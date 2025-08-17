@@ -1,0 +1,50 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33801.468
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotNetFractal.WinForms", "dotNetFractal.WinForms\dotNetFractal.WinForms.csproj", "{4C3EA0AB-05FE-43BA-BB86-14C9A8E36B0B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dotNetFractal.Logic", "dotNetFractal.Logic\dotNetFractal.Logic.csproj", "{0CCFC10B-12A4-44BB-9DBA-69ED1CCBF62C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dotNetFractal.WPF", "dotNetFractal.WPF\dotNetFractal.WPF.csproj", "{DB25CACD-9A6A-4DFB-942F-DFBBE3DF277E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4C3EA0AB-05FE-43BA-BB86-14C9A8E36B0B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C3EA0AB-05FE-43BA-BB86-14C9A8E36B0B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C3EA0AB-05FE-43BA-BB86-14C9A8E36B0B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4C3EA0AB-05FE-43BA-BB86-14C9A8E36B0B}.Debug|x64.Build.0 = Debug|Any CPU
+		{4C3EA0AB-05FE-43BA-BB86-14C9A8E36B0B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C3EA0AB-05FE-43BA-BB86-14C9A8E36B0B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C3EA0AB-05FE-43BA-BB86-14C9A8E36B0B}.Release|x64.ActiveCfg = Release|Any CPU
+		{4C3EA0AB-05FE-43BA-BB86-14C9A8E36B0B}.Release|x64.Build.0 = Release|Any CPU
+		{0CCFC10B-12A4-44BB-9DBA-69ED1CCBF62C}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{0CCFC10B-12A4-44BB-9DBA-69ED1CCBF62C}.Debug|Any CPU.Build.0 = Debug|x64
+		{0CCFC10B-12A4-44BB-9DBA-69ED1CCBF62C}.Debug|x64.ActiveCfg = Debug|x64
+		{0CCFC10B-12A4-44BB-9DBA-69ED1CCBF62C}.Debug|x64.Build.0 = Debug|x64
+		{0CCFC10B-12A4-44BB-9DBA-69ED1CCBF62C}.Release|Any CPU.ActiveCfg = Release|x64
+		{0CCFC10B-12A4-44BB-9DBA-69ED1CCBF62C}.Release|Any CPU.Build.0 = Release|x64
+		{0CCFC10B-12A4-44BB-9DBA-69ED1CCBF62C}.Release|x64.ActiveCfg = Release|x64
+		{0CCFC10B-12A4-44BB-9DBA-69ED1CCBF62C}.Release|x64.Build.0 = Release|x64
+		{DB25CACD-9A6A-4DFB-942F-DFBBE3DF277E}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{DB25CACD-9A6A-4DFB-942F-DFBBE3DF277E}.Debug|Any CPU.Build.0 = Debug|x64
+		{DB25CACD-9A6A-4DFB-942F-DFBBE3DF277E}.Debug|x64.ActiveCfg = Debug|x64
+		{DB25CACD-9A6A-4DFB-942F-DFBBE3DF277E}.Debug|x64.Build.0 = Debug|x64
+		{DB25CACD-9A6A-4DFB-942F-DFBBE3DF277E}.Release|Any CPU.ActiveCfg = Release|x64
+		{DB25CACD-9A6A-4DFB-942F-DFBBE3DF277E}.Release|Any CPU.Build.0 = Release|x64
+		{DB25CACD-9A6A-4DFB-942F-DFBBE3DF277E}.Release|x64.ActiveCfg = Release|x64
+		{DB25CACD-9A6A-4DFB-942F-DFBBE3DF277E}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9FD43E42-5958-4836-98CD-58666E2EE6FD}
+	EndGlobalSection
+EndGlobal

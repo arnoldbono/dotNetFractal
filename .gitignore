@@ -1,0 +1,13 @@
+Output/
+bin/
+obj/
+*.user
+*.suo
+*.userprefs
+*.sln.docstates
+*.sln.ide
+*.sln.ide.*
+*.sln.suo
+*.sln.vspscc
+*.sln.vssscc
+.vs/

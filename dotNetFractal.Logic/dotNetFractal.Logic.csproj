@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <ProjectGuid>{0CCFC10B-12A4-44BB-9DBA-69ED1CCBF62C}</ProjectGuid>
+        <OutputType>Library</OutputType>
+        <AppDesignerFolder>Properties</AppDesignerFolder>
+        <RootNamespace>dotNetFractal.Logic</RootNamespace>
+        <AssemblyName>dotNetFractal.Logic</AssemblyName>
+		<Platforms>x64</Platforms>
+		<TargetFramework>net6.0-windows</TargetFramework>
+    </PropertyGroup>
+  	<PropertyGroup>
+		<Company>Roland Boon</Company>
+		<Copyright>Copyright © 2023</Copyright>
+		<Description>Implementation logic for dotNetFractal</Description>
+		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+		<PackageProjectUrl>https://boonorg.com</PackageProjectUrl>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<VersionPrefix>1.1.0</VersionPrefix>
+		<FileVersion>1.1.0.0</FileVersion>
+		<AssemblyVersion>1.1.0.0</AssemblyVersion>
+		<BaseOutputPath>..\Output\</BaseOutputPath>
+	</PropertyGroup>
+  	<ItemGroup>
+  	  <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
+  	</ItemGroup>
+</Project>
