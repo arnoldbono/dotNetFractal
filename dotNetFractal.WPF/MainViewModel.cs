@@ -325,5 +325,43 @@ namespace dotNetFractal.WPF
             // Regenerate the fractal with the new area
             NewFractal(true);
         }
+
+        public void ZoomOutFromRectangle(double pixelX1, double pixelY1, double pixelX2, double pixelY2, double imageWidth, double imageHeight)
+        {
+            if (m_fractalArea == null || imageWidth == 0 || imageHeight == 0)
+                return;
+
+            var displayArea = m_fractalArea.GetDisplayArea((int)imageWidth, (int)imageHeight);
+
+            // Get the center of the selected rectangle in fractal coordinates
+            double centerPixelX = (pixelX1 + pixelX2) / 2.0;
+            double centerPixelY = (pixelY1 + pixelY2) / 2.0;
+            double centerFractalX = displayArea.GetX((int)centerPixelX);
+            double centerFractalY = displayArea.GetY((int)centerPixelY);
+
+            // Calculate the zoom-out ratio based on the rectangle size
+            double rectWidth = Math.Abs(pixelX2 - pixelX1);
+            double rectHeight = Math.Abs(pixelY2 - pixelY1);
+            double widthRatio = imageWidth / rectWidth;
+            double heightRatio = imageHeight / rectHeight;
+            double zoomOutRatio = Math.Min(widthRatio, heightRatio);
+
+            // Calculate the current fractal area dimensions
+            double currentWidth = m_fractalArea.MaxX - m_fractalArea.MinX;
+            double currentHeight = m_fractalArea.MaxY - m_fractalArea.MinY;
+
+            // Calculate the new fractal area dimensions (zoomed out)
+            double newWidth = currentWidth * zoomOutRatio;
+            double newHeight = currentHeight * zoomOutRatio;
+
+            // Set the new fractal area centered on the selection rectangle center
+            m_fractalArea.MinX = centerFractalX - newWidth / 2.0;
+            m_fractalArea.MaxX = centerFractalX + newWidth / 2.0;
+            m_fractalArea.MinY = centerFractalY - newHeight / 2.0;
+            m_fractalArea.MaxY = centerFractalY + newHeight / 2.0;
+
+            // Regenerate the fractal with the new area
+            NewFractal(true);
+        }
     }
 }
