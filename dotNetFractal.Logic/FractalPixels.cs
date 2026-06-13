@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
 
-namespace dotNetFractal
+namespace dotNetFractal.Logic
 {
     public class FractalPixels
     {

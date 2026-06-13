@@ -1,0 +1,13 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Project Path="dotNetFractal.Logic/dotNetFractal.Logic.csproj">
+    <Platform Project="x64" />
+  </Project>
+  <!-- Project Path="dotNetFractal.WinForms/dotNetFractal.WinForms.csproj" / -->
+  <Project Path="dotNetFractal.WPF/dotNetFractal.WPF.csproj">
+    <Platform Project="x64" />
+  </Project>
+</Solution>

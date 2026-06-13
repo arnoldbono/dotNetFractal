@@ -1,6 +1,7 @@
 using System;
+using System.Drawing;
 
-namespace dotNetFractal
+namespace dotNetFractal.Logic
 {
     public class FractalAreaPatch
     {
@@ -18,6 +19,15 @@ namespace dotNetFractal
             StartIndexHeight = startIndexHeight;
             StopIndexWidth = stopIndexWidth;
             StopIndexHeight = stopIndexHeight;
+        }
+
+        public Rectangle GetRectangle()
+        {
+            var x = StartIndexWidth;
+            var y = StartIndexHeight;
+            var width = StopIndexWidth - x;
+            var height = StopIndexHeight - y;
+            return new Rectangle(x, y, width, height);
         }
     }
 }

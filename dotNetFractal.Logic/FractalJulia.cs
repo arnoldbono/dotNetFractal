@@ -1,46 +1,45 @@
 using System;
 
-namespace dotNetFractal
+namespace dotNetFractal.Logic
 {
-	/// <summary>
-	/// Summary description for JuliaFractal.
-	/// </summary>
-	public class FractalJulia : Fractal
-	{
-		private double m_startingPointX = 0.0;
-		private double m_startingPointY = 0.0;
+    /// <summary>
+    /// Summary description for JuliaFractal.
+    /// </summary>
+    public class FractalJulia : Fractal
+    {
+        private double m_startingPointX = 0.0;
+        private double m_startingPointY = 0.0;
 
-		public FractalJulia()
-		{
-			; // Empty
-		}
+        public FractalJulia()
+        {
+            ; // Empty
+        }
 
         protected override void ThreadProc()
-		{
-			Stop = false;
+        {
+            Stop = false;
             Stopped = false;
-
-            ComputedWidth = 0;
 
             var startIndexWidth = AreaPatch.StartIndexWidth;
             var stopIndexWidth = AreaPatch.StopIndexWidth;
             var startIndexHeight = AreaPatch.StartIndexHeight;
             var stopIndexHeight = AreaPatch.StopIndexHeight;
 
+            var displayArea = Area.DisplayArea;
+
             // plot Julia Set using Mandelbrot formula
             double Cx = m_startingPointX;
-			double Cy = m_startingPointY;
+            double Cy = m_startingPointY;
             for (var i = startIndexWidth; i < stopIndexWidth && !Stop; ++i)
             {
-                ComputedWidth = i - startIndexWidth;
-                double x0 = Area.GetX(i);
+                double x0 = displayArea.GetX(i);
 
                 for (var j = startIndexHeight; j < stopIndexHeight; ++j)
-				{
-                    double y0 = Area.GetY(j);
-					double x = x0;
-					double y = y0;
-					int teller = 0;
+                {
+                    double y0 = displayArea.GetY(j);
+                    double x = x0;
+                    double y = y0;
+                    int teller = 0;
                     double Radius2 = 0.0;
                     double PrevRadius2 = 0.0;
                     while (++teller < MaxIterations)
@@ -55,36 +54,31 @@ namespace dotNetFractal
                             break;
                         }
 
-						y *= x;
-						y += y + Cy;
-						x = xx - yy + Cx;
-					}
+                        y *= x;
+                        y += y + Cy;
+                        x = xx - yy + Cx;
+                    }
 
                     Area.Pixels.SetPixel(i, j, new FractalPixel(teller, Radius2, PrevRadius2));
                 }
-			}
-
-            if (!Stop)
-            {
-                ComputedWidth = stopIndexWidth - startIndexWidth;
             }
 
             Stopped = true;
         }
 
-        public double startingPointX
-		{
-			get { return m_startingPointX; }
-		}
-		public double startingPointY
-		{
-			get { return m_startingPointY; }
-		}
+        public double StartingPointX
+        {
+            get { return m_startingPointX; }
+        }
+        public double StartingPointY
+        {
+            get { return m_startingPointY; }
+        }
 
-		public void SetStartingPoint(double x, double y)
-		{
-			m_startingPointX = x;
-			m_startingPointY = y;
-		}
-	}
+        public void SetStartingPoint(double x, double y)
+        {
+            m_startingPointX = x;
+            m_startingPointY = y;
+        }
+    }
 }

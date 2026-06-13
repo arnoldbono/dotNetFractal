@@ -4,7 +4,7 @@ using System.Drawing.Imaging;
 using System.Diagnostics;
 using System.IO;
 
-namespace dotNetFractal
+namespace dotNetFractal.Logic
 {
     /// <summary>
     /// A FractalCachedImage is a square image with Size pixels horizontally and vertically.

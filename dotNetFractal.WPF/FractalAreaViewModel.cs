@@ -1,27 +1,32 @@
-﻿using System;
+﻿using dotNetFractal.Logic;
 using ReactiveUI;
+using System;
+using System.Collections.Generic;
 
 namespace dotNetFractal.WPF
 {
     public class FractalAreaViewModel : BaseViewModel
     {
-        public readonly FractalPlate[] Plates =
-        {
-            new FractalPlate( "Plate 4",  -2.0,      -1.25,      0.5,      1.25),
-            new FractalPlate( "Plate 5",  -0.702973,  0.374785, -0.642879, 0.395415),
-            new FractalPlate( "Plate 5a", -0.691594,  0.386608, -0.690089, 0.387494),
-            new FractalPlate( "Plate 6",  -0.691060,  0.387103, -0.690906, 0.387228),
-            new FractalPlate( "Plate 7",  -0.793114,  0.037822, -0.723005, 0.140974),
-            new FractalPlate( "Plate 7a", -0.749337,  0.109349, -0.744948, 0.115851),
-            new FractalPlate( "Plate 8",  -0.745465,  0.112896, -0.745387, 0.113034),
-            new FractalPlate( "Plate 9",  -0.745464,  0.112967, -0.745388, 0.113030)
-        };
+        public readonly List<FractalPlate> m_plates =
+        [
+            new("Plate 0",  -2.4,      -1.4,      1.4,      1.4),
+            new("Plate 4",  -2.0,      -1.25,      0.5,      1.25),
+            new("Plate 5",  -0.702973,  0.374785, -0.642879, 0.395415),
+            new("Plate 5a", -0.691594,  0.386608, -0.690089, 0.387494),
+            new("Plate 6",  -0.691060,  0.387103, -0.690906, 0.387228),
+            new("Plate 7",  -0.793114,  0.037822, -0.723005, 0.140974),
+            new("Plate 7a", -0.749337,  0.109349, -0.744948, 0.115851),
+            new("Plate 8",  -0.745465,  0.112896, -0.745387, 0.113034),
+            new("Plate 9",  -0.745464,  0.112967, -0.745388, 0.113030)
+        ];
         
         private double m_minX;
         private double m_minY;
         private double m_maxX;
         private double m_maxY;
         private int m_selectedPlate;
+
+        public List<FractalPlate> Plates => m_plates;
 
         public DisplayArea GetDisplayArea(int width, int height)
         {

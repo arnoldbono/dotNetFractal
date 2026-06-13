@@ -2,7 +2,7 @@
   "profiles": {
     "Profile 1": {
       "commandName": "Executable",
-      "executablePath": "C:\\Development\\dotNetFractal\\Output\\x64\\Debug\\net6.0-windows\\dotNetFractal.WPF.exe"
+      "executablePath": "C:\\Development\\dotNetFractal\\Output\\x64\\Debug\\net10.0-windows\\dotNetFractal.WPF.exe"
     }
   }
 }

@@ -44,16 +44,7 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <Label Grid.Column="0" Grid.Row="0" Content="Plate:"  VerticalAlignment="Center"/>
-            <ComboBox Grid.Column="1" Grid.Row="0" Width="100" SelectedIndex="{Binding SelectedPlate}" HorizontalAlignment="Right" VerticalAlignment="Center">
-                <ComboBoxItem Content="Plate 4" />
-                <ComboBoxItem Content="Plate 5" />
-                <ComboBoxItem Content="Plate 5a" />
-                <ComboBoxItem Content="Plate 6" />
-                <ComboBoxItem Content="Plate 7" />
-                <ComboBoxItem Content="Plate 7a" />
-                <ComboBoxItem Content="Plate 8" />
-                <ComboBoxItem Content="Plate 9" />
-            </ComboBox>
+            <ComboBox Grid.Column="1" Grid.Row="0" Width="100" SelectedIndex="{Binding SelectedPlate}" ItemsSource="{Binding Plates}" HorizontalAlignment="Right" VerticalAlignment="Center" />
         </Grid>
         <StackPanel Grid.Row="2" Margin="10,10,10,10" Orientation="Horizontal" HorizontalAlignment="Right" >
             <Button Content="Cancel" IsCancel="True" Width="60" Margin="0,0,10,0" />

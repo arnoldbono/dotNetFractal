@@ -1,6 +1,6 @@
 using System;
 
-namespace dotNetFractal
+namespace dotNetFractal.Logic
 {
     public class DisplayArea
     {
@@ -43,16 +43,11 @@ namespace dotNetFractal
             PixelsHorizontal = horizontal;
             PixelsVertical = vertical;
             var ratio = (double)PixelsVertical / (double)PixelsHorizontal;
-            if (width > height)
-            {
-                Width = width;
-                Height = ratio * Width;
-            }
-            else
-            {
-                Height = height;
-                Width = Height / ratio;
-            }
+            var length = Math.Max(width, height);
+            Width = length;
+            Height = ratio * length;
+            //Width = width;
+            //Height = height;
         }
 
         public double GetX(int i)
@@ -65,20 +60,14 @@ namespace dotNetFractal
             return CenterY + (double)(PixelsVertical / 2 - j) * Height / (double)PixelsVertical;
         }
 
-        public double GetWidth(int w)
+        public int GetI(double x)
         {
-            return (double)w / (double)PixelsHorizontal * Width;
+            return (int)Math.Floor((double)PixelsHorizontal * (1.0 + (x - CenterX) / Width) / 2.0);
         }
 
-        public double GetHeight(int h)
+        public int GetJ(double y)
         {
-            return (double)h / (double)PixelsVertical * Height;
+            return (int)Math.Floor((double)PixelsVertical * (1.0 + (CenterY - y) / Height) / 2.0);
         }
-
-        public void GetPosition(int i, int j, out double x, out double y)
-        {
-            x = GetX(i);
-            y = GetY(j);
-        }
-     }
+    }
 }

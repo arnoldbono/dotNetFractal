@@ -1,14 +1,16 @@
 using System;
 using System.Threading;
 
-namespace dotNetFractal
+namespace dotNetFractal.Logic
 {
     public abstract class Worker
-	{
-		private Thread m_thread = null;
+    {
+        private RegisteredWaitHandle m_waitHandle = null;
+        private ManualResetEvent m_threadCompletedEvent = null;
         private Mutex m_mutex = null;
         private bool m_stop = false;
         private bool m_stopped = false;
+        private Action<Action> m_threadPoolExecutor = null;
 
         public bool Stopped
         {
@@ -23,47 +25,74 @@ namespace dotNetFractal
         }
 
         public Worker()
-		{
+        {
             m_mutex = new Mutex(false);
+            m_threadCompletedEvent = new ManualResetEvent(false);
         }
 
         // placeholder
         abstract protected void ThreadProc();
 
-        public virtual void StartThread()
-		{
-			LockMutex();
+        private void ThreadProcWrapper(object state)
+        {
+            try
+            {
+                ThreadProc();
+            }
+            finally
+            {
+                // Signal the completion events when the thread finishes
+                m_threadCompletedEvent?.Set();
+            }
+        }
+
+        public virtual void StartThread(Action<Action> threadPoolExecutor = null)
+        {
+            LockMutex();
             m_stop = false;
             m_stopped = false;
-            m_thread = new Thread(new ThreadStart(ThreadProc));
-			m_thread.Start();
-			UnlockMutex();
-		}
+            m_threadPoolExecutor = threadPoolExecutor;
+            m_threadCompletedEvent.Reset();
+
+            if (m_threadPoolExecutor != null)
+            {
+                // Use the provided thread pool executor
+                m_threadPoolExecutor(() => ThreadProcWrapper(null));
+            }
+            else
+            {
+                // Use the default .NET ThreadPool
+                ThreadPool.QueueUserWorkItem(ThreadProcWrapper);
+            }
+            UnlockMutex();
+        }
 
         public virtual void StopThread()
-		{
-			Stop = true;
-            if (m_thread == null)
-            {
-                m_stopped = true;
-            }
-            else if (m_thread.IsAlive)
-            {
-                while (!m_stopped)
-                {
-                    m_thread.Join(); // to wait until a Thread ends
-                }
-            }
-		}
+        {
+            Stop = true;
+            if (m_stopped)
+                return;
 
-		public void LockMutex()
-		{
-			m_mutex.WaitOne();
-		}
+            // Wait for the thread pool work item to complete
+            m_threadCompletedEvent?.WaitOne();
 
-		public void UnlockMutex()
-		{
-			m_mutex.ReleaseMutex();
-		}
+            if (m_waitHandle != null)
+            {
+                m_waitHandle.Unregister(null);
+                m_waitHandle = null;
+            }
+
+            m_stopped = true;
+        }
+
+        public void LockMutex()
+        {
+            m_mutex.WaitOne();
+        }
+
+        public void UnlockMutex()
+        {
+            m_mutex.ReleaseMutex();
+        }
     }
 }

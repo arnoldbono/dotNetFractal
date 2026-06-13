@@ -9,22 +9,39 @@
     <Window.DataContext>
         <local:MainViewModel />
     </Window.DataContext>
-    <Grid>
-        <StackPanel Orientation="Vertical">
-            <Menu>
-                <MenuItem Header="_File">
-                    <MenuItem Header="_New" Command="{Binding NewFractalCommand}" />
-                    <MenuItem Header="Save _As" Command="{Binding SaveAsCommand}" />
-                </MenuItem>
-                <MenuItem Header="_Edit">
-                    <MenuItem Header="_Copy" />
-                </MenuItem>
-                <MenuItem Header="_Preferences">
-                    <MenuItem Header="_Fractal Area" Command="{Binding FractalAreaCommand}" />
-                    <MenuItem Header="_Image Resolution" Command="{Binding ImageResolutionCommand}" />
-                </MenuItem>
-            </Menu>
-            <Image x:Name="FractalImage" Stretch="None" Source="{Binding MainImage}" Height="{Binding Height}" Width="{Binding Width}" VerticalAlignment="Top" HorizontalAlignment="Left"/>
-        </StackPanel>
-    </Grid>
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_New" Command="{Binding NewFractalCommand}" />
+                <MenuItem Header="Save _As" Command="{Binding SaveAsCommand}" />
+            </MenuItem>
+            <MenuItem Header="_Edit">
+                <MenuItem Header="_Copy" />
+            </MenuItem>
+            <MenuItem Header="_Preferences">
+                <MenuItem Header="_Fractal Area" Command="{Binding FractalAreaCommand}" />
+                <MenuItem Header="_Image Resolution" Command="{Binding ImageResolutionCommand}" />
+                <MenuItem Header="_Color Map" Command="{Binding ColorMapCommand}" />
+            </MenuItem>
+        </Menu>
+        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+            <Grid>
+                <Image x:Name="FractalImage" Stretch="None" Source="{Binding MainImage}" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+                <Canvas x:Name="SelectionCanvas" 
+                        Background="Transparent"
+                        MouseLeftButtonDown="SelectionCanvas_MouseLeftButtonDown"
+                        MouseMove="SelectionCanvas_MouseMove"
+                        MouseLeftButtonUp="SelectionCanvas_MouseLeftButtonUp"
+                        VerticalAlignment="Top" 
+                        HorizontalAlignment="Left">
+                    <Rectangle x:Name="SelectionRectangle" 
+                               Stroke="White" 
+                               StrokeThickness="2" 
+                               StrokeDashArray="4,2"
+                               Fill="Transparent" 
+                               Visibility="Collapsed"/>
+                </Canvas>
+            </Grid>
+        </ScrollViewer>
+    </DockPanel>
 </Window>

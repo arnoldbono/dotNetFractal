@@ -6,7 +6,7 @@ using System.Drawing;
 using System.Diagnostics;
 using System.Drawing.Imaging;
 
-namespace dotNetFractal
+namespace dotNetFractal.Logic
 {
     /// <summary>
     /// Subdivides FractalQuarters until the DisplayArea is no longer completely within one
@@ -17,8 +17,11 @@ namespace dotNetFractal
     public class FractalStitcher : Worker
     {
         private readonly Func<IFractal> m_fractalFunc;
-        private readonly List<IFractal> m_fractalsToUpdate = new List<IFractal>();
+        private readonly List<IFractal> m_fractalsToUpdate = [];
+        private readonly AutoResetEvent m_bitmapUpdateEvent = new (false);
         private DisplayArea m_area;
+
+        private static int PatchSize => 128;
 
         public DisplayArea Area
         {
@@ -30,52 +33,97 @@ namespace dotNetFractal
             }
         }
 
-        public FractalArea FractalArea { get; set; }
+        public WaitHandle BitmapUpdateEvent => m_bitmapUpdateEvent;
 
         public FractalStitcher(Func<Fractal> fractalFunc, DisplayArea area)
         {
             Debug.Assert(fractalFunc != null && area != null);
             m_fractalFunc = fractalFunc;
             m_area = area;
-       }
+        }
+
+        public bool HasFractalsToUpdate
+        {
+            get
+            {
+                LockMutex();
+                var hasFractals = m_fractalsToUpdate.Count > 0;
+                UnlockMutex();
+                return hasFractals;
+            }
+        }
+
+        private List<IFractal> GetPatches(DisplayArea area)
+        {
+            var fractalArea = new FractalArea(area);
+
+            var width = Area.PixelsHorizontal;
+            var height = Area.PixelsVertical;
+
+            var horizontalPatches = width / PatchSize + (width % PatchSize != 0 ? 1 : 0);
+            var vertitalPatches = height / PatchSize + (height % PatchSize != 0 ? 1 : 0);
+
+            var patches = new List<IFractal>();
+
+            for (int i = 0; i < horizontalPatches; ++i)
+            {
+                var startIndexWidth = i * PatchSize;
+                var stopIndexWidth = Math.Min(startIndexWidth + PatchSize, width);
+
+                for (int j = 0; j < vertitalPatches; ++j)
+                {
+                    var startIndexHeight = j * PatchSize;
+                    var stopIndexHeight = Math.Min(startIndexHeight + PatchSize, height);
+
+                    var fractal = m_fractalFunc();
+                    fractal.Area = fractalArea;
+                    fractal.AreaPatch = new FractalAreaPatch(startIndexWidth, startIndexHeight, stopIndexWidth, stopIndexHeight);
+                    patches.Add(fractal);
+                }
+            }
+
+            return patches;
+        }
 
         protected override void ThreadProc()
         {
             Stop = false;
 
-            var width = m_area.PixelsHorizontal;
-            var height = m_area.PixelsVertical;
-
-            var patchSize = 128;
-            var horizontalPatches = width / patchSize + (width % patchSize != 0 ? 1 : 0);
-            var vertitalPatches = height / patchSize + (height % patchSize != 0 ? 1 : 0);
+            var waitingFractals = GetPatches(Area);
 
             var processorCount = Environment.ProcessorCount;
             var startedFractals = new List<IFractal>();
-            var waitingFractals = new List<IFractal>();
 
-            FractalArea = new FractalArea(m_area.CenterX, m_area.CenterY, m_area.Width, m_area.PixelsHorizontal, m_area.PixelsVertical);
+            // Create a reset event that fractals will signal when they complete
+            var completionEvent = new ManualResetEventSlim(false);
 
-            for (int i = 0; i < horizontalPatches; ++i)
+            // Create a semaphore to limit the number of concurrent threads from the pool
+            var maxConcurrentThreads = processorCount - 1;
+            var semaphore = new SemaphoreSlim(maxConcurrentThreads, maxConcurrentThreads);
+
+            // Create a thread pool executor that manages concurrency
+            void threadPoolExecutor(Action work)
             {
-                var startIndexWidth = i * patchSize;
-                var stopIndexWidth = Math.Min(startIndexWidth + patchSize, width);
-
-                for (int j = 0; j < vertitalPatches; ++j)
+                semaphore.Wait();
+                ThreadPool.QueueUserWorkItem(_ =>
                 {
-                    var startIndexHeight = j * patchSize;
-                    var stopIndexHeight = Math.Min(startIndexHeight + patchSize, height);
-
-                    var fractal = m_fractalFunc();
-                    fractal.Area = FractalArea;
-                    fractal.AreaPatch = new FractalAreaPatch(startIndexWidth, startIndexHeight, stopIndexWidth, stopIndexHeight);
-                    waitingFractals.Add(fractal);
-                }
+                    try
+                    {
+                        work();
+                    }
+                    finally
+                    {
+                        LockMutex();
+                        semaphore?.Release();
+                        completionEvent?.Set();
+                        UnlockMutex();
+                    }
+                });
             }
 
             while (!Stop)
             {
-                while (startedFractals.Count() < processorCount - 1)
+                while (startedFractals.Count < maxConcurrentThreads)
                 {
                     var fractal = waitingFractals.FirstOrDefault();
                     if (fractal == null)
@@ -85,10 +133,14 @@ namespace dotNetFractal
 
                     waitingFractals.Remove(fractal);
                     startedFractals.Add(fractal);
-                    fractal.StartThread();
+                    completionEvent.Reset();
+                    fractal.StartThread(threadPoolExecutor);
                 }
 
+                completionEvent.Wait();
+
                 var fractals = startedFractals.ToArray();
+                var fractalsStopped = false;
 
                 foreach (var fractal in fractals)
                 {
@@ -99,66 +151,93 @@ namespace dotNetFractal
                         UnlockMutex();
 
                         startedFractals.Remove(fractal);
+
+                        fractalsStopped = true;
                     }
                 }
 
-                if (!startedFractals.Any() && !waitingFractals.Any())
+                if (fractalsStopped)
+                {
+                    m_bitmapUpdateEvent.Set();
+                }
+
+                if (startedFractals.Count == 0 && waitingFractals.Count == 0)
                 {
                     break;
                 }
-
-                Thread.Sleep(100);
             }
 
+            LockMutex();
             startedFractals.Clear();
             waitingFractals.Clear();
-
-            LockMutex();
+            completionEvent.Dispose();
+            completionEvent = null;
+            semaphore.Dispose();
+            semaphore = null;
             Stopped = true;
             UnlockMutex();
         }
 
-        public Rectangle Update(Bitmap bitmap)
+        public bool Update(Bitmap bitmap)
         {
-            Rectangle retval = Rectangle.Empty;
-
             LockMutex();
             var fractal = m_fractalsToUpdate.FirstOrDefault();
             UnlockMutex();
 
-            if (fractal != null)
+            if (fractal == null)
             {
-                UpdateBitmap(bitmap, fractal);
-
-                LockMutex();
-                m_fractalsToUpdate.Remove(fractal);
-                UnlockMutex();
-
-                var areaPatch = fractal.AreaPatch;
-                var x = areaPatch.StartIndexWidth;
-                var y = areaPatch.StartIndexHeight;
-                var width = areaPatch.StopIndexWidth - x;
-                var height = areaPatch.StopIndexHeight - y;
-
-                retval = new Rectangle(x, y, width, height);
+                return false;
             }
 
-            return retval;
+            UpdateBitmap(bitmap, fractal);
+
+            LockMutex();
+            m_fractalsToUpdate.Remove(fractal);
+            UnlockMutex();
+
+            return true;
         }
 
         public Bitmap GetBitmap(int width, int height)
         {
-            return new Bitmap(width, height, PixelFormat.Format32bppArgb);
+            var bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+            DefaultFill(bitmap);
+            return bitmap;
         }
 
-        public void DefaultFill(Bitmap bitmap)
+        private void DefaultFill(Bitmap bitmap)
         {
             Graphics grfx = Graphics.FromImage(bitmap);
             grfx.FillRectangle(new SolidBrush(Color.Azure), new Rectangle(0, 0, bitmap.Width, bitmap.Height));
+
+            var patches = GetPatches(Area);
+
+            foreach (var fractal in patches)
+            {
+                var fractalArea = fractal.Area;
+                var areaPatch = fractal.AreaPatch;
+                var startIndexWidth = areaPatch.StartIndexWidth;
+                var stopIndexWidth = areaPatch.StopIndexWidth;
+                var startIndexHeight = areaPatch.StartIndexHeight;
+                var stopIndexHeight = areaPatch.StopIndexHeight;
+
+                for (var i = startIndexWidth; i < stopIndexWidth && !Stop; i += stopIndexWidth - 1)
+                {
+                    for (var j = startIndexHeight; j < stopIndexHeight; j += stopIndexWidth - 1)
+                    {
+                        var pixel = fractalArea.GetPixel(i, j);
+                        if (pixel != null)
+                        {
+                            bitmap.SetPixel(i, j, Color.Black);
+                        }
+                    }
+                }
+            }
         }
 
         public void UpdateBitmap(Bitmap bitmap, IFractal fractal)
         {
+            var fractalArea = fractal.Area;
             var areaPatch = fractal.AreaPatch;
             var startIndexWidth = areaPatch.StartIndexWidth;
             var stopIndexWidth = areaPatch.StopIndexWidth;
@@ -167,18 +246,15 @@ namespace dotNetFractal
 
             for (var i = startIndexWidth; i < stopIndexWidth && !Stop; ++i)
             {
-                double x = Area.GetX(i);
                 for (var j = startIndexHeight; j < stopIndexHeight; ++j)
                 {
-                    double y = Area.GetY(j);
-                    var pixel = FractalArea.GetPixel(x, y);
+                    var pixel = fractalArea.GetPixel(i, j);
                     if (pixel != null)
                     {
                         bitmap.SetPixel(i, j,
                             fractal.ComputeColor(pixel.Iteration, pixel.PreviousRadius, pixel.Radius));
                     }
                 }
-                Thread.Sleep(0);
             }
         }
     }

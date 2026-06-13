@@ -1,10 +1,13 @@
 ﻿using Microsoft.Win32;
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Threading;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using dotNetFractal.Logic;
 
 namespace dotNetFractal.WPF
 {
@@ -13,6 +16,7 @@ namespace dotNetFractal.WPF
         private RelayCommand<EventArgs> m_newFractalCommand;
         private RelayCommand<EventArgs> m_imageResolutionCommand;
         private RelayCommand<EventArgs> m_fractalAreaCommand;
+        private RelayCommand<EventArgs> m_colorMapCommand;
         private RelayCommand<EventArgs> m_saveAsCommand;
 
         private ImageResolutionViewModel m_imageResolution;
@@ -20,7 +24,9 @@ namespace dotNetFractal.WPF
 
         private FractalStitcher m_stitcher;
 
-        private DispatcherTimer m_dispatcherTimer;
+        private Thread m_updateWorkerThread;
+        private volatile bool m_stopWorkerThread;
+        private readonly Dispatcher m_dispatcher;
         private Bitmap m_bitmap;
         private ImageSource m_mainImageSource;
         private int m_width;
@@ -74,10 +80,8 @@ namespace dotNetFractal.WPF
 
         public MainViewModel()
         {
-            m_dispatcherTimer = new DispatcherTimer();
-            m_dispatcherTimer.Tick += new EventHandler(UpdateBitmap);
-            m_dispatcherTimer.Interval = TimeSpan.FromMilliseconds(20);
-            m_dispatcherTimer.Start();
+            m_dispatcher = Dispatcher.CurrentDispatcher;
+            StartUpdateWorkerThread();
             OnNewFractal();
         }
 
@@ -87,10 +91,16 @@ namespace dotNetFractal.WPF
 
         public ICommand FractalAreaCommand => m_fractalAreaCommand ??= new RelayCommand<EventArgs>(param => OnFractalAreaCommand());
 
+        public ICommand ColorMapCommand => m_colorMapCommand ??= new RelayCommand<EventArgs>(param => OnColorMap());
+
         public ICommand SaveAsCommand => m_saveAsCommand ??= new RelayCommand<EventArgs>(param => OnSaveAs());
 
-        private void UpdateBitmap(object sender, EventArgs e)
+        private void UpdateBitmap()
         {
+            // Assert that this method is called on the main UI thread
+            Debug.Assert(m_dispatcher?.CheckAccess() ?? true, 
+                "UpdateBitmap must be called on the main UI thread");
+
             if (m_stitcher == null) return;
 
             int width = m_stitcher.Area.PixelsHorizontal;
@@ -100,28 +110,86 @@ namespace dotNetFractal.WPF
                 (m_bitmap.Height != height))
             {
                 m_bitmap = m_stitcher.GetBitmap(width, height);
-                m_stitcher.DefaultFill(m_bitmap);
+                MainImage = ConvertBitmapToBitmapImage.Convert(m_bitmap);
             }
 
-            if (m_bitmap == null)
-            {
-                return;
-            }
+            // POST: m_bitmap != null
 
-            if ((m_mainImageSource == null) ||
-                (m_mainImageSource.Width != m_bitmap.Width) ||
-                (m_mainImageSource.Height != m_bitmap.Height))
+            if ((MainImage == null) ||
+                (MainImage.Width != m_bitmap.Width) ||
+                (MainImage.Height != m_bitmap.Height))
             {
                 MainImage = ConvertBitmapToBitmapImage.Convert(m_bitmap);
             }
 
-            var rect = m_stitcher.Update(m_bitmap);
-            if (!rect.IsEmpty)
+            if (m_stitcher.Update(m_bitmap))
             {
-                //Graphics grfx = Graphics.FromImage(m_mainBitmap);
-                //grfx.Clip = new Region(rect);
-                //grfx.DrawImage(m_bitmap, new Point(0, 0));
                 MainImage = ConvertBitmapToBitmapImage.Convert(m_bitmap);
+            }
+        }
+
+        private void StartUpdateWorkerThread()
+        {
+            m_stopWorkerThread = false;
+            m_updateWorkerThread = new Thread(UpdateWorkerThreadProc)
+            {
+                IsBackground = true,
+                Name = "BitmapUpdateWorker"
+            };
+            m_updateWorkerThread.Start();
+        }
+
+        private void StopUpdateWorkerThread()
+        {
+            if (m_updateWorkerThread != null)
+            {
+                m_stopWorkerThread = true;
+
+                // Signal the event to wake up the worker thread so it can exit
+                (m_stitcher?.BitmapUpdateEvent as AutoResetEvent)?.Set();
+
+                if (m_updateWorkerThread.IsAlive)
+                {
+                    m_updateWorkerThread.Join(1000); // Wait up to 1 second
+                }
+
+                m_updateWorkerThread = null;
+            }
+        }
+
+        private void UpdateWorkerThreadProc()
+        {
+            while (!m_stopWorkerThread)
+            {
+                try
+                {
+                    // Wait for the FractalStitcher to signal that a fractal needs updating
+                    if (m_stitcher?.BitmapUpdateEvent == null)
+                    {
+                        Thread.Sleep(100);
+                        continue;
+                    }
+
+                    if (m_stopWorkerThread)
+                        break;
+
+                    if (m_stitcher.HasFractalsToUpdate ||
+                        m_stitcher.BitmapUpdateEvent.WaitOne(100))
+                    {
+                        if (m_stopWorkerThread)
+                            break;
+
+                        // Marshal the UpdateBitmap call to the UI thread
+                        m_dispatcher.Invoke(() =>
+                        {
+                            UpdateBitmap();
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Error in UpdateWorkerThread: {ex.Message}");
+                }
             }
         }
 
@@ -141,13 +209,20 @@ namespace dotNetFractal.WPF
         {
             if (force || m_stitcher == null)
             {
+                m_stitcher?.StopThread();
+
                 Width = m_imageResolution.Width;
                 Height = m_imageResolution.Height;
 
                 var displayArea = m_fractalArea.GetDisplayArea(Width, Height);
+                m_stitcher = new FractalStitcher(() => new FractalMandelbrot(), displayArea);
 
-                m_stitcher =
-                    new FractalStitcher(() => new FractalMandelbrot(), displayArea);
+                if (MainImage != null)
+                {
+                    m_bitmap = m_stitcher.GetBitmap(Width, Height);
+                    MainImage = ConvertBitmapToBitmapImage.Convert(m_bitmap);
+                }
+
                 m_stitcher.StartThread();
             }
         }
@@ -178,12 +253,17 @@ namespace dotNetFractal.WPF
             }
         }
 
+        public void OnColorMap()
+        {
+            var dlg = new ColorMapWindow();
+            dlg.ShowDialog();
+        }
 
         public void OnSaveAs()
         {
             var saveFileDialog = new SaveFileDialog
             {
-                Filter = "JPeg Image|*.jpg|Bitmap Image|*.bmp",
+                Filter = "JPeg Image|*.jpg|Bitmap Image|*.bmp|PNG Image|*.png",
                 Title = "Save an Image File"
             };
 
@@ -205,12 +285,45 @@ namespace dotNetFractal.WPF
                         case 2:
                             m_bitmap.Save(fs, System.Drawing.Imaging.ImageFormat.Bmp);
                             break;
+
+                        case 3:
+                            m_bitmap.Save(fs, System.Drawing.Imaging.ImageFormat.Png);
+                            break;
                     }
 
                     fs.Close();
                 }
                 m_stitcher.UnlockMutex();
             }
+        }
+
+        public void OnShowColorMap()
+        {
+            var dlg = new ColorMapWindow();
+            dlg.ShowDialog();
+        }
+
+        public void ZoomToRectangle(double pixelX1, double pixelY1, double pixelX2, double pixelY2, double imageWidth, double imageHeight)
+        {
+            if (m_fractalArea == null || imageWidth == 0 || imageHeight == 0)
+                return;
+
+            var displayArea = m_fractalArea.GetDisplayArea((int)imageWidth, (int)imageHeight);
+
+            // Get the current fractal area bounds
+            double newMinX = displayArea.GetX((int)pixelX1);
+            double newMaxX = displayArea.GetX((int)pixelX2);
+            double newMinY = displayArea.GetY((int)pixelY1);
+            double newMaxY = displayArea.GetY((int)pixelY2);
+
+            // Update the fractal area
+            m_fractalArea.MinX = Math.Min(newMinX, newMaxX);
+            m_fractalArea.MaxX = Math.Max(newMinX, newMaxX);
+            m_fractalArea.MinY = Math.Min(newMinY, newMaxY);
+            m_fractalArea.MaxY = Math.Max(newMinY, newMaxY);
+
+            // Regenerate the fractal with the new area
+            NewFractal(true);
         }
     }
 }
