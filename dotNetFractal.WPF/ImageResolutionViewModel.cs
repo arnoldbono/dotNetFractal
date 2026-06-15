@@ -1,4 +1,5 @@
 ﻿using System;
+using dotNetFractal.WPF.ViewModels;
 using ReactiveUI;
 
 namespace dotNetFractal.WPF

@@ -11,49 +11,12 @@ namespace dotNetFractal.Logic
     /// The zoom level is n, meaning that it the original image has been subdivided (n-1) times.
     /// There are 2^(2 * (n-1)) FractalCachedImage at zoom level is n.
     /// </summary>
-    class FractalCachedImage
+    public class FractalCachedImage : IDisposable
     {
-        public const int Size = 127; // odd, and smaller than a byte
-
-        #region Members
-        private uint m_zoomLevel = 1;
+        private uint m_zoomLevel = 0;
         private UInt64 m_indexI = 0;
         private UInt64 m_indexJ = 0;
         private Image m_image = null;
-        #endregion
-
-        #region Constructors
-        public FractalCachedImage()
-        {
-            m_image = new Bitmap(Size, Size, PixelFormat.Format32bppArgb);
-        }
-
-        public FractalCachedImage(uint zoomLevel, UInt64 indexI, UInt64 indexJ)
-        {
-            m_zoomLevel = zoomLevel;
-            m_indexI = indexI;
-            m_indexJ = indexJ;
-            m_image = new Bitmap(Size, Size, PixelFormat.Format32bppArgb);
-        }
-
-        public FractalCachedImage(string folder, uint zoomLevel, UInt64 indexI, UInt64 indexJ)
-        {
-            m_zoomLevel = zoomLevel;
-            m_indexI = indexI;
-            m_indexJ = indexJ;
-            m_image = Load(folder);
-        }
-        #endregion
-
-        #region Properties
-        /// <summary>
-        /// The zoom level is n >= 1, meaning that it the original image has been subdivided (n-1) times.
-        /// </summary>
-        public uint ZoomLevel
-        {
-            get { return m_zoomLevel; }
-            set { m_zoomLevel = value; }
-        }
 
         /// <summary>
         /// The horizontal index.
@@ -75,6 +38,17 @@ namespace dotNetFractal.Logic
             set { m_indexJ = value; }
         }
 
+        /// <summary>
+        /// The zoom level is n >= 1, meaning that it the original image has been subdivided (n-1) times.
+        /// </summary>
+        public uint ZoomLevel
+        {
+            get { return m_zoomLevel; }
+            set { m_zoomLevel = value; }
+        }
+
+        public int Size { get; }
+
         public Image Image
         {
             get { return m_image; }
@@ -84,9 +58,29 @@ namespace dotNetFractal.Logic
         {
             get { return m_zoomLevel.ToString() + "_" + m_indexI.ToString() + "_" + m_indexJ.ToString() + ".fci"; }
         }
-        #endregion
 
-        #region Methods
+        public FractalCachedImage(int size) : this(0, 0, size, 0)
+        {
+        }
+
+        public FractalCachedImage(UInt64 indexI, UInt64 indexJ, int size, uint zoomLevel)
+        {
+            m_indexI = indexI;
+            m_indexJ = indexJ;
+            Size = size;
+            m_zoomLevel = zoomLevel;
+            m_image = new Bitmap(Size, Size, PixelFormat.Format32bppArgb);
+        }
+
+        public FractalCachedImage(string folder, uint zoomLevel, UInt64 indexI, UInt64 indexJ, int size)
+        {
+            m_zoomLevel = zoomLevel;
+            m_indexI = indexI;
+            m_indexJ = indexJ;
+            Size = size;
+            m_image = Load(folder);
+        }
+
         public void Save(string folder)
         {
             Debug.Assert(m_image != null);
@@ -97,6 +91,13 @@ namespace dotNetFractal.Logic
         {
             return Bitmap.FromFile(Path.Combine(folder, FileName));
         }
-        #endregion
+
+        public void Dispose()
+        {
+            m_image?.Dispose();
+            m_image = null;
+
+            GC.SuppressFinalize(this);
+        }
     }
 }

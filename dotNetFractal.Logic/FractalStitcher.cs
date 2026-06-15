@@ -77,7 +77,7 @@ namespace dotNetFractal.Logic
 
                     var fractal = m_fractalFunc();
                     fractal.Area = fractalArea;
-                    fractal.AreaPatch = new FractalAreaPatch(startIndexWidth, startIndexHeight, stopIndexWidth, stopIndexHeight);
+                    fractal.AreaPatch = new FractalAreaPatch(startIndexWidth, startIndexHeight, PatchSize);
                     patches.Add(fractal);
                 }
             }
@@ -146,6 +146,8 @@ namespace dotNetFractal.Logic
                 {
                     if (fractal.Stopped)
                     {
+                        UpdateBitmap(fractal);
+
                         LockMutex();
                         m_fractalsToUpdate.Add(fractal);
                         UnlockMutex();
@@ -195,6 +197,9 @@ namespace dotNetFractal.Logic
             m_fractalsToUpdate.Remove(fractal);
             UnlockMutex();
 
+            fractal.AreaPatch.Dispose();
+            fractal.AreaPatch = null;
+
             return true;
         }
 
@@ -210,26 +215,56 @@ namespace dotNetFractal.Logic
             Graphics grfx = Graphics.FromImage(bitmap);
             grfx.FillRectangle(new SolidBrush(Color.Azure), new Rectangle(0, 0, bitmap.Width, bitmap.Height));
 
-            var patches = GetPatches(Area);
+            //var patches = GetPatches(Area);
 
-            foreach (var fractal in patches)
+            //foreach (var fractal in patches)
+            //{
+            //    var fractalArea = fractal.Area;
+            //    var areaPatch = fractal.AreaPatch;
+
+            //    var width = Area.PixelsHorizontal;
+            //    var height = Area.PixelsVertical;
+
+            //    var fractalImage = areaPatch.FractalImage;
+            //    var image = (Bitmap)fractalImage.Image;
+            //    var size = fractalImage.Size;
+            //    Graphics grfx1 = Graphics.FromImage(image);
+            //    grfx1.FillRectangle(new SolidBrush(Color.Azure), areaPatch.GetSourceRectangle(width, height));
+
+            //    for (var i = 0; i < size && !Stop; i += size - 1)
+            //    {
+            //        for (var j = 0; j < size; j += size - 1)
+            //        {
+            //            var pixel = fractalArea.GetPixel(areaPatch.StartIndexWidth + i, areaPatch.StartIndexHeight + j);
+            //            if (pixel != null)
+            //            {
+            //                image.SetPixel(i, j, Color.Black);
+            //            }
+            //        }
+            //    }
+
+            //    grfx.DrawImage(image, areaPatch.GetTargetRectangle(width, height), areaPatch.GetSourceRectangle(width, height), GraphicsUnit.Pixel);
+            //}
+        }
+
+        private void UpdateBitmap(IFractal fractal)
+        {
+            var fractalArea = fractal.Area;
+            var areaPatch = fractal.AreaPatch;
+
+            var fractalImage = areaPatch.FractalImage;
+            var image = (Bitmap)fractalImage.Image;
+            var size = fractalImage.Size;
+
+            for (var i = 0; i < size && !Stop; ++i)
             {
-                var fractalArea = fractal.Area;
-                var areaPatch = fractal.AreaPatch;
-                var startIndexWidth = areaPatch.StartIndexWidth;
-                var stopIndexWidth = areaPatch.StopIndexWidth;
-                var startIndexHeight = areaPatch.StartIndexHeight;
-                var stopIndexHeight = areaPatch.StopIndexHeight;
-
-                for (var i = startIndexWidth; i < stopIndexWidth && !Stop; i += stopIndexWidth - 1)
+                for (var j = 0; j < size && !Stop; ++j)
                 {
-                    for (var j = startIndexHeight; j < stopIndexHeight; j += stopIndexWidth - 1)
+                    var pixel = fractalArea.GetPixel(areaPatch.StartIndexWidth + i, areaPatch.StartIndexHeight + j);
+                    if (pixel != null)
                     {
-                        var pixel = fractalArea.GetPixel(i, j);
-                        if (pixel != null)
-                        {
-                            bitmap.SetPixel(i, j, Color.Black);
-                        }
+                        image.SetPixel(i, j,
+                            fractal.ComputeColor(pixel.Iteration, pixel.PreviousRadius, pixel.Radius));
                     }
                 }
             }
@@ -237,25 +272,14 @@ namespace dotNetFractal.Logic
 
         public void UpdateBitmap(Bitmap bitmap, IFractal fractal)
         {
-            var fractalArea = fractal.Area;
             var areaPatch = fractal.AreaPatch;
-            var startIndexWidth = areaPatch.StartIndexWidth;
-            var stopIndexWidth = areaPatch.StopIndexWidth;
-            var startIndexHeight = areaPatch.StartIndexHeight;
-            var stopIndexHeight = areaPatch.StopIndexHeight;
 
-            for (var i = startIndexWidth; i < stopIndexWidth && !Stop; ++i)
-            {
-                for (var j = startIndexHeight; j < stopIndexHeight; ++j)
-                {
-                    var pixel = fractalArea.GetPixel(i, j);
-                    if (pixel != null)
-                    {
-                        bitmap.SetPixel(i, j,
-                            fractal.ComputeColor(pixel.Iteration, pixel.PreviousRadius, pixel.Radius));
-                    }
-                }
-            }
+            var fractalImage = areaPatch.FractalImage;
+            var image = (Bitmap)fractalImage.Image;
+            var size = fractalImage.Size;
+
+            Graphics grfx = Graphics.FromImage(bitmap);
+            grfx.DrawImage(image, areaPatch.GetTargetRectangle(bitmap.Width, bitmap.Height), areaPatch.GetSourceRectangle(bitmap.Width, bitmap.Height), GraphicsUnit.Pixel);
         }
     }
 }

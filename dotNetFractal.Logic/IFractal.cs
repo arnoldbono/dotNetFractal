@@ -18,7 +18,9 @@ namespace dotNetFractal.Logic
 
 		int MaxIterations { get; set; }
 
-		Color ComputeColor(int iteration, double previousRadius, double radius);
+        bool SmoothColoring { get; set; }
+
+        Color ComputeColor(int iteration, double previousRadius, double radius);
 
 		void GetColor(int index, out int red, out int green, out int blue);
 

@@ -3,7 +3,7 @@ using ReactiveUI;
 using System;
 using System.Collections.Generic;
 
-namespace dotNetFractal.WPF
+namespace dotNetFractal.WPF.ViewModels
 {
     public class FractalAreaViewModel : BaseViewModel
     {

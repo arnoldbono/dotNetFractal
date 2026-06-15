@@ -31,6 +31,11 @@ namespace dotNetFractal.Logic
 
                 for (var j = startIndexHeight; j < stopIndexHeight; ++j)
                 {
+                    if (!Area.Pixels.Inside(i, j))
+                    {
+                        continue;
+                    }
+
                     double Cy = displayArea.GetY(j);
                     double x = Cx;
                     double y = Cy;

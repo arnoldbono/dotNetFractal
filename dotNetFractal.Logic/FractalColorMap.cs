@@ -23,17 +23,19 @@ namespace dotNetFractal.Logic
             get
             {
                 var color1 = Colors[0];
+                var size = Colors.Length;
                 var color2 = color1;
-                int i = 0;
-                while (true)
+
+                for (int i = 1; i < size; i++)
                 {
                     color1 = color2;
-                    color2 = Colors[++i];
+                    color2 = Colors[i];
                     if (color2.Fraction >= fraction)
                     {
                         break;
                     }
                 }
+
                 var color = new FractalColor();
                 double factor = (double)(color2.Fraction - fraction) / (double)(color2.Fraction - color1.Fraction);
                 color.Red = (int)((double)color2.Red + (double)(color1.Red - color2.Red) * factor);
@@ -44,7 +46,9 @@ namespace dotNetFractal.Logic
             }
         }
 
-        public FractalColor[] Colors =
+        public FractalColor[] Colors = DefaultColors.Clone() as FractalColor[];
+
+        public static readonly FractalColor[] DefaultColors =
         {
             new(  3,  0,  0, 0.0),
             new( 30,  0,  0, 1.0 / 255.0),

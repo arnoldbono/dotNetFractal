@@ -9,7 +9,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using dotNetFractal.Logic;
 
-namespace dotNetFractal.WPF
+namespace dotNetFractal.WPF.ViewModels
 {
     public class MainViewModel : BaseViewModel
     {
@@ -18,9 +18,11 @@ namespace dotNetFractal.WPF
         private RelayCommand<EventArgs> m_fractalAreaCommand;
         private RelayCommand<EventArgs> m_colorMapCommand;
         private RelayCommand<EventArgs> m_saveAsCommand;
+        private RelayCommand<EventArgs> m_fractalSettingsCommand;
 
         private ImageResolutionViewModel m_imageResolution;
         private FractalAreaViewModel m_fractalArea;
+        private FractalSettingsViewModel m_fractalSettings;
 
         private FractalStitcher m_stitcher;
 
@@ -94,6 +96,8 @@ namespace dotNetFractal.WPF
         public ICommand ColorMapCommand => m_colorMapCommand ??= new RelayCommand<EventArgs>(param => OnColorMap());
 
         public ICommand SaveAsCommand => m_saveAsCommand ??= new RelayCommand<EventArgs>(param => OnSaveAs());
+
+        public ICommand FractalSettingsCommand => m_fractalSettingsCommand ??= new RelayCommand<EventArgs>(param => OnFractalSettings());
 
         private void UpdateBitmap()
         {
@@ -198,14 +202,19 @@ namespace dotNetFractal.WPF
             m_imageResolution = new ImageResolutionViewModel
             {
                 SelectedResolution = ResolutionEnum.Custom,
-                Width = 128,
-                Height = 128
+                Width = 512,
+                Height = 512
             };
             m_fractalArea = new FractalAreaViewModel();
-            NewFractal();
+            m_fractalSettings = new FractalSettingsViewModel
+            {
+                MaxIterations = 256,
+                MaxColorSteps = 16
+            };
+            StartFractalComputation();
         }
 
-        private void NewFractal(bool force = false)
+        private void StartFractalComputation(bool force = false)
         {
             if (force || m_stitcher == null)
             {
@@ -215,7 +224,17 @@ namespace dotNetFractal.WPF
                 Height = m_imageResolution.Height;
 
                 var displayArea = m_fractalArea.GetDisplayArea(Width, Height);
-                m_stitcher = new FractalStitcher(() => new FractalMandelbrot(), displayArea);
+                m_stitcher = new FractalStitcher(() =>
+                {
+                    var fractal = new FractalMandelbrot();
+                    if (m_fractalSettings != null)
+                    {
+                        fractal.MaxIterations = m_fractalSettings.MaxIterations;
+                        fractal.MaxColors = m_fractalSettings.MaxColorSteps;
+                        fractal.SmoothColoring = m_fractalSettings.SmoothColoring;
+                    }
+                    return fractal;
+                }, displayArea);
 
                 if (MainImage != null)
                 {
@@ -236,7 +255,7 @@ namespace dotNetFractal.WPF
 
             if (dlg.ShowDialog() == true)
             {
-                NewFractal(true);
+                StartFractalComputation(true);
             }
         }
 
@@ -249,14 +268,30 @@ namespace dotNetFractal.WPF
 
             if (dlg.ShowDialog() == true)
             {
-                NewFractal(true);
+                StartFractalComputation(true);
             }
         }
 
         public void OnColorMap()
         {
             var dlg = new ColorMapWindow();
-            dlg.ShowDialog();
+            if (dlg.ShowDialog() == true)
+            {
+                StartFractalComputation(true);
+            }
+        }
+
+        public void OnFractalSettings()
+        {
+            var dlg = new FractalSettingsWindow
+            {
+                DataContext = m_fractalSettings
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                StartFractalComputation(true);
+            }
         }
 
         public void OnSaveAs()
@@ -323,7 +358,7 @@ namespace dotNetFractal.WPF
             m_fractalArea.MaxY = Math.Max(newMinY, newMaxY);
 
             // Regenerate the fractal with the new area
-            NewFractal(true);
+            StartFractalComputation(true);
         }
 
         public void ZoomOutFromRectangle(double pixelX1, double pixelY1, double pixelX2, double pixelY2, double imageWidth, double imageHeight)
@@ -361,7 +396,7 @@ namespace dotNetFractal.WPF
             m_fractalArea.MaxY = centerFractalY + newHeight / 2.0;
 
             // Regenerate the fractal with the new area
-            NewFractal(true);
+            StartFractalComputation(true);
         }
     }
 }

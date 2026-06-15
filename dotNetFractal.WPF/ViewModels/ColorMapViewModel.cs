@@ -6,7 +6,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using dotNetFractal.Logic;
 
-namespace dotNetFractal.WPF
+namespace dotNetFractal.WPF.ViewModels
 {
     /// <summary>
     /// ViewModel for the Color Map Window that generates a bitmap showing the FractalColorMap
@@ -18,6 +18,7 @@ namespace dotNetFractal.WPF
         private EditableFractalColor m_selectedColor;
         private RelayCommand<object> m_addColorCommand;
         private RelayCommand<object> m_deleteColorCommand;
+        private RelayCommand<object> m_resetColorCommand;
 
         public ImageSource ColorMapImage
         {
@@ -54,6 +55,8 @@ namespace dotNetFractal.WPF
         public ICommand AddColorCommand => m_addColorCommand ??= new RelayCommand<object>(_ => AddColor(), _ => CanAddColor());
 
         public ICommand DeleteColorCommand => m_deleteColorCommand ??= new RelayCommand<object>(_ => DeleteColor(), _ => CanDeleteColor());
+
+        public ICommand ResetColorCommand => m_resetColorCommand ??= new RelayCommand<object>(_ => ResetColors());
 
         public ColorMapViewModel()
         {
@@ -112,7 +115,7 @@ namespace dotNetFractal.WPF
                     bitmap.SetPixel(x, 0, color);
                 }
 
-                // Convert System.Drawing.Bitmap to WPF ImageSource
+                // Convert System.Drawing.FractalImage to WPF ImageSource
                 return ConvertBitmapToBitmapImage.Convert(bitmap);
             }
         }
@@ -199,6 +202,33 @@ namespace dotNetFractal.WPF
         {
             // Update the underlying FractalColorMap with all current colors
             m_colorMap.Colors = [.. Colors.Select(c => c.ToFractalColor())];
+
+            // Regenerate the bitmap
+            ColorMapImage = GenerateColorMapBitmap();
+        }
+
+        private void ResetColors()
+        {
+            // Clear existing colors
+            foreach (var color in Colors)
+            {
+                color.ColorChanged -= OnColorChanged;
+            }
+            Colors.Clear();
+
+            // Reset the underlying color map to default colors
+            m_colorMap.Colors = FractalColorMap.DefaultColors.Clone() as FractalColor[];
+
+            // Create editable wrappers for the default colors
+            foreach (var color in m_colorMap.Colors)
+            {
+                var editableColor = new EditableFractalColor(color);
+                editableColor.ColorChanged += OnColorChanged;
+                Colors.Add(editableColor);
+            }
+
+            // Clear selection
+            SelectedColor = null;
 
             // Regenerate the bitmap
             ColorMapImage = GenerateColorMapBitmap();

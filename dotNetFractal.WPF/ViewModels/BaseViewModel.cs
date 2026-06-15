@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
 
-namespace dotNetFractal.WPF
+namespace dotNetFractal.WPF.ViewModels
 {
     public class BaseViewModel : INotifyPropertyChanged
     {

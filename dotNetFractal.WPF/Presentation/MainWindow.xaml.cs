@@ -1,9 +1,10 @@
-﻿using System;
+﻿using dotNetFractal.WPF.ViewModels;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace dotNetFractal.WPF
+namespace dotNetFractal.WPF.Presentation
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml

@@ -4,10 +4,11 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:dotNetFractal.WPF"
+        xmlns:vm="clr-namespace:dotNetFractal.WPF.ViewModels"
         mc:Ignorable="d"
         Title="Fractal Color Map" Height="420" Width="450" ResizeMode="CanResize">
     <Window.DataContext>
-        <local:ColorMapViewModel />
+        <vm:ColorMapViewModel />
     </Window.DataContext>
     <Grid Margin="10">
         <Grid.RowDefinitions>
@@ -63,7 +64,11 @@
                             Command="{Binding AddColorCommand}"/>
                     <Button Content="Delete" 
                             Width="60"
+                            Margin="0,0,0,5"
                             Command="{Binding DeleteColorCommand}"/>
+                    <Button Content="Reset" 
+                            Width="60"
+                            Command="{Binding ResetColorCommand}"/>
                 </StackPanel>
             </Grid>
         </GroupBox>

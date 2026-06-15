@@ -13,8 +13,9 @@ namespace dotNetFractal.Logic
         private FractalArea m_area = null;
         private FractalAreaPatch m_areaPatch = null;
         private double m_maxRadius = 4.0;
-        private int m_maxIterations = 4096;
-        private int m_maxColors = 256;
+        private int m_maxIterations = 256;
+        private int m_maxColors = 16;
+        private bool m_smoothColoring = true;
 
         public FractalArea Area
         {
@@ -51,10 +52,17 @@ namespace dotNetFractal.Logic
             get { return m_maxIterations; }
             set { m_maxIterations = value; }
         }
+
         public int MaxColors
         {
             get { return m_maxColors; }
             set { m_maxColors = value; }
+        }
+
+        public bool SmoothColoring
+        {
+            get { return m_smoothColoring; }
+            set { m_smoothColoring = value; }
         }
 
         public Fractal()
@@ -68,7 +76,7 @@ namespace dotNetFractal.Logic
 
             GetColor(iteration, out var red, out var green, out var blue);
 
-            if (iteration != 0)
+            if (iteration != 0 && SmoothColoring)
             {
                 // PRE: radius > MaxRadius (otherwise the fractal computation loop should not have stopped)
                 var fraction = Math.Sqrt((MaxRadius - previousRadius) / (radius - previousRadius));

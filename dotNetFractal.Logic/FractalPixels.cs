@@ -18,14 +18,14 @@ namespace dotNetFractal.Logic
             m_pixels = new FractalPixel[Width, Height];
         }
 
+        public bool Inside(int i, int j)
+        {
+            return i >= 0 && i < Width && j >= 0 && j < Height;
+        }
+
         public FractalPixel GetPixel(int i, int j)
         {
-            if (i < 0 || i >= Width || j < 0 || j >= Height)
-            {
-                return null;
-            }
-
-            return m_pixels[i, j];
+            return Inside(i, j) ? m_pixels[i, j] : null;
         }
 
         public void SetPixel(int i, int j, FractalPixel pixel)

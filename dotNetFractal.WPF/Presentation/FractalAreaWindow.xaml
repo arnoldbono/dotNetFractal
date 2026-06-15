@@ -4,10 +4,11 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:dotNetFractal.WPF"
+        xmlns:vm="clr-namespace:dotNetFractal.WPF.ViewModels"
         mc:Ignorable="d"
         Title="Fractal Area" Height="220" Width="240" ResizeMode="NoResize">
     <Window.DataContext>
-        <local:FractalAreaViewModel />
+        <vm:FractalAreaViewModel />
     </Window.DataContext>
     <Grid>
         <Grid.RowDefinitions>
