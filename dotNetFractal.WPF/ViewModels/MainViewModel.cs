@@ -8,6 +8,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using dotNetFractal.Logic;
+using System.Windows;
 
 namespace dotNetFractal.WPF.ViewModels
 {
@@ -19,6 +20,7 @@ namespace dotNetFractal.WPF.ViewModels
         private RelayCommand<EventArgs> m_colorMapCommand;
         private RelayCommand<EventArgs> m_saveAsCommand;
         private RelayCommand<EventArgs> m_fractalSettingsCommand;
+        private RelayCommand<EventArgs> m_copyCommand;
 
         private ImageResolutionViewModel m_imageResolution;
         private FractalAreaViewModel m_fractalArea;
@@ -98,6 +100,8 @@ namespace dotNetFractal.WPF.ViewModels
         public ICommand SaveAsCommand => m_saveAsCommand ??= new RelayCommand<EventArgs>(param => OnSaveAs());
 
         public ICommand FractalSettingsCommand => m_fractalSettingsCommand ??= new RelayCommand<EventArgs>(param => OnFractalSettings());
+
+        public ICommand CopyCommand => m_copyCommand ??= new RelayCommand<EventArgs>(param => OnCopy());
 
         private void UpdateBitmap()
         {
@@ -292,6 +296,10 @@ namespace dotNetFractal.WPF.ViewModels
             {
                 StartFractalComputation(true);
             }
+        }
+        public void OnCopy()
+        {
+            Clipboard.SetImage((System.Windows.Media.Imaging.BitmapSource)MainImage);
         }
 
         public void OnSaveAs()

@@ -17,7 +17,7 @@
                 <MenuItem Header="Save _As" Command="{Binding SaveAsCommand}" />
             </MenuItem>
             <MenuItem Header="_Edit">
-                <MenuItem Header="_Copy" />
+                <MenuItem Header="_Copy" Command="{Binding CopyCommand}"/>
             </MenuItem>
             <MenuItem Header="_Preferences">
                 <MenuItem Header="_Fractal Area" Command="{Binding FractalAreaCommand}" />
