@@ -6,7 +6,13 @@
         xmlns:local="clr-namespace:dotNetFractal.WPF"
         xmlns:vm="clr-namespace:dotNetFractal.WPF.ViewModels"
         mc:Ignorable="d"
-        Title="Fractal Area" Height="220" Width="240" ResizeMode="NoResize">
+        Title="Fractal Area"
+        SizeToContent="WidthAndHeight" 
+        MinWidth="240" 
+        MinHeight="220" 
+        MaxWidth="400" 
+        MaxHeight="300" 
+        ResizeMode="NoResize">
     <Window.DataContext>
         <vm:FractalAreaViewModel />
     </Window.DataContext>
@@ -27,14 +33,14 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <Label Grid.Column="0" Grid.Row="0" Content="Min X:"  VerticalAlignment="Center"/>
-            <TextBox Grid.Column="1" Grid.Row="0" TextWrapping="Wrap" Text="{Binding MinX}" Width="120" HorizontalAlignment="Left" VerticalAlignment="Center" />
-            <Label Grid.Column="0" Grid.Row="1" Content="Min Y:"  VerticalAlignment="Center"/>
-            <TextBox Grid.Column="1" Grid.Row="1" TextWrapping="Wrap" Text="{Binding MinY}" Width="120" HorizontalAlignment="Left" VerticalAlignment="Center" />
-            <Label Grid.Column="0" Grid.Row="2" Content="Max X:"  VerticalAlignment="Center"/>
-            <TextBox Grid.Column="1" Grid.Row="2" TextWrapping="Wrap" Text="{Binding MaxX}" Width="120" HorizontalAlignment="Left" VerticalAlignment="Center" />
-            <Label Grid.Column="0" Grid.Row="3" Content="Max Y:"  VerticalAlignment="Center"/>
-            <TextBox Grid.Column="1" Grid.Row="3" TextWrapping="Wrap" Text="{Binding MaxY}" Width="120" HorizontalAlignment="Left" VerticalAlignment="Center" />
+            <Label Grid.Column="0" Grid.Row="0" Content="Center X:"  VerticalAlignment="Center"/>
+            <TextBox Grid.Column="1" Grid.Row="0" TextWrapping="Wrap" Text="{Binding CenterX}" Width="120" HorizontalAlignment="Left" VerticalAlignment="Center" />
+            <Label Grid.Column="0" Grid.Row="1" Content="Center Y:"  VerticalAlignment="Center"/>
+            <TextBox Grid.Column="1" Grid.Row="1" TextWrapping="Wrap" Text="{Binding CenterY}" Width="120" HorizontalAlignment="Left" VerticalAlignment="Center" />
+            <Label Grid.Column="0" Grid.Row="2" Content="Width:"  VerticalAlignment="Center"/>
+            <TextBox Grid.Column="1" Grid.Row="2" TextWrapping="Wrap" Text="{Binding Width}" Width="120" HorizontalAlignment="Left" VerticalAlignment="Center" />
+            <Label Grid.Column="0" Grid.Row="3" Content="Height:"  VerticalAlignment="Center"/>
+            <TextBox Grid.Column="1" Grid.Row="3" TextWrapping="Wrap" Text="{Binding Height}" Width="120" HorizontalAlignment="Left" VerticalAlignment="Center" />
         </Grid>
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>

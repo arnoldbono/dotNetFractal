@@ -118,7 +118,7 @@ namespace dotNetFractal.WPF.ViewModels
                 (m_bitmap.Height != height))
             {
                 m_bitmap = m_stitcher.GetBitmap(width, height);
-                MainImage = ConvertBitmapToBitmapImage.Convert(m_bitmap);
+                MainImage = ConvertBitmapToImageSource.Clone(m_bitmap);
             }
 
             // POST: m_bitmap != null
@@ -127,12 +127,12 @@ namespace dotNetFractal.WPF.ViewModels
                 (MainImage.Width != m_bitmap.Width) ||
                 (MainImage.Height != m_bitmap.Height))
             {
-                MainImage = ConvertBitmapToBitmapImage.Convert(m_bitmap);
+                MainImage = ConvertBitmapToImageSource.Clone(m_bitmap);
             }
 
             if (m_stitcher.Update(m_bitmap))
             {
-                MainImage = ConvertBitmapToBitmapImage.Convert(m_bitmap);
+                MainImage = ConvertBitmapToImageSource.ConvertFast(m_bitmap);
             }
         }
 
@@ -243,7 +243,7 @@ namespace dotNetFractal.WPF.ViewModels
                 if (MainImage != null)
                 {
                     m_bitmap = m_stitcher.GetBitmap(Width, Height);
-                    MainImage = ConvertBitmapToBitmapImage.Convert(m_bitmap);
+                    MainImage = ConvertBitmapToImageSource.ConvertFast(m_bitmap);
                 }
 
                 m_stitcher.StartThread();
@@ -306,7 +306,7 @@ namespace dotNetFractal.WPF.ViewModels
         {
             var saveFileDialog = new SaveFileDialog
             {
-                Filter = "JPeg Image|*.jpg|Bitmap Image|*.bmp|PNG Image|*.png",
+                Filter = "PNG Image|*.png|JPeg Image|*.jpg|Bitmap Image|*.bmp",
                 Title = "Save an Image File"
             };
 
@@ -354,16 +354,16 @@ namespace dotNetFractal.WPF.ViewModels
             var displayArea = m_fractalArea.GetDisplayArea((int)imageWidth, (int)imageHeight);
 
             // Get the current fractal area bounds
-            double newMinX = displayArea.GetX((int)pixelX1);
-            double newMaxX = displayArea.GetX((int)pixelX2);
-            double newMinY = displayArea.GetY((int)pixelY1);
-            double newMaxY = displayArea.GetY((int)pixelY2);
+            //double newMinX = displayArea.GetX((int)pixelX1);
+            //double newMaxX = displayArea.GetX((int)pixelX2);
+            //double newMinY = displayArea.GetY((int)pixelY1);
+            //double newMaxY = displayArea.GetY((int)pixelY2);
 
             // Update the fractal area
-            m_fractalArea.MinX = Math.Min(newMinX, newMaxX);
-            m_fractalArea.MaxX = Math.Max(newMinX, newMaxX);
-            m_fractalArea.MinY = Math.Min(newMinY, newMaxY);
-            m_fractalArea.MaxY = Math.Max(newMinY, newMaxY);
+            m_fractalArea.CenterX = displayArea.GetCenterX((int)pixelX1, (int)pixelX2);
+            m_fractalArea.CenterY = displayArea.GetCenterY((int)pixelY1, (int)pixelY2);
+            m_fractalArea.Width = displayArea.GetWidth((int)pixelX1, (int)pixelX2);
+            m_fractalArea.Height = displayArea.GetHeight((int)pixelY1, (int)pixelY2);
 
             // Regenerate the fractal with the new area
             StartFractalComputation(true);
@@ -390,18 +390,18 @@ namespace dotNetFractal.WPF.ViewModels
             double zoomOutRatio = Math.Min(widthRatio, heightRatio);
 
             // Calculate the current fractal area dimensions
-            double currentWidth = m_fractalArea.MaxX - m_fractalArea.MinX;
-            double currentHeight = m_fractalArea.MaxY - m_fractalArea.MinY;
+            double currentWidth = m_fractalArea.Width;
+            double currentHeight = m_fractalArea.Height;
 
             // Calculate the new fractal area dimensions (zoomed out)
             double newWidth = currentWidth * zoomOutRatio;
             double newHeight = currentHeight * zoomOutRatio;
 
             // Set the new fractal area centered on the selection rectangle center
-            m_fractalArea.MinX = centerFractalX - newWidth / 2.0;
-            m_fractalArea.MaxX = centerFractalX + newWidth / 2.0;
-            m_fractalArea.MinY = centerFractalY - newHeight / 2.0;
-            m_fractalArea.MaxY = centerFractalY + newHeight / 2.0;
+            m_fractalArea.CenterX = centerFractalX;
+            m_fractalArea.CenterY = centerFractalY;
+            m_fractalArea.Width = newWidth;
+            m_fractalArea.Height = newHeight;
 
             // Regenerate the fractal with the new area
             StartFractalComputation(true);

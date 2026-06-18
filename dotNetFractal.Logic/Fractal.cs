@@ -105,5 +105,30 @@ namespace dotNetFractal.Logic
         {
             base.StartThread(threadPoolExecutor);
         }
+
+        protected void UpdateAreaPatchFractalImage()
+        {
+            var fractalArea = Area;
+            var areaPatch = AreaPatch;
+
+            var fractalImage = areaPatch.FractalImage;
+            var image = (Bitmap)fractalImage.Image;
+            var size = fractalImage.Size;
+
+            for (var i = 0; i < size && !Stop; ++i)
+            {
+                for (var j = 0; j < size && !Stop; ++j)
+                {
+                    var pixel = fractalArea.GetPixel(areaPatch.StartIndexWidth + i, areaPatch.StartIndexHeight + j);
+                    if (pixel != null)
+                    {
+                        image.SetPixel(i, j,
+                            ComputeColor(pixel.Iteration, pixel.PreviousRadius, pixel.Radius));
+                    }
+                }
+            }
+        }
+
+
     }
 }

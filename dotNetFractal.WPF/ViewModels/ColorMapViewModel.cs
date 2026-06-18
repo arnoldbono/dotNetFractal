@@ -116,7 +116,7 @@ namespace dotNetFractal.WPF.ViewModels
                 }
 
                 // Convert System.Drawing.FractalImage to WPF ImageSource
-                return ConvertBitmapToBitmapImage.Convert(bitmap);
+                return ConvertBitmapToImageSource.Clone(bitmap);
             }
         }
 

@@ -50,6 +50,26 @@ namespace dotNetFractal.Logic
             //Height = height;
         }
 
+        public double GetCenterX(int i1, int i2)
+        {
+            return CenterX + ((double)(i1 + i2 - PixelsHorizontal) * Width / (double)PixelsHorizontal) / 2.0;
+        }
+
+        public double GetCenterY(int j1, int j2)
+        {
+            return CenterY + ((double)(PixelsVertical - (j1 + j2)) * Height / (double)PixelsVertical) / 2.0;
+        }
+
+        public double GetWidth(int i1, int i2)
+        {
+            return Math.Abs((double)(i2 - i1) * Width / (double)PixelsHorizontal);
+        }
+
+        public double GetHeight(int j1, int j2)
+        {
+            return Math.Abs((double)(j2 - j1) * Height / (double)PixelsVertical);
+        }
+
         public double GetX(int i)
         {
             return CenterX + (double)(i - PixelsHorizontal / 2) * Width / (double)PixelsHorizontal;

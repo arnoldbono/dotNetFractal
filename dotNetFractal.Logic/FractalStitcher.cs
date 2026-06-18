@@ -121,6 +121,8 @@ namespace dotNetFractal.Logic
                 });
             }
 
+            int fractalCount = 0;
+
             while (!Stop)
             {
                 while (startedFractals.Count < maxConcurrentThreads)
@@ -146,10 +148,9 @@ namespace dotNetFractal.Logic
                 {
                     if (fractal.Stopped)
                     {
-                        UpdateBitmap(fractal);
-
                         LockMutex();
                         m_fractalsToUpdate.Add(fractal);
+                        ++fractalCount;
                         UnlockMutex();
 
                         startedFractals.Remove(fractal);
@@ -158,9 +159,10 @@ namespace dotNetFractal.Logic
                     }
                 }
 
-                if (fractalsStopped)
+                if (fractalsStopped && fractalCount >= 4)
                 {
-                    m_bitmapUpdateEvent.Set();
+                    m_bitmapUpdateEvent.Set(); // Wake up the main thread to update the bitmap
+                    fractalCount = 0;
                 }
 
                 if (startedFractals.Count == 0 && waitingFractals.Count == 0)
@@ -182,25 +184,32 @@ namespace dotNetFractal.Logic
 
         public bool Update(Bitmap bitmap)
         {
-            LockMutex();
-            var fractal = m_fractalsToUpdate.FirstOrDefault();
-            UnlockMutex();
+            var updated = false;
 
-            if (fractal == null)
+            while (true)
             {
-                return false;
+                LockMutex();
+                var fractal = m_fractalsToUpdate.FirstOrDefault();
+                UnlockMutex();
+
+                if (fractal == null)
+                {
+                    break;
+                }
+
+                UpdateBitmap(bitmap, fractal);
+
+                LockMutex();
+                m_fractalsToUpdate.Remove(fractal);
+                UnlockMutex();
+
+                fractal.AreaPatch.Dispose();
+                fractal.AreaPatch = null;
+
+                updated = true;
             }
 
-            UpdateBitmap(bitmap, fractal);
-
-            LockMutex();
-            m_fractalsToUpdate.Remove(fractal);
-            UnlockMutex();
-
-            fractal.AreaPatch.Dispose();
-            fractal.AreaPatch = null;
-
-            return true;
+            return updated;
         }
 
         public Bitmap GetBitmap(int width, int height)
@@ -245,29 +254,6 @@ namespace dotNetFractal.Logic
 
             //    grfx.DrawImage(image, areaPatch.GetTargetRectangle(width, height), areaPatch.GetSourceRectangle(width, height), GraphicsUnit.Pixel);
             //}
-        }
-
-        private void UpdateBitmap(IFractal fractal)
-        {
-            var fractalArea = fractal.Area;
-            var areaPatch = fractal.AreaPatch;
-
-            var fractalImage = areaPatch.FractalImage;
-            var image = (Bitmap)fractalImage.Image;
-            var size = fractalImage.Size;
-
-            for (var i = 0; i < size && !Stop; ++i)
-            {
-                for (var j = 0; j < size && !Stop; ++j)
-                {
-                    var pixel = fractalArea.GetPixel(areaPatch.StartIndexWidth + i, areaPatch.StartIndexHeight + j);
-                    if (pixel != null)
-                    {
-                        image.SetPixel(i, j,
-                            fractal.ComputeColor(pixel.Iteration, pixel.PreviousRadius, pixel.Radius));
-                    }
-                }
-            }
         }
 
         public void UpdateBitmap(Bitmap bitmap, IFractal fractal)

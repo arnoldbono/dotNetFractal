@@ -62,7 +62,9 @@ namespace dotNetFractal.Logic
                     Area.Pixels.SetPixel(i, j, new FractalPixel(teller, Radius2, PrevRadius2));
                 }
             }
-            
+
+            UpdateAreaPatchFractalImage();
+
             Stopped = true;
         }
     }

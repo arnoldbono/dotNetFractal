@@ -2,6 +2,7 @@
 using ReactiveUI;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 
 namespace dotNetFractal.WPF.ViewModels
 {
@@ -20,77 +21,84 @@ namespace dotNetFractal.WPF.ViewModels
             new("Plate 9",  -0.745464,  0.112967, -0.745388, 0.113030)
         ];
         
-        private double m_minX;
-        private double m_minY;
-        private double m_maxX;
-        private double m_maxY;
+        private double m_centerX;
+        private double m_centerY;
+        private double m_width;
+        private double m_height;
         private int m_selectedPlate;
 
         public List<FractalPlate> Plates => m_plates;
 
         public DisplayArea GetDisplayArea(int width, int height)
         {
-            return new DisplayArea((MaxX + MinX) / 2.0, (MaxY + MinY) / 2.0, MaxX - MinX, MaxY - MinY, width, height);
+            return new DisplayArea(CenterX, CenterY, Width, Height, width, height);
         }
 
-        public double MinX
+        public double CenterX
         {
-            get => m_minX;
+            get => m_centerX;
             set
             {
-                if (m_minX == value)
+                if (m_centerX == value)
                 {
                     return;
                 }
 
-                m_minX = value;
+                m_centerX = value;
                 OnPropertyChanged();
             }
         }
 
-        public double MinY
+        public double CenterY
         {
-            get => m_minY;
+            get => m_centerY;
             set
             {
-                if (m_minY == value)
+                if (m_centerY == value)
                 {
                     return;
                 }
 
-                m_minY = value;
+                m_centerY = value;
                 OnPropertyChanged();
             }
         }
 
-        public double MaxX
+        public double Width
         {
-            get => m_maxX;
+            get => m_width;
             set
             {
-                if (m_maxX == value)
+                if (m_width == value)
                 {
                     return;
                 }
 
-                m_maxX = value;
+                m_width = value;
                 OnPropertyChanged();
             }
         }
 
-        public double MaxY
+        public double Height
         {
-            get => m_maxY;
+            get => m_height;
             set
             {
-                if (m_maxY == value)
+                if (m_height == value)
                 {
                     return;
                 }
-
-                m_maxY = value;
+                m_height = value;
                 OnPropertyChanged();
             }
+        }
+
+        public void GetRectangle(out double minX, out double minY, out double width, out double height)
+        {
+            minX = CenterX - Width / 2.0;
+            minY = CenterY - Height / 2.0;
+            width = Width;
+            height = Height;
         }
 
         public int SelectedPlate
@@ -116,10 +124,10 @@ namespace dotNetFractal.WPF.ViewModels
         private void OnSelectedPlate(int plateIndex)
         {
             var plate = Plates[plateIndex];
-            MinX = plate.MinX;
-            MaxX = plate.MaxX;
-            MinY = plate.MinY;
-            MaxY = plate.MaxY;
+            CenterX = (plate.MinX + plate.MaxX) / 2.0;
+            CenterY = (plate.MinY + plate.MaxY) / 2.0;
+            Width = plate.MaxX - plate.MinX;
+            Height = plate.MaxY - plate.MinY;
         }
     }
 }
