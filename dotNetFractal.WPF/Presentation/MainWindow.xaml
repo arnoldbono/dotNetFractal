@@ -10,6 +10,10 @@
     <Window.DataContext>
         <vm:MainViewModel />
     </Window.DataContext>
+    <Window.InputBindings>
+        <KeyBinding Command="{Binding GoBackCommand}" Key="Z" Modifiers="Ctrl" />
+        <KeyBinding Command="{Binding GoForwardCommand}" Key="Y" Modifiers="Ctrl" />
+    </Window.InputBindings>
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
@@ -17,6 +21,9 @@
                 <MenuItem Header="Save _As" Command="{Binding SaveAsCommand}" />
             </MenuItem>
             <MenuItem Header="_Edit">
+                <MenuItem Header="_Undo (Go Back)" Command="{Binding GoBackCommand}" InputGestureText="Ctrl+Z"/>
+                <MenuItem Header="_Redo (Go Forward)" Command="{Binding GoForwardCommand}" InputGestureText="Ctrl+Y"/>
+                <Separator />
                 <MenuItem Header="_Copy" Command="{Binding CopyCommand}"/>
             </MenuItem>
             <MenuItem Header="_Preferences">

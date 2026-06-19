@@ -21,12 +21,17 @@ namespace dotNetFractal.WPF.ViewModels
         private RelayCommand<EventArgs> m_saveAsCommand;
         private RelayCommand<EventArgs> m_fractalSettingsCommand;
         private RelayCommand<EventArgs> m_copyCommand;
+        private RelayCommand<EventArgs> m_goBackCommand;
+        private RelayCommand<EventArgs> m_goForwardCommand;
 
         private ImageResolutionViewModel m_imageResolution;
         private FractalAreaViewModel m_fractalArea;
         private FractalSettingsViewModel m_fractalSettings;
 
         private FractalStitcher m_stitcher;
+        private readonly FractalReplay m_fractalReplay = new();
+        private int m_currentHistoryIndex = -1;
+        private bool m_isNavigating = false;
 
         private Thread m_updateWorkerThread;
         private volatile bool m_stopWorkerThread;
@@ -89,6 +94,13 @@ namespace dotNetFractal.WPF.ViewModels
             OnNewFractal();
         }
 
+        public void Dispose()
+        {
+            StopUpdateWorkerThread();
+            m_stitcher?.StopThread();
+            m_bitmap?.Dispose();
+        }
+
         public ICommand NewFractalCommand => m_newFractalCommand ??= new RelayCommand<EventArgs>(param => OnNewFractal());
 
         public ICommand ImageResolutionCommand => m_imageResolutionCommand ??= new RelayCommand<EventArgs>(param => OnImageResolution());
@@ -102,6 +114,10 @@ namespace dotNetFractal.WPF.ViewModels
         public ICommand FractalSettingsCommand => m_fractalSettingsCommand ??= new RelayCommand<EventArgs>(param => OnFractalSettings());
 
         public ICommand CopyCommand => m_copyCommand ??= new RelayCommand<EventArgs>(param => OnCopy());
+
+        public ICommand GoBackCommand => m_goBackCommand ??= new RelayCommand<EventArgs>(param => OnGoBack(), param => CanGoBack());
+
+        public ICommand GoForwardCommand => m_goForwardCommand ??= new RelayCommand<EventArgs>(param => OnGoForward(), param => CanGoForward());
 
         private void UpdateBitmap()
         {
@@ -181,17 +197,14 @@ namespace dotNetFractal.WPF.ViewModels
                     if (m_stopWorkerThread)
                         break;
 
-                    if (m_stitcher.HasFractalsToUpdate ||
-                        m_stitcher.BitmapUpdateEvent.WaitOne(100))
+                    if (m_stitcher.BitmapUpdateEvent.WaitOne(100) ||
+                        m_stitcher.HasFractalsToUpdate)
                     {
                         if (m_stopWorkerThread)
                             break;
 
-                        // Marshal the UpdateBitmap call to the UI thread
-                        m_dispatcher.Invoke(() =>
-                        {
-                            UpdateBitmap();
-                        });
+                        // Call UpdateBitmap on the UI thread
+                        m_dispatcher.Invoke(UpdateBitmap);
                     }
                 }
                 catch (Exception ex)
@@ -228,6 +241,19 @@ namespace dotNetFractal.WPF.ViewModels
                 Height = m_imageResolution.Height;
 
                 var displayArea = m_fractalArea.GetDisplayArea(Width, Height);
+
+                // Only add to history if not navigating
+                if (!m_isNavigating)
+                {
+                    // Remove any forward history if we're creating a new fractal
+                    if (m_currentHistoryIndex >= 0 && m_currentHistoryIndex < m_fractalReplay.HistoryCount - 1)
+                    {
+                        m_fractalReplay.RemoveAllFromIndex(m_currentHistoryIndex);
+                    }
+
+                    m_currentHistoryIndex = m_fractalReplay.Add(displayArea);
+                }
+
                 m_stitcher = new FractalStitcher(() =>
                 {
                     var fractal = new FractalMandelbrot();
@@ -248,6 +274,9 @@ namespace dotNetFractal.WPF.ViewModels
 
                 m_stitcher.StartThread();
             }
+
+            // Update command states
+            CommandManager.InvalidateRequerySuggested();
         }
 
         public void OnImageResolution()
@@ -340,7 +369,7 @@ namespace dotNetFractal.WPF.ViewModels
             }
         }
 
-        public void OnShowColorMap()
+        public static void OnShowColorMap()
         {
             var dlg = new ColorMapWindow();
             dlg.ShowDialog();
@@ -352,12 +381,6 @@ namespace dotNetFractal.WPF.ViewModels
                 return;
 
             var displayArea = m_fractalArea.GetDisplayArea((int)imageWidth, (int)imageHeight);
-
-            // Get the current fractal area bounds
-            //double newMinX = displayArea.GetX((int)pixelX1);
-            //double newMaxX = displayArea.GetX((int)pixelX2);
-            //double newMinY = displayArea.GetY((int)pixelY1);
-            //double newMaxY = displayArea.GetY((int)pixelY2);
 
             // Update the fractal area
             m_fractalArea.CenterX = displayArea.GetCenterX((int)pixelX1, (int)pixelX2);
@@ -377,25 +400,25 @@ namespace dotNetFractal.WPF.ViewModels
             var displayArea = m_fractalArea.GetDisplayArea((int)imageWidth, (int)imageHeight);
 
             // Get the center of the selected rectangle in fractal coordinates
-            double centerPixelX = (pixelX1 + pixelX2) / 2.0;
-            double centerPixelY = (pixelY1 + pixelY2) / 2.0;
-            double centerFractalX = displayArea.GetX((int)centerPixelX);
-            double centerFractalY = displayArea.GetY((int)centerPixelY);
+            var centerPixelX = (decimal)(pixelX1 + pixelX2) / 2.0m;
+            var centerPixelY = (decimal)(pixelY1 + pixelY2) / 2.0m;
+            var centerFractalX = displayArea.GetX((int)centerPixelX);
+            var centerFractalY = displayArea.GetY((int)centerPixelY);
 
             // Calculate the zoom-out ratio based on the rectangle size
-            double rectWidth = Math.Abs(pixelX2 - pixelX1);
-            double rectHeight = Math.Abs(pixelY2 - pixelY1);
-            double widthRatio = imageWidth / rectWidth;
-            double heightRatio = imageHeight / rectHeight;
-            double zoomOutRatio = Math.Min(widthRatio, heightRatio);
+            var rectWidth = (decimal)Math.Abs(pixelX2 - pixelX1);
+            var rectHeight = (decimal)Math.Abs(pixelY2 - pixelY1);
+            var widthRatio = (decimal)imageWidth / rectWidth;
+            var heightRatio = (decimal)imageHeight / rectHeight;
+            var zoomOutRatio = Math.Min(widthRatio, heightRatio);
 
             // Calculate the current fractal area dimensions
-            double currentWidth = m_fractalArea.Width;
-            double currentHeight = m_fractalArea.Height;
+            var currentWidth = m_fractalArea.Width;
+            var currentHeight = m_fractalArea.Height;
 
             // Calculate the new fractal area dimensions (zoomed out)
-            double newWidth = currentWidth * zoomOutRatio;
-            double newHeight = currentHeight * zoomOutRatio;
+            var newWidth = currentWidth * zoomOutRatio;
+            var newHeight = currentHeight * zoomOutRatio;
 
             // Set the new fractal area centered on the selection rectangle center
             m_fractalArea.CenterX = centerFractalX;
@@ -405,6 +428,61 @@ namespace dotNetFractal.WPF.ViewModels
 
             // Regenerate the fractal with the new area
             StartFractalComputation(true);
+        }
+
+        private bool CanGoBack()
+        {
+            return m_currentHistoryIndex > 0;
+        }
+
+        private bool CanGoForward()
+        {
+            return m_currentHistoryIndex >= 0 && m_currentHistoryIndex < m_fractalReplay.HistoryCount - 1;
+        }
+
+        public void OnGoBack()
+        {
+            if (!CanGoBack())
+                return;
+
+            NavigateToHistoryIndex(--m_currentHistoryIndex);
+        }
+
+        public void OnGoForward()
+        {
+            if (!CanGoForward())
+                return;
+
+            NavigateToHistoryIndex(++m_currentHistoryIndex);
+        }
+
+        private void NavigateToHistoryIndex(int index)
+        {
+            if (index < 0 || index >= m_fractalReplay.HistoryCount)
+                return;
+
+            var displayArea = m_fractalReplay[index];
+            if (displayArea == null)
+                return;
+
+            // Set flag to prevent adding to history during navigation
+            m_isNavigating = true;
+
+            try
+            {
+                // Update the fractal area from the history
+                m_fractalArea.CenterX = displayArea.CenterX;
+                m_fractalArea.CenterY = displayArea.CenterY;
+                m_fractalArea.Width = displayArea.Width;
+                m_fractalArea.Height = displayArea.Height;
+
+                // Regenerate the fractal with the historical area
+                StartFractalComputation(true);
+            }
+            finally
+            {
+                m_isNavigating = false;
+            }
         }
     }
 }

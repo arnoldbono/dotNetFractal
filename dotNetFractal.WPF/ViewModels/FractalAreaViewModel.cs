@@ -21,10 +21,10 @@ namespace dotNetFractal.WPF.ViewModels
             new("Plate 9",  -0.745464,  0.112967, -0.745388, 0.113030)
         ];
         
-        private double m_centerX;
-        private double m_centerY;
-        private double m_width;
-        private double m_height;
+        private decimal m_centerX;
+        private decimal m_centerY;
+        private decimal m_width;
+        private decimal m_height;
         private int m_selectedPlate;
 
         public List<FractalPlate> Plates => m_plates;
@@ -34,7 +34,7 @@ namespace dotNetFractal.WPF.ViewModels
             return new DisplayArea(CenterX, CenterY, Width, Height, width, height);
         }
 
-        public double CenterX
+        public decimal CenterX
         {
             get => m_centerX;
             set
@@ -49,7 +49,7 @@ namespace dotNetFractal.WPF.ViewModels
             }
         }
 
-        public double CenterY
+        public decimal CenterY
         {
             get => m_centerY;
             set
@@ -64,7 +64,7 @@ namespace dotNetFractal.WPF.ViewModels
             }
         }
 
-        public double Width
+        public decimal Width
         {
             get => m_width;
             set
@@ -79,7 +79,7 @@ namespace dotNetFractal.WPF.ViewModels
             }
         }
 
-        public double Height
+        public decimal Height
         {
             get => m_height;
             set
@@ -93,10 +93,10 @@ namespace dotNetFractal.WPF.ViewModels
             }
         }
 
-        public void GetRectangle(out double minX, out double minY, out double width, out double height)
+        public void GetRectangle(out decimal minX, out decimal minY, out decimal width, out decimal height)
         {
-            minX = CenterX - Width / 2.0;
-            minY = CenterY - Height / 2.0;
+            minX = CenterX - Width / 2.0m;
+            minY = CenterY - Height / 2.0m;
             width = Width;
             height = Height;
         }
@@ -124,10 +124,10 @@ namespace dotNetFractal.WPF.ViewModels
         private void OnSelectedPlate(int plateIndex)
         {
             var plate = Plates[plateIndex];
-            CenterX = (plate.MinX + plate.MaxX) / 2.0;
-            CenterY = (plate.MinY + plate.MaxY) / 2.0;
-            Width = plate.MaxX - plate.MinX;
-            Height = plate.MaxY - plate.MinY;
+            CenterX = (decimal)(plate.MinX + plate.MaxX) / 2.0m;
+            CenterY = (decimal)(plate.MinY + plate.MaxY) / 2.0m;
+            Width = (decimal)(plate.MaxX - plate.MinX);
+            Height = (decimal)(plate.MaxY - plate.MinY);
         }
     }
 }

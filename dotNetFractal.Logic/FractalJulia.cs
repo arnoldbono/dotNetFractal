@@ -7,8 +7,8 @@ namespace dotNetFractal.Logic
     /// </summary>
     public class FractalJulia : Fractal
     {
-        private double m_startingPointX = 0.0;
-        private double m_startingPointY = 0.0;
+        private decimal m_startingPointX = 0.0m;
+        private decimal m_startingPointY = 0.0m;
 
         public FractalJulia()
         {
@@ -28,26 +28,26 @@ namespace dotNetFractal.Logic
             var displayArea = Area.DisplayArea;
 
             // plot Julia Set using Mandelbrot formula
-            double Cx = m_startingPointX;
-            double Cy = m_startingPointY;
+            var Cx = m_startingPointX;
+            var Cy = m_startingPointY;
             for (var i = startIndexWidth; i < stopIndexWidth && !Stop; ++i)
             {
-                double x0 = displayArea.GetX(i);
+                var x0 = displayArea.GetX(i);
 
-                for (var j = startIndexHeight; j < stopIndexHeight; ++j)
+                for (var j = startIndexHeight; j < stopIndexHeight && !Stop; ++j)
                 {
-                    double y0 = displayArea.GetY(j);
-                    double x = x0;
-                    double y = y0;
+                    var y0 = displayArea.GetY(j);
+                    var x = x0;
+                    var y = y0;
                     int teller = 0;
-                    double Radius2 = 0.0;
-                    double PrevRadius2 = 0.0;
+                    decimal Radius2 = 0.0m;
+                    decimal PrevRadius2 = 0.0m;
                     while (++teller < MaxIterations)
                     {
                         PrevRadius2 = Radius2;
 
-                        double xx = x * x;
-                        double yy = y * y;
+                        decimal xx = x * x;
+                        decimal yy = y * y;
 
                         if ((Radius2 = xx + yy) > MaxRadius)
                         {
@@ -68,16 +68,10 @@ namespace dotNetFractal.Logic
             Stopped = true;
         }
 
-        public double StartingPointX
-        {
-            get { return m_startingPointX; }
-        }
-        public double StartingPointY
-        {
-            get { return m_startingPointY; }
-        }
+        public decimal StartingPointX => m_startingPointX;
+        public decimal StartingPointY => m_startingPointY;
 
-        public void SetStartingPoint(double x, double y)
+        public void SetStartingPoint(decimal x, decimal y)
         {
             m_startingPointX = x;
             m_startingPointY = y;

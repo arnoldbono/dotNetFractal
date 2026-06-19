@@ -27,7 +27,7 @@ namespace dotNetFractal.Logic
             // plot Mandelbrot formula
             for (var i = startIndexWidth; i < stopIndexWidth && !Stop; ++i)
             {
-                double Cx = displayArea.GetX(i);
+                var Cx = displayArea.GetX(i);
 
                 for (var j = startIndexHeight; j < stopIndexHeight; ++j)
                 {
@@ -36,18 +36,18 @@ namespace dotNetFractal.Logic
                         continue;
                     }
 
-                    double Cy = displayArea.GetY(j);
-                    double x = Cx;
-                    double y = Cy;
+                    var Cy = displayArea.GetY(j);
+                    var x = Cx;
+                    var y = Cy;
                     int teller = 0;
-                    double Radius2 = 0.0;
-                    double PrevRadius2 = 0.0;
+                    var Radius2 = 0.0m;
+                    var PrevRadius2 = 0.0m;
                     while (++teller < MaxIterations)
                     {
                         PrevRadius2 = Radius2;
 
-                        double xx = x * x;
-                        double yy = y * y;
+                        var xx = x * x;
+                        var yy = y * y;
 
                         if ((Radius2 = xx + yy) > MaxRadius)
                         {

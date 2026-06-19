@@ -14,13 +14,13 @@ namespace dotNetFractal.Logic
 
 		bool Stopped { get; }
 
-		double MaxRadius { get; set; }
+		decimal MaxRadius { get; set; }
 
 		int MaxIterations { get; set; }
 
         bool SmoothColoring { get; set; }
 
-        Color ComputeColor(int iteration, double previousRadius, double radius);
+        Color ComputeColor(int iteration, decimal previousRadius, decimal radius);
 
 		void GetColor(int index, out int red, out int green, out int blue);
 

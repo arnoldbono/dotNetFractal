@@ -4,45 +4,43 @@ namespace dotNetFractal.Logic
 {
     public class DisplayArea
     {
-        public double CenterX { get; }
+        public decimal CenterX { get; }
 
-        public double CenterY { get; }
+        public decimal CenterY { get; }
 
         public int PixelsHorizontal { get; }
 
         public int PixelsVertical { get; }
 
-        public double Width { get; }
+        public decimal Width { get; }
 
-        public double Height { get; }
+        public decimal Height { get; }
 
-        public double Right
+        public decimal Right => CenterX + Width / 2.0m;
+
+        public decimal Left => CenterX - Width / 2.0m;
+
+        public decimal Top => CenterY + Height / 2.0m;
+
+        public decimal Bottom => CenterY - Height / 2.0m;
+
+        public DisplayArea(DisplayArea displayArea)
         {
-            get { return CenterX + Width / 2.0; }
+            CenterX = displayArea.CenterX;
+            CenterY = displayArea.CenterY;
+            PixelsHorizontal = displayArea.PixelsHorizontal;
+            PixelsVertical = displayArea.PixelsVertical;
+            Width = displayArea.Width;
+            Height = displayArea.Height;
         }
 
-        public double Left
-        {
-            get { return CenterX - Width / 2.0; }
-        }
-
-        public double Top
-        {
-            get { return CenterY + Height / 2.0; }
-        }
-
-        public double Bottom
-        {
-            get { return CenterY - Height / 2.0; }
-        }
-
-        public DisplayArea(double centerX, double centerY, double width, double height, int horizontal, int vertical)
+        public DisplayArea(decimal centerX, decimal centerY, decimal width, decimal height, int horizontal, int vertical)
         {
             CenterX = centerX;
             CenterY = centerY;
             PixelsHorizontal = horizontal;
             PixelsVertical = vertical;
-            var ratio = (double)PixelsVertical / (double)PixelsHorizontal;
+            var ratio = (decimal)PixelsVertical / (decimal)PixelsHorizontal;
             var length = Math.Max(width, height);
             Width = length;
             Height = ratio * length;
@@ -50,44 +48,74 @@ namespace dotNetFractal.Logic
             //Height = height;
         }
 
-        public double GetCenterX(int i1, int i2)
+        public static bool operator == (DisplayArea a, DisplayArea b)
         {
-            return CenterX + ((double)(i1 + i2 - PixelsHorizontal) * Width / (double)PixelsHorizontal) / 2.0;
+            if (ReferenceEquals(a, b))
+                return true;
+            if (a is null || b is null)
+                return false;
+            return a.CenterX == b.CenterX &&
+                   a.CenterY == b.CenterY &&
+                   a.PixelsHorizontal == b.PixelsHorizontal &&
+                   a.PixelsVertical == b.PixelsVertical;
+            // Width and Height are not considered in equality.
         }
 
-        public double GetCenterY(int j1, int j2)
+        public static bool operator != (DisplayArea a, DisplayArea b)
         {
-            return CenterY + ((double)(PixelsVertical - (j1 + j2)) * Height / (double)PixelsVertical) / 2.0;
+            return !(a == b);
         }
 
-        public double GetWidth(int i1, int i2)
+        public override bool Equals(object obj)
         {
-            return Math.Abs((double)(i2 - i1) * Width / (double)PixelsHorizontal);
+            if (obj is DisplayArea other)
+                return this == other;
+            return false;
         }
 
-        public double GetHeight(int j1, int j2)
+        public override int GetHashCode()
         {
-            return Math.Abs((double)(j2 - j1) * Height / (double)PixelsVertical);
+            return HashCode.Combine(CenterX, CenterY, PixelsHorizontal, PixelsVertical);
         }
 
-        public double GetX(int i)
+        public decimal GetCenterX(int i1, int i2)
         {
-            return CenterX + (double)(i - PixelsHorizontal / 2) * Width / (double)PixelsHorizontal;
+            return CenterX + ((i1 + i2 - PixelsHorizontal) * Width / PixelsHorizontal) / 2.0m;
         }
 
-        public double GetY(int j)
+        public decimal GetCenterY(int j1, int j2)
         {
-            return CenterY + (double)(PixelsVertical / 2 - j) * Height / (double)PixelsVertical;
+            return CenterY + ((PixelsVertical - (j1 + j2)) * Height / PixelsVertical) / 2.0m;
         }
 
-        public int GetI(double x)
+        public decimal GetWidth(int i1, int i2)
         {
-            return (int)Math.Floor((double)PixelsHorizontal * (1.0 + (x - CenterX) / Width) / 2.0);
+            return Math.Abs((i2 - i1) * Width / PixelsHorizontal);
         }
 
-        public int GetJ(double y)
+        public decimal GetHeight(int j1, int j2)
         {
-            return (int)Math.Floor((double)PixelsVertical * (1.0 + (CenterY - y) / Height) / 2.0);
+            return Math.Abs((j2 - j1) * Height / PixelsVertical);
+        }
+
+        public decimal GetX(int i)
+        {
+            return CenterX + (i - PixelsHorizontal / 2) * Width / (decimal)PixelsHorizontal;
+        }
+
+        public decimal GetY(int j)
+        {
+            return CenterY + (PixelsVertical / 2 - j) * Height / PixelsVertical;
+        }
+
+        public int GetI(decimal x)
+        {
+            return (int)Math.Floor(PixelsHorizontal * (1.0m + (x - CenterX) / Width) / 2.0m);
+        }
+
+        public int GetJ(decimal y)
+        {
+            return (int)Math.Floor(PixelsVertical * (1.0m + (CenterY - y) / Height) / 2.0m);
         }
     }
 }

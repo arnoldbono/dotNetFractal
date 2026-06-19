@@ -7,16 +7,16 @@ namespace dotNetFractal.Logic
     {
         public int Iteration { get; set; }
 
-        public double Radius { get; set; }
+        public decimal Radius { get; set; }
 
-        public double PreviousRadius { get; set; }
+        public decimal PreviousRadius { get; set; }
 
         private FractalPixel()
         {
             ; // serialization only
         }
 
-        public FractalPixel(int iteration, double radius, double previousRadius)
+        public FractalPixel(int iteration, decimal radius, decimal previousRadius)
         {
             Iteration = iteration;
             Radius = radius;
@@ -35,8 +35,8 @@ namespace dotNetFractal.Logic
             return new FractalPixel
             {
                 Iteration = br.ReadInt32(),
-                Radius = br.ReadDouble(),
-                PreviousRadius = br.ReadDouble()
+                Radius = br.ReadDecimal(),
+                PreviousRadius = br.ReadDecimal()
             };
         }
     }

@@ -78,10 +78,10 @@ namespace dotNetFractal.Logic
 
         public void Read(BinaryReader br)
         {
-            var refX = br.ReadDouble();
-            var refY = br.ReadDouble();
-            var areaWidth = br.ReadDouble();
-            var areaHeight = br.ReadDouble();
+            var refX = br.ReadDecimal();
+            var refY = br.ReadDecimal();
+            var areaWidth = br.ReadDecimal();
+            var areaHeight = br.ReadDecimal();
             var width = br.ReadInt32();
             var height = br.ReadInt32();
 
