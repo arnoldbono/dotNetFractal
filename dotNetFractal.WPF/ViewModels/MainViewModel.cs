@@ -14,7 +14,7 @@ namespace dotNetFractal.WPF.ViewModels
 {
     public class MainViewModel : BaseViewModel
     {
-        private static readonly FractalDecimal m_half = (FractalDecimal)0.5;
+        private static readonly FractalDouble m_half = (FractalDouble)0.5;
 
         private RelayCommand<EventArgs> m_newFractalCommand;
         private RelayCommand<EventArgs> m_imageResolutionCommand;
@@ -27,11 +27,11 @@ namespace dotNetFractal.WPF.ViewModels
         private RelayCommand<EventArgs> m_goForwardCommand;
 
         private ImageResolutionViewModel m_imageResolution;
-        private FractalAreaViewModel<FractalDecimal> m_fractalArea;
+        private FractalAreaViewModel m_fractalArea;
         private FractalSettingsViewModel m_fractalSettings;
 
-        private FractalStitcher<FractalDecimal> m_stitcher;
-        private readonly FractalReplay<FractalDecimal> m_fractalReplay = new();
+        private FractalStitcher m_stitcher;
+        private readonly FractalReplay m_fractalReplay = new();
         private int m_currentHistoryIndex = -1;
         private bool m_isNavigating = false;
 
@@ -129,8 +129,8 @@ namespace dotNetFractal.WPF.ViewModels
 
             if (m_stitcher == null) return;
 
-            int width = m_stitcher.Area.PixelsHorizontal;
-            int height = m_stitcher.Area.PixelsVertical;
+            int width = m_stitcher.DisplayArea.PixelsHorizontal;
+            int height = m_stitcher.DisplayArea.PixelsVertical;
             if ((m_bitmap == null) ||
                 (m_bitmap.Width != width) ||
                 (m_bitmap.Height != height))
@@ -224,7 +224,7 @@ namespace dotNetFractal.WPF.ViewModels
                 Width = 512,
                 Height = 512
             };
-            m_fractalArea = new FractalAreaViewModel<FractalDecimal>();
+            m_fractalArea = new FractalAreaViewModel();
             m_fractalSettings = new FractalSettingsViewModel
             {
                 MaxIterations = 256,
@@ -256,9 +256,9 @@ namespace dotNetFractal.WPF.ViewModels
                     m_currentHistoryIndex = m_fractalReplay.Add(displayArea);
                 }
 
-                m_stitcher = new FractalStitcher<FractalDecimal>(() =>
+                m_stitcher = new FractalStitcher(() =>
                 {
-                    var fractal = new FractalMandelbrot<FractalDecimal>();
+                    var fractal = new FractalMandelbrot<FractalDouble>();
                     if (m_fractalSettings != null)
                     {
                         fractal.MaxIterations = m_fractalSettings.MaxIterations;
@@ -266,7 +266,7 @@ namespace dotNetFractal.WPF.ViewModels
                         fractal.SmoothColoring = m_fractalSettings.SmoothColoring;
                     }
                     return fractal;
-                }, displayArea);
+                }, new FractalArea<FractalDouble>(displayArea), displayArea);
 
                 if (MainImage != null)
                 {
@@ -384,11 +384,13 @@ namespace dotNetFractal.WPF.ViewModels
 
             var displayArea = m_fractalArea.GetDisplayArea((int)imageWidth, (int)imageHeight);
 
+            var displayAreaTyped = displayArea as DisplayArea<FractalDouble> ?? throw new InvalidOperationException("Unsupported display area type.");
+
             // Update the fractal area
-            m_fractalArea.CenterX = displayArea.GetCenterX((int)pixelX1, (int)pixelX2);
-            m_fractalArea.CenterY = displayArea.GetCenterY((int)pixelY1, (int)pixelY2);
-            m_fractalArea.Width = displayArea.GetWidth((int)pixelX1, (int)pixelX2);
-            m_fractalArea.Height = displayArea.GetHeight((int)pixelY1, (int)pixelY2);
+            m_fractalArea.CenterX = displayAreaTyped.GetCenterX((int)pixelX1, (int)pixelX2);
+            m_fractalArea.CenterY = displayAreaTyped.GetCenterY((int)pixelY1, (int)pixelY2);
+            m_fractalArea.Width = displayAreaTyped.GetWidth((int)pixelX1, (int)pixelX2);
+            m_fractalArea.Height = displayAreaTyped.GetHeight((int)pixelY1, (int)pixelY2);
 
             // Regenerate the fractal with the new area
             StartFractalComputation(true);
@@ -400,19 +402,20 @@ namespace dotNetFractal.WPF.ViewModels
                 return;
 
             var displayArea = m_fractalArea.GetDisplayArea((int)imageWidth, (int)imageHeight);
+            var displayAreaTyped = displayArea as DisplayArea<FractalDouble> ?? throw new InvalidOperationException("Unsupported display area type.");
 
             // Get the center of the selected rectangle in fractal coordinates
-            var centerPixelX = (FractalDecimal)(pixelX1 + pixelX2) * m_half;
-            var centerPixelY = (FractalDecimal)(pixelY1 + pixelY2) * m_half;
-            var centerFractalX = displayArea.GetX(FractalDecimal.Floor(centerPixelX));
-            var centerFractalY = displayArea.GetY(FractalDecimal.Floor(centerPixelY));
+            var centerPixelX = (FractalDouble)(pixelX1 + pixelX2) * m_half;
+            var centerPixelY = (FractalDouble)(pixelY1 + pixelY2) * m_half;
+            var centerFractalX = displayAreaTyped.GetX(FractalDouble.Floor(centerPixelX));
+            var centerFractalY = displayAreaTyped.GetY(FractalDouble.Floor(centerPixelY));
 
             // Calculate the zoom-out ratio based on the rectangle size
-            var rectWidth = (FractalDecimal)Math.Abs(pixelX2 - pixelX1);
-            var rectHeight = (FractalDecimal)Math.Abs(pixelY2 - pixelY1);
-            var widthRatio = (FractalDecimal)imageWidth / rectWidth;
-            var heightRatio = (FractalDecimal)imageHeight / rectHeight;
-            var zoomOutRatio = FractalDecimal.Min(widthRatio, heightRatio);
+            var rectWidth = (FractalDouble)Math.Abs(pixelX2 - pixelX1);
+            var rectHeight = (FractalDouble)Math.Abs(pixelY2 - pixelY1);
+            var widthRatio = (FractalDouble)imageWidth / rectWidth;
+            var heightRatio = (FractalDouble)imageHeight / rectHeight;
+            var zoomOutRatio = FractalDouble.Min(widthRatio, heightRatio);
 
             // Calculate the current fractal area dimensions
             var currentWidth = m_fractalArea.Width;
@@ -473,10 +476,11 @@ namespace dotNetFractal.WPF.ViewModels
             try
             {
                 // Update the fractal area from the history
-                m_fractalArea.CenterX = displayArea.CenterX;
-                m_fractalArea.CenterY = displayArea.CenterY;
-                m_fractalArea.Width = displayArea.Width;
-                m_fractalArea.Height = displayArea.Height;
+                var displayAreaTyped = displayArea as DisplayArea<FractalDouble> ?? throw new InvalidOperationException("Unsupported display area type.");
+                m_fractalArea.CenterX = displayAreaTyped.CenterX;
+                m_fractalArea.CenterY = displayAreaTyped.CenterY;
+                m_fractalArea.Width = displayAreaTyped.Width;
+                m_fractalArea.Height = displayAreaTyped.Height;
 
                 // Regenerate the fractal with the historical area
                 StartFractalComputation(true);

@@ -3,12 +3,12 @@
 namespace dotNetFractal.Logic
 {
     // Maintains a list of DisplayArea to store the history of areas.
-    public class FractalReplay<T> where T : IFractalUnit<T>, new()
+    public class FractalReplay
     {
-        private readonly List<DisplayArea<T>> m_history = new ();
+        private readonly List<IDisplayArea> m_history = new ();
 
         // Add an area to the history
-        public int Add(DisplayArea<T> area)
+        public int Add(IDisplayArea area)
         {
             if (area == default)
                 return -1;
@@ -25,9 +25,9 @@ namespace dotNetFractal.Logic
             return m_history.Count - 1;
         }
 
-        public int Add(FractalArea<T> area)
+        public int Add(IFractalArea area)
         {
-            return Add(new DisplayArea<T>(area.DisplayArea));
+            return Add(area.DisplayArea);
         }
 
         public void ClearHistory()
@@ -37,12 +37,12 @@ namespace dotNetFractal.Logic
 
         public int HistoryCount => m_history.Count;
 
-        public int GetIndex(DisplayArea<T> area)
+        public int GetIndex(IDisplayArea area)
         {
             return m_history.FindIndex(p => p == area);
         }
 
-        public DisplayArea<T> this[int index]
+        public IDisplayArea this[int index]
         {
             get
             {
@@ -60,7 +60,7 @@ namespace dotNetFractal.Logic
                 m_history.RemoveRange(index + 1, count - index - 1);
         }
 
-        public DisplayArea<T>[] GetHistory()
+        public IDisplayArea[] GetHistory()
         {
             return [..m_history.AsReadOnly()];
         }

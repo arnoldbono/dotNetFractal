@@ -28,11 +28,12 @@ namespace dotNetFractal.Logic
             var startIndexHeight = AreaPatch.StartIndexHeight;
             var stopIndexHeight = AreaPatch.StopIndexHeight;
 
-            var displayArea = Area.DisplayArea;
+            var displayArea = (DisplayArea<T>)Area.DisplayArea;
 
             // plot Julia Set using Mandelbrot formula
             var Cx = m_startingPointX;
             var Cy = m_startingPointY;
+            var maxRadius = (T)MaxRadius;
             for (var i = startIndexWidth; i < stopIndexWidth && !Stop; ++i)
             {
                 var x0 = displayArea.GetX(i);
@@ -52,7 +53,7 @@ namespace dotNetFractal.Logic
                         var xx = x * x;
                         var yy = y * y;
 
-                        if ((Radius2 = xx + yy) > MaxRadius)
+                        if ((Radius2 = xx + yy) > maxRadius)
                         {
                             break;
                         }

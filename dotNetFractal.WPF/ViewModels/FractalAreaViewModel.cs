@@ -39,7 +39,7 @@ namespace dotNetFractal.WPF.ViewModels
 
         public List<FractalPlate> Plates => m_plates;
 
-        public DisplayArea<T> GetDisplayArea(int width, int height)
+        public IDisplayArea GetDisplayArea(int width, int height)
         {
             return new DisplayArea<T>(CenterX, CenterY, Width, Height, width, height);
         }
@@ -101,14 +101,6 @@ namespace dotNetFractal.WPF.ViewModels
                 m_height = value;
                 OnPropertyChanged();
             }
-        }
-
-        public void GetRectangle(out T minX, out T minY, out T width, out T height)
-        {
-            minX = CenterX - Width * m_half;
-            minY = CenterY - Height * m_half;
-            width = Width;
-            height = Height;
         }
 
         public int SelectedPlate

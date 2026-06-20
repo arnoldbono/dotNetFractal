@@ -14,32 +14,26 @@ namespace dotNetFractal.Logic
     /// Also, subdivides those FractalQuarters whose pixels per Width is lower than the number
     /// of pixels of the DisplayArea per Width.
     /// </summary>
-    public class FractalStitcher<T> : Worker where T : IFractalUnit<T>, new()
+    public class FractalStitcher : Worker
     {
-        private readonly Func<IFractal<T>> m_fractalFunc;
-        private readonly List<IFractal<T>> m_fractalsToUpdate = new List<IFractal<T>>();
-        private readonly AutoResetEvent m_bitmapUpdateEvent = new AutoResetEvent(false);
-        private DisplayArea<T> m_area;
+        private readonly Func<IFractal> m_fractalFunc;
+        private readonly List<IFractal> m_fractalsToUpdate = [];
+        private readonly AutoResetEvent m_bitmapUpdateEvent = new (false);
+        private readonly IFractalArea m_fractalArea;
+        private readonly IDisplayArea m_displayArea;
 
         private static int PatchSize => 128;
 
-        public DisplayArea<T> Area
-        {
-            get { return m_area; }
-            set
-            {
-                StopThread();
-                m_area = value;
-            }
-        }
+        public IDisplayArea DisplayArea => m_displayArea;
 
         public WaitHandle BitmapUpdateEvent => m_bitmapUpdateEvent;
 
-        public FractalStitcher(Func<IFractal<T>> fractalFunc, DisplayArea<T> area)
+        public FractalStitcher(Func<IFractal> fractalFunc, IFractalArea fractalArea, IDisplayArea area)
         {
-            Debug.Assert(fractalFunc != null && area != null);
+            Debug.Assert(fractalFunc != null && fractalArea != null && area != null);
             m_fractalFunc = fractalFunc;
-            m_area = area;
+            m_fractalArea = fractalArea;
+            m_displayArea = area;
         }
 
         public bool HasFractalsToUpdate
@@ -53,17 +47,15 @@ namespace dotNetFractal.Logic
             }
         }
 
-        private List<IFractal<T>> GetPatches(DisplayArea<T> area)
+        private List<IFractal> GetPatches(IDisplayArea area)
         {
-            var fractalArea = new FractalArea<T>(area);
-
-            var width = Area.PixelsHorizontal;
-            var height = Area.PixelsVertical;
+            var width = DisplayArea.PixelsHorizontal;
+            var height = DisplayArea.PixelsVertical;
 
             var horizontalPatches = width / PatchSize + (width % PatchSize != 0 ? 1 : 0);
             var vertitalPatches = height / PatchSize + (height % PatchSize != 0 ? 1 : 0);
 
-            var patches = new List<IFractal<T>>();
+            var patches = new List<IFractal>();
 
             for (int i = 0; i < horizontalPatches; ++i)
             {
@@ -76,7 +68,7 @@ namespace dotNetFractal.Logic
                     var stopIndexHeight = Math.Min(startIndexHeight + PatchSize, height);
 
                     var fractal = m_fractalFunc();
-                    fractal.Area = fractalArea;
+                    fractal.Area = m_fractalArea;
                     fractal.AreaPatch = new FractalAreaPatch(startIndexWidth, startIndexHeight, PatchSize);
                     patches.Add(fractal);
                 }
@@ -89,10 +81,10 @@ namespace dotNetFractal.Logic
         {
             Stop = false;
 
-            var waitingFractals = GetPatches(Area);
+            var waitingFractals = GetPatches(DisplayArea);
 
             var processorCount = Environment.ProcessorCount;
-            var startedFractals = new List<IFractal<T>>();
+            var startedFractals = new List<IFractal>();
 
             // Create a reset event that fractals will signal when they complete
             var completionEvent = new ManualResetEventSlim(false);
@@ -225,7 +217,7 @@ namespace dotNetFractal.Logic
             grfx.FillRectangle(new SolidBrush(Color.Azure), new Rectangle(0, 0, bitmap.Width, bitmap.Height));
         }
 
-        public void UpdateBitmap(Bitmap bitmap, IFractal<T> fractal)
+        public void UpdateBitmap(Bitmap bitmap, IFractal fractal)
         {
             var areaPatch = fractal.AreaPatch;
 

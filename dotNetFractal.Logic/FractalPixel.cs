@@ -3,13 +3,20 @@ using System.IO;
 
 namespace dotNetFractal.Logic
 {
-    public class FractalPixel<T> where T : IFractalUnit<T>, new()
+    public class FractalPixel<T> : IFractalPixel where T : IFractalUnit<T>, new()
     {
-        public int Iteration { get; set; }
+        public int Iteration { get; private set; }
 
-        public T Radius { get; set; }
+        public T Radius { get; private set; }
 
-        public T PreviousRadius { get; set; }
+        public T PreviousRadius { get; private set; }
+
+        public double GetEscapeFraction(double maxRadius)
+        {
+            // PRE: radius > MaxRadius (otherwise the fractal computation loop should not have stopped).
+            // PRE: previousRadius < MaxRadius.
+            return Math.Sqrt((double)(((T)maxRadius - PreviousRadius) / (Radius - PreviousRadius)));
+        }
 
         private FractalPixel()
         {
@@ -30,7 +37,7 @@ namespace dotNetFractal.Logic
             bw.Write((decimal)PreviousRadius);
         }
 
-        public static FractalPixel<T> Read(BinaryReader br)
+        public static IFractalPixel Read(BinaryReader br)
         {
             return new FractalPixel<T>
             {

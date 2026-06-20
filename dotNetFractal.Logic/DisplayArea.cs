@@ -1,8 +1,9 @@
 using System;
+using System.IO;
 
 namespace dotNetFractal.Logic
 {
-    public class DisplayArea<T> where T : IFractalUnit<T>, new()
+    public class DisplayArea<T> : IDisplayArea where T : IFractalUnit<T>, new()
     {
         private readonly T m_half = (T)0.5;
         private readonly T m_one = (T)1.0;
@@ -27,14 +28,15 @@ namespace dotNetFractal.Logic
 
         public T Bottom => CenterY - Height * m_half;
 
-        public DisplayArea(DisplayArea<T> displayArea)
+        public DisplayArea(IDisplayArea displayArea)
         {
-            CenterX = displayArea.CenterX;
-            CenterY = displayArea.CenterY;
-            PixelsHorizontal = displayArea.PixelsHorizontal;
-            PixelsVertical = displayArea.PixelsVertical;
-            Width = displayArea.Width;
-            Height = displayArea.Height;
+            var displayAreaTyped = displayArea as DisplayArea<T> ?? throw new ArgumentException("Invalid display area type", nameof(displayArea));
+            CenterX = displayAreaTyped.CenterX;
+            CenterY = displayAreaTyped.CenterY;
+            PixelsHorizontal = displayAreaTyped.PixelsHorizontal;
+            PixelsVertical = displayAreaTyped.PixelsVertical;
+            Width = displayAreaTyped.Width;
+            Height = displayAreaTyped.Height;
         }
 
         public DisplayArea(T centerX, T centerY, T width, T height, int horizontal, int vertical)
@@ -117,6 +119,27 @@ namespace dotNetFractal.Logic
         public int GetJ(T y)
         {
             return T.Floor((T)PixelsVertical * (m_one + (CenterY - y) / Height) * m_half);
+        }
+
+        public static DisplayArea<T> Read(BinaryReader br)
+        {
+            var centerX = (T)(decimal)br.ReadDecimal();
+            var centerY = (T)(decimal)br.ReadDecimal();
+            var width = (T)(decimal)br.ReadDecimal();
+            var height = (T)(decimal)br.ReadDecimal();
+            var pixelsHorizontal = br.ReadInt32();
+            var pixelsVertical = br.ReadInt32();
+            return new DisplayArea<T>(centerX, centerY, width, height, pixelsHorizontal, pixelsVertical);
+        }
+
+        public void Write(BinaryWriter bw)
+        {
+            bw.Write((decimal)CenterX);
+            bw.Write((decimal)CenterY);
+            bw.Write((decimal)Width);
+            bw.Write((decimal)Height);
+            bw.Write(PixelsHorizontal);
+            bw.Write(PixelsVertical);
         }
     }
 }

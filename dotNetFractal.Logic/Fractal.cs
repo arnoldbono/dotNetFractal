@@ -6,18 +6,18 @@ namespace dotNetFractal.Logic
     /// <summary>
     /// Compute a Fractal from left to right.
     /// </summary>
-    abstract public class Fractal<T> : Worker, IFractal<T> where T : IFractalUnit<T>, new()
+    abstract public class Fractal<T> : Worker, IFractal where T : IFractalUnit<T>, new()
     {
         private readonly FractalColorMap m_colorMap = FractalColorMap.GetInstance();
 
-        private FractalArea<T> m_area = null;
+        private IFractalArea m_area = null;
         private FractalAreaPatch m_areaPatch = null;
-        private T m_maxRadius = (T)4.0;
+        private double m_maxRadius = 4.0;
         private int m_maxIterations = 256;
         private int m_maxColors = 16;
         private bool m_smoothColoring = true;
 
-        public FractalArea<T> Area
+        public IFractalArea Area
         {
             get { return m_area; }
             set
@@ -41,7 +41,7 @@ namespace dotNetFractal.Logic
             }
         }
 
-        public T MaxRadius
+        public double MaxRadius
         {
             get { return m_maxRadius; }
             set { m_maxRadius = value; }
@@ -69,8 +69,9 @@ namespace dotNetFractal.Logic
         {
         }
 
-        public Color ComputeColor(int iteration, T previousRadius, T radius)
+        public Color ComputeColor(IFractalPixel pixel)
         {
+            var iteration = pixel.Iteration;
             if (iteration >= MaxIterations)
                 return Color.Black;
 
@@ -78,8 +79,7 @@ namespace dotNetFractal.Logic
 
             if (iteration != 0 && SmoothColoring)
             {
-                // PRE: radius > MaxRadius (otherwise the fractal computation loop should not have stopped)
-                var fraction = Math.Sqrt((double)((MaxRadius - previousRadius) / (radius - previousRadius)));
+                var fraction = pixel.GetEscapeFraction((double)MaxRadius);
                 System.Diagnostics.Debug.Assert(fraction < 1.0);
 
                 GetColor(iteration - 1, out var red1, out var green1, out var blue1);
@@ -122,8 +122,7 @@ namespace dotNetFractal.Logic
                     var pixel = fractalArea.GetPixel(areaPatch.StartIndexWidth + i, areaPatch.StartIndexHeight + j);
                     if (pixel != null)
                     {
-                        image.SetPixel(i, j,
-                            ComputeColor(pixel.Iteration, pixel.PreviousRadius, pixel.Radius));
+                        image.SetPixel(i, j, ComputeColor(pixel));
                     }
                 }
             }

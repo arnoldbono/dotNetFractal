@@ -22,9 +22,10 @@ namespace dotNetFractal.Logic
             var startIndexHeight = AreaPatch.StartIndexHeight;
             var stopIndexHeight = AreaPatch.StopIndexHeight;
 
-            var displayArea = Area.DisplayArea;
+            var displayArea = (DisplayArea<T>)Area.DisplayArea;
+            var maxRadius = (T)MaxRadius;
 
-            // plot Mandelbrot formula
+            // Compute Mandelbrot fractal for the given area patch
             for (var i = startIndexWidth; i < stopIndexWidth && !Stop; ++i)
             {
                 var Cx = displayArea.GetX(i);
@@ -49,7 +50,7 @@ namespace dotNetFractal.Logic
                         var xx = x * x;
                         var yy = y * y;
 
-                        if ((Radius2 = xx + yy) > MaxRadius)
+                        if ((Radius2 = xx + yy) > maxRadius)
                         {
                             break;
                         }
