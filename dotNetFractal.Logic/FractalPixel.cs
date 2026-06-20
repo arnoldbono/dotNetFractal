@@ -3,20 +3,20 @@ using System.IO;
 
 namespace dotNetFractal.Logic
 {
-    public class FractalPixel
+    public class FractalPixel<T> where T : IFractalUnit<T>, new()
     {
         public int Iteration { get; set; }
 
-        public decimal Radius { get; set; }
+        public T Radius { get; set; }
 
-        public decimal PreviousRadius { get; set; }
+        public T PreviousRadius { get; set; }
 
         private FractalPixel()
         {
             ; // serialization only
         }
 
-        public FractalPixel(int iteration, decimal radius, decimal previousRadius)
+        public FractalPixel(int iteration, T radius, T previousRadius)
         {
             Iteration = iteration;
             Radius = radius;
@@ -26,17 +26,17 @@ namespace dotNetFractal.Logic
         public void Write(BinaryWriter bw)
         {
             bw.Write((Int32)Iteration);
-            bw.Write(Radius);
-            bw.Write(PreviousRadius);
+            bw.Write((decimal)Radius);
+            bw.Write((decimal)PreviousRadius);
         }
 
-        public static FractalPixel Read(BinaryReader br)
+        public static FractalPixel<T> Read(BinaryReader br)
         {
-            return new FractalPixel
+            return new FractalPixel<T>
             {
                 Iteration = br.ReadInt32(),
-                Radius = br.ReadDecimal(),
-                PreviousRadius = br.ReadDecimal()
+                Radius = (T)br.ReadDecimal(),
+                PreviousRadius = (T)br.ReadDecimal()
             };
         }
     }

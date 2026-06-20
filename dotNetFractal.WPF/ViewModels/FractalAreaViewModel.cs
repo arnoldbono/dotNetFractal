@@ -1,13 +1,23 @@
-﻿using dotNetFractal.Logic;
-using ReactiveUI;
+﻿using ReactiveUI;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
+
+using dotNetFractal.Logic;
 
 namespace dotNetFractal.WPF.ViewModels
 {
-    public class FractalAreaViewModel : BaseViewModel
+    public class FractalAreaViewModel : FractalAreaViewModel<FractalDouble>
     {
+        public FractalAreaViewModel() : base()
+        {
+            ; // Empty
+        }
+    }
+
+    public class FractalAreaViewModel<T> : BaseViewModel where T : IFractalUnit<T>, new()
+    {
+        private readonly T m_half = (T)0.5;
+
         public readonly List<FractalPlate> m_plates =
         [
             new("Plate 0",  -2.4,      -1.4,      1.4,      1.4),
@@ -20,21 +30,21 @@ namespace dotNetFractal.WPF.ViewModels
             new("Plate 8",  -0.745465,  0.112896, -0.745387, 0.113034),
             new("Plate 9",  -0.745464,  0.112967, -0.745388, 0.113030)
         ];
-        
-        private decimal m_centerX;
-        private decimal m_centerY;
-        private decimal m_width;
-        private decimal m_height;
-        private int m_selectedPlate;
+
+        private T m_centerX = new();
+        private T m_centerY = new();
+        private T m_width = new();
+        private T m_height = new();
+        private int m_selectedPlate = 0;
 
         public List<FractalPlate> Plates => m_plates;
 
-        public DisplayArea GetDisplayArea(int width, int height)
+        public DisplayArea<T> GetDisplayArea(int width, int height)
         {
-            return new DisplayArea(CenterX, CenterY, Width, Height, width, height);
+            return new DisplayArea<T>(CenterX, CenterY, Width, Height, width, height);
         }
 
-        public decimal CenterX
+        public T CenterX
         {
             get => m_centerX;
             set
@@ -49,7 +59,7 @@ namespace dotNetFractal.WPF.ViewModels
             }
         }
 
-        public decimal CenterY
+        public T CenterY
         {
             get => m_centerY;
             set
@@ -64,7 +74,7 @@ namespace dotNetFractal.WPF.ViewModels
             }
         }
 
-        public decimal Width
+        public T Width
         {
             get => m_width;
             set
@@ -79,7 +89,7 @@ namespace dotNetFractal.WPF.ViewModels
             }
         }
 
-        public decimal Height
+        public T Height
         {
             get => m_height;
             set
@@ -93,10 +103,10 @@ namespace dotNetFractal.WPF.ViewModels
             }
         }
 
-        public void GetRectangle(out decimal minX, out decimal minY, out decimal width, out decimal height)
+        public void GetRectangle(out T minX, out T minY, out T width, out T height)
         {
-            minX = CenterX - Width / 2.0m;
-            minY = CenterY - Height / 2.0m;
+            minX = CenterX - Width * m_half;
+            minY = CenterY - Height * m_half;
             width = Width;
             height = Height;
         }
@@ -124,10 +134,10 @@ namespace dotNetFractal.WPF.ViewModels
         private void OnSelectedPlate(int plateIndex)
         {
             var plate = Plates[plateIndex];
-            CenterX = (decimal)(plate.MinX + plate.MaxX) / 2.0m;
-            CenterY = (decimal)(plate.MinY + plate.MaxY) / 2.0m;
-            Width = (decimal)(plate.MaxX - plate.MinX);
-            Height = (decimal)(plate.MaxY - plate.MinY);
+            CenterX = (T)(plate.MinX + plate.MaxX) * m_half;
+            CenterY = (T)(plate.MinY + plate.MaxY) * m_half;
+            Width = (T)(plate.MaxX - plate.MinX);
+            Height = (T)(plate.MaxY - plate.MinY);
         }
     }
 }

@@ -3,9 +3,9 @@ using System.Diagnostics;
 
 namespace dotNetFractal.Logic
 {
-    public class FractalPixels
+    public class FractalPixels<T> where T : IFractalUnit<T>, new()
     {
-        private readonly FractalPixel[,] m_pixels;
+        private readonly FractalPixel<T>[,] m_pixels;
 
         public int Width { get; set; }
 
@@ -15,7 +15,7 @@ namespace dotNetFractal.Logic
         {
             Width = width;
             Height = height;
-            m_pixels = new FractalPixel[Width, Height];
+            m_pixels = new FractalPixel<T>[Width, Height];
         }
 
         public bool Inside(int i, int j)
@@ -23,12 +23,12 @@ namespace dotNetFractal.Logic
             return i >= 0 && i < Width && j >= 0 && j < Height;
         }
 
-        public FractalPixel GetPixel(int i, int j)
+        public FractalPixel<T> GetPixel(int i, int j)
         {
             return Inside(i, j) ? m_pixels[i, j] : null;
         }
 
-        public void SetPixel(int i, int j, FractalPixel pixel)
+        public void SetPixel(int i, int j, FractalPixel<T> pixel)
         {
             if (i >= 0 && i < Width && j >= 0 && j < Height)
             {

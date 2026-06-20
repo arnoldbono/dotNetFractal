@@ -5,7 +5,7 @@ namespace dotNetFractal.Logic
     /// <summary>
     /// Computes the Mandelbrot fractal.
     /// </summary>
-    public class FractalMandelbrot : Fractal
+    public class FractalMandelbrot<T> : Fractal<T> where T : IFractalUnit<T>, new()
     {
         public FractalMandelbrot()
         {
@@ -40,8 +40,8 @@ namespace dotNetFractal.Logic
                     var x = Cx;
                     var y = Cy;
                     int teller = 0;
-                    var Radius2 = 0.0m;
-                    var PrevRadius2 = 0.0m;
+                    var Radius2 = new T();
+                    var PrevRadius2 = new T();
                     while (++teller < MaxIterations)
                     {
                         PrevRadius2 = Radius2;
@@ -59,7 +59,7 @@ namespace dotNetFractal.Logic
                         x = xx - yy + Cx;
                     }
 
-                    Area.Pixels.SetPixel(i, j, new FractalPixel(teller, Radius2, PrevRadius2));
+                    Area.Pixels.SetPixel(i, j, new FractalPixel<T>(teller, Radius2, PrevRadius2));
                 }
             }
 

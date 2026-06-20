@@ -5,10 +5,13 @@ namespace dotNetFractal.Logic
     /// <summary>
     /// Compute a Julia fractal.
     /// </summary>
-    public class FractalJulia : Fractal
+    public class FractalJulia<T> : Fractal<T> where T : IFractalUnit<T>, new()
     {
-        private decimal m_startingPointX = 0.0m;
-        private decimal m_startingPointY = 0.0m;
+        private T m_startingPointX = new();
+        private T m_startingPointY = new();
+
+        public T StartingPointX => m_startingPointX;
+        public T StartingPointY => m_startingPointY;
 
         public FractalJulia()
         {
@@ -40,14 +43,14 @@ namespace dotNetFractal.Logic
                     var x = x0;
                     var y = y0;
                     int teller = 0;
-                    decimal Radius2 = 0.0m;
-                    decimal PrevRadius2 = 0.0m;
+                    T Radius2 = new();
+                    T PrevRadius2 = new();
                     while (++teller < MaxIterations)
                     {
                         PrevRadius2 = Radius2;
 
-                        decimal xx = x * x;
-                        decimal yy = y * y;
+                        var xx = x * x;
+                        var yy = y * y;
 
                         if ((Radius2 = xx + yy) > MaxRadius)
                         {
@@ -59,7 +62,7 @@ namespace dotNetFractal.Logic
                         x = xx - yy + Cx;
                     }
 
-                    Area.Pixels.SetPixel(i, j, new FractalPixel(teller, Radius2, PrevRadius2));
+                    Area.Pixels.SetPixel(i, j, new FractalPixel<T>(teller, Radius2, PrevRadius2));
                 }
             }
 
@@ -68,10 +71,7 @@ namespace dotNetFractal.Logic
             Stopped = true;
         }
 
-        public decimal StartingPointX => m_startingPointX;
-        public decimal StartingPointY => m_startingPointY;
-
-        public void SetStartingPoint(decimal x, decimal y)
+        public void SetStartingPoint(T x, T y)
         {
             m_startingPointX = x;
             m_startingPointY = y;

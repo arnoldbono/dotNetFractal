@@ -14,6 +14,8 @@ namespace dotNetFractal.WPF.ViewModels
 {
     public class MainViewModel : BaseViewModel
     {
+        private static readonly FractalDecimal m_half = (FractalDecimal)0.5;
+
         private RelayCommand<EventArgs> m_newFractalCommand;
         private RelayCommand<EventArgs> m_imageResolutionCommand;
         private RelayCommand<EventArgs> m_fractalAreaCommand;
@@ -25,11 +27,11 @@ namespace dotNetFractal.WPF.ViewModels
         private RelayCommand<EventArgs> m_goForwardCommand;
 
         private ImageResolutionViewModel m_imageResolution;
-        private FractalAreaViewModel m_fractalArea;
+        private FractalAreaViewModel<FractalDecimal> m_fractalArea;
         private FractalSettingsViewModel m_fractalSettings;
 
-        private FractalStitcher m_stitcher;
-        private readonly FractalReplay m_fractalReplay = new();
+        private FractalStitcher<FractalDecimal> m_stitcher;
+        private readonly FractalReplay<FractalDecimal> m_fractalReplay = new();
         private int m_currentHistoryIndex = -1;
         private bool m_isNavigating = false;
 
@@ -222,7 +224,7 @@ namespace dotNetFractal.WPF.ViewModels
                 Width = 512,
                 Height = 512
             };
-            m_fractalArea = new FractalAreaViewModel();
+            m_fractalArea = new FractalAreaViewModel<FractalDecimal>();
             m_fractalSettings = new FractalSettingsViewModel
             {
                 MaxIterations = 256,
@@ -254,9 +256,9 @@ namespace dotNetFractal.WPF.ViewModels
                     m_currentHistoryIndex = m_fractalReplay.Add(displayArea);
                 }
 
-                m_stitcher = new FractalStitcher(() =>
+                m_stitcher = new FractalStitcher<FractalDecimal>(() =>
                 {
-                    var fractal = new FractalMandelbrot();
+                    var fractal = new FractalMandelbrot<FractalDecimal>();
                     if (m_fractalSettings != null)
                     {
                         fractal.MaxIterations = m_fractalSettings.MaxIterations;
@@ -400,17 +402,17 @@ namespace dotNetFractal.WPF.ViewModels
             var displayArea = m_fractalArea.GetDisplayArea((int)imageWidth, (int)imageHeight);
 
             // Get the center of the selected rectangle in fractal coordinates
-            var centerPixelX = (decimal)(pixelX1 + pixelX2) / 2.0m;
-            var centerPixelY = (decimal)(pixelY1 + pixelY2) / 2.0m;
-            var centerFractalX = displayArea.GetX((int)centerPixelX);
-            var centerFractalY = displayArea.GetY((int)centerPixelY);
+            var centerPixelX = (FractalDecimal)(pixelX1 + pixelX2) * m_half;
+            var centerPixelY = (FractalDecimal)(pixelY1 + pixelY2) * m_half;
+            var centerFractalX = displayArea.GetX(FractalDecimal.Floor(centerPixelX));
+            var centerFractalY = displayArea.GetY(FractalDecimal.Floor(centerPixelY));
 
             // Calculate the zoom-out ratio based on the rectangle size
-            var rectWidth = (decimal)Math.Abs(pixelX2 - pixelX1);
-            var rectHeight = (decimal)Math.Abs(pixelY2 - pixelY1);
-            var widthRatio = (decimal)imageWidth / rectWidth;
-            var heightRatio = (decimal)imageHeight / rectHeight;
-            var zoomOutRatio = Math.Min(widthRatio, heightRatio);
+            var rectWidth = (FractalDecimal)Math.Abs(pixelX2 - pixelX1);
+            var rectHeight = (FractalDecimal)Math.Abs(pixelY2 - pixelY1);
+            var widthRatio = (FractalDecimal)imageWidth / rectWidth;
+            var heightRatio = (FractalDecimal)imageHeight / rectHeight;
+            var zoomOutRatio = FractalDecimal.Min(widthRatio, heightRatio);
 
             // Calculate the current fractal area dimensions
             var currentWidth = m_fractalArea.Width;

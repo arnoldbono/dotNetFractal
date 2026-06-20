@@ -6,18 +6,18 @@ namespace dotNetFractal.Logic
     /// <summary>
     /// Compute a Fractal from left to right.
     /// </summary>
-    abstract public class Fractal : Worker, IFractal
+    abstract public class Fractal<T> : Worker, IFractal<T> where T : IFractalUnit<T>, new()
     {
         private readonly FractalColorMap m_colorMap = FractalColorMap.GetInstance();
 
-        private FractalArea m_area = null;
+        private FractalArea<T> m_area = null;
         private FractalAreaPatch m_areaPatch = null;
-        private decimal m_maxRadius = 4.0m;
+        private T m_maxRadius = (T)4.0;
         private int m_maxIterations = 256;
         private int m_maxColors = 16;
         private bool m_smoothColoring = true;
 
-        public FractalArea Area
+        public FractalArea<T> Area
         {
             get { return m_area; }
             set
@@ -41,7 +41,7 @@ namespace dotNetFractal.Logic
             }
         }
 
-        public decimal MaxRadius
+        public T MaxRadius
         {
             get { return m_maxRadius; }
             set { m_maxRadius = value; }
@@ -69,7 +69,7 @@ namespace dotNetFractal.Logic
         {
         }
 
-        public Color ComputeColor(int iteration, decimal previousRadius, decimal radius)
+        public Color ComputeColor(int iteration, T previousRadius, T radius)
         {
             if (iteration >= MaxIterations)
                 return Color.Black;
@@ -79,7 +79,7 @@ namespace dotNetFractal.Logic
             if (iteration != 0 && SmoothColoring)
             {
                 // PRE: radius > MaxRadius (otherwise the fractal computation loop should not have stopped)
-                var fraction = (double)Math.Sqrt((double)((MaxRadius - previousRadius) / (radius - previousRadius)));
+                var fraction = Math.Sqrt((double)((MaxRadius - previousRadius) / (radius - previousRadius)));
                 System.Diagnostics.Debug.Assert(fraction < 1.0);
 
                 GetColor(iteration - 1, out var red1, out var green1, out var blue1);
@@ -128,7 +128,5 @@ namespace dotNetFractal.Logic
                 }
             }
         }
-
-
     }
 }
