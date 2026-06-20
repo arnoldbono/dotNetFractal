@@ -20,20 +20,18 @@ namespace dotNetFractal.Logic
         private readonly List<IFractal> m_fractalsToUpdate = [];
         private readonly AutoResetEvent m_bitmapUpdateEvent = new (false);
         private readonly IFractalArea m_fractalArea;
-        private readonly IDisplayArea m_displayArea;
 
         private static int PatchSize => 128;
 
-        public IDisplayArea DisplayArea => m_displayArea;
+        public IDisplayArea DisplayArea => m_fractalArea.DisplayArea;
 
         public WaitHandle BitmapUpdateEvent => m_bitmapUpdateEvent;
 
-        public FractalStitcher(Func<IFractal> fractalFunc, IFractalArea fractalArea, IDisplayArea area)
+        public FractalStitcher(Func<IFractal> fractalFunc, IFractalArea fractalArea)
         {
-            Debug.Assert(fractalFunc != null && fractalArea != null && area != null);
+            Debug.Assert(fractalFunc != null && fractalArea != null);
             m_fractalFunc = fractalFunc;
             m_fractalArea = fractalArea;
-            m_displayArea = area;
         }
 
         public bool HasFractalsToUpdate
@@ -49,8 +47,8 @@ namespace dotNetFractal.Logic
 
         private List<IFractal> GetPatches(IDisplayArea area)
         {
-            var width = DisplayArea.PixelsHorizontal;
-            var height = DisplayArea.PixelsVertical;
+            var width = area.PixelsHorizontal;
+            var height = area.PixelsVertical;
 
             var horizontalPatches = width / PatchSize + (width % PatchSize != 0 ? 1 : 0);
             var vertitalPatches = height / PatchSize + (height % PatchSize != 0 ? 1 : 0);
@@ -81,7 +79,7 @@ namespace dotNetFractal.Logic
         {
             Stop = false;
 
-            var waitingFractals = GetPatches(DisplayArea);
+            var waitingFractals = GetPatches(m_fractalArea.DisplayArea);
 
             var processorCount = Environment.ProcessorCount;
             var startedFractals = new List<IFractal>();
@@ -204,7 +202,7 @@ namespace dotNetFractal.Logic
             return updated;
         }
 
-        public Bitmap GetBitmap(int width, int height)
+        public static Bitmap GetBitmap(int width, int height)
         {
             var bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
             DefaultFill(bitmap);

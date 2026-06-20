@@ -6,7 +6,7 @@ using dotNetFractal.Logic;
 
 namespace dotNetFractal.WPF.ViewModels
 {
-    public class FractalAreaViewModel : FractalAreaViewModel<FractalDouble>
+    public class FractalAreaViewModel : FractalAreaViewModel<FractalDecimal>
     {
         public FractalAreaViewModel() : base()
         {

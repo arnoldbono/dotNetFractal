@@ -161,7 +161,7 @@ namespace dotNetFractal.WPF.Presentation
                     else
                     {
                         // Zoom to the selected rectangle
-                        viewModel?.ZoomToRectangle(x1, y1, x2, y2, FractalImage.ActualWidth, FractalImage.ActualHeight);
+                        viewModel?.ZoomInToRectangle(x1, y1, x2, y2, FractalImage.ActualWidth, FractalImage.ActualHeight);
                     }
                 }
 

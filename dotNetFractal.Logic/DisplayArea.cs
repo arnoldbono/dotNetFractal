@@ -8,17 +8,13 @@ namespace dotNetFractal.Logic
         private readonly T m_half = (T)0.5;
         private readonly T m_one = (T)1.0;
 
-        public T CenterX { get; }
+        public T CenterX { get; private set; }
 
-        public T CenterY { get; }
+        public T CenterY { get; private set; }
 
-        public int PixelsHorizontal { get; }
+        public T Width { get; private set; }
 
-        public int PixelsVertical { get; }
-
-        public T Width { get; }
-
-        public T Height { get; }
+        public T Height { get; private set; }
 
         public T Right => CenterX + Width * m_half;
 
@@ -27,6 +23,10 @@ namespace dotNetFractal.Logic
         public T Top => CenterY + Height * m_half;
 
         public T Bottom => CenterY - Height * m_half;
+
+        public int PixelsHorizontal { get; private set; }
+
+        public int PixelsVertical { get; private set; }
 
         public DisplayArea(IDisplayArea displayArea)
         {
@@ -49,6 +49,11 @@ namespace dotNetFractal.Logic
             var length = T.Max(width, height);
             Width = length;
             Height = ratio * length;
+        }
+
+        public IDisplayArea ZoomIn(int i1, int j1, int i2, int j2, int horizontal, int vertical)
+        {
+            return DisplayAreaFactory.ZoomIn(this, i1, j1, i2, j2, horizontal, vertical);
         }
 
         public static bool operator == (DisplayArea<T> a, DisplayArea<T> b)
