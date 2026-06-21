@@ -51,6 +51,12 @@ namespace dotNetFractal.Logic
             Height = ratio * length;
         }
 
+        public void ResetJuliaSetCenter()
+        {
+            CenterX = (T)0.0;
+            CenterY = (T)0.0;
+        }
+
         public IDisplayArea ZoomIn(int i1, int j1, int i2, int j2, int horizontal, int vertical)
         {
             return DisplayAreaFactory.ZoomIn(this, i1, j1, i2, j2, horizontal, vertical);
