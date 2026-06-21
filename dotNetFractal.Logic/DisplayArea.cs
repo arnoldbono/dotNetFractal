@@ -51,7 +51,7 @@ namespace dotNetFractal.Logic
             Height = ratio * length;
         }
 
-        public void ResetJuliaSetCenter()
+        public void JuliaSetResetCenter()
         {
             CenterX = (T)0.0;
             CenterY = (T)0.0;

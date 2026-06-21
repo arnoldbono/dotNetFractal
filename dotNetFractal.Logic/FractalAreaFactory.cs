@@ -16,7 +16,7 @@ namespace dotNetFractal.Logic
                 {
                     var displayArea = fractalAreaT1.DisplayArea as DisplayArea<FractalDecimal>;
                     fractalAreaT1.SetJulieSet(displayArea.CenterX, displayArea.CenterY);
-                    fractalAreaT1.DisplayArea.ResetJuliaSetCenter();
+                    fractalAreaT1.DisplayArea.JuliaSetResetCenter();
                 }
             }
             else if (fractalArea is FractalArea<FractalDouble> fractalAreaT2)
@@ -30,7 +30,7 @@ namespace dotNetFractal.Logic
                 {
                     var displayArea = fractalAreaT2.DisplayArea as DisplayArea<FractalDouble>;
                     fractalAreaT2.SetJulieSet(displayArea.CenterX, displayArea.CenterY);
-                    fractalAreaT2.DisplayArea.ResetJuliaSetCenter();
+                    fractalAreaT2.DisplayArea.JuliaSetResetCenter();
                 }
             }
         }

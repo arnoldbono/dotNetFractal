@@ -11,7 +11,7 @@ namespace dotNetFractal.Logic
 
         void Write(BinaryWriter bw);
 
-        void ResetJuliaSetCenter();
+        void JuliaSetResetCenter();
 
         IDisplayArea ZoomIn(int i1, int j1, int i2, int j2, int horizontal, int vertical);
     }
