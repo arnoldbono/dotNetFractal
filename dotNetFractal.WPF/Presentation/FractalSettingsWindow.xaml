@@ -27,6 +27,8 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -37,6 +39,8 @@
                 <Label Content="Max Color Steps:" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left"/>
                 <TextBox Text="{Binding MaxColorSteps}" Width="80" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right" HorizontalContentAlignment="Right" VerticalAlignment="Center"/>
                 <CheckBox Content="Smooth Coloring" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" IsChecked="{Binding SmoothColoring}" VerticalAlignment="Center" Margin="5,5,0,0"/>
+                <CheckBox Content="High Precision" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" IsChecked="{Binding HighPrecision}" VerticalAlignment="Center" Margin="5,5,0,0"/>
+                <CheckBox Content="Julia Set" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" IsChecked="{Binding Julia}" VerticalAlignment="Center" Margin="5,5,0,0"/>
             </Grid>
         </GroupBox>
         <StackPanel Grid.Row="1" Margin="0,5,0,0" Orientation="Horizontal" HorizontalAlignment="Right" >

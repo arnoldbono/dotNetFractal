@@ -5,7 +5,7 @@ namespace dotNetFractal.WPF
 {
     public enum ResolutionEnum
     {
-        [Description("300,300")]
+        [Description("512,512")]
         Custom,
         [Description("1920,1080")]
         FullHD,

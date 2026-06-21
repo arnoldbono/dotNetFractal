@@ -4,17 +4,19 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Input;
 using System.Windows.Media;
+
 using dotNetFractal.Logic;
 
 namespace dotNetFractal.WPF.ViewModels
 {
     /// <summary>
-    /// ViewModel for the Color Map Window that generates a bitmap showing the FractalColorMap
+    /// ViewModel for the Color Map Window that generates a bitmap showing the FractalColorMap.
     /// </summary>
     public class ColorMapViewModel : BaseViewModel
     {
-        private ImageSource m_colorMapImage;
         private readonly FractalColorMap m_colorMap;
+
+        private ImageSource m_colorMapImage;
         private EditableFractalColor m_selectedColor;
         private RelayCommand<object> m_addColorCommand;
         private RelayCommand<object> m_deleteColorCommand;
@@ -63,24 +65,27 @@ namespace dotNetFractal.WPF.ViewModels
             m_colorMap = FractalColorMap.GetInstance();
 
             // Create editable wrappers for the colors
-            Colors = new ObservableCollection<EditableFractalColor>();
+            Colors = [];
             foreach (var color in m_colorMap.Colors)
             {
                 var editableColor = new EditableFractalColor(color);
-                editableColor.ColorChanged += OnColorChanged;
+                editableColor.PropertyChanged += OnColorChanged;
                 Colors.Add(editableColor);
             }
 
             ColorMapImage = GenerateColorMapBitmap();
         }
 
-        private void OnColorChanged()
+        private void OnColorChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             // Update the underlying FractalColorMap
-            for (int i = 0; i < Colors.Count && i < m_colorMap.Colors.Length; i++)
+            var count = Math.Min(Colors.Count, m_colorMap.Colors.Length);
+            var colors = new FractalColor[count];
+            for (int i = 0; i < count; i++)
             {
-                m_colorMap.Colors[i] = Colors[i].ToFractalColor();
+                colors[i] = Colors[i].ToFractalColor();
             }
+            m_colorMap.Colors = colors;
 
             // Regenerate the bitmap
             ColorMapImage = GenerateColorMapBitmap();
@@ -91,31 +96,27 @@ namespace dotNetFractal.WPF.ViewModels
         /// </summary>
         private ImageSource GenerateColorMapBitmap()
         {
-            const int width = 256;
-            const int height = 1;
+            const int Width = 256;
+            const int Height = 1;
+            const double FractionStep = 1.0 / (Width - 1);
 
             // Create a 256x1 bitmap
-            using (var bitmap = new Bitmap(width, height, System.Drawing.Imaging.PixelFormat.Format32bppArgb))
+            using (var bitmap = new Bitmap(Width, Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb))
             {
                 // Fill each pixel with the corresponding color from the color map
-                for (int x = 0; x < width; x++)
+                for (int x = 0; x < Width; x++)
                 {
-                    // Calculate fraction from 0.0 to 1.0
-                    double fraction = x / (double)(width - 1);
-
-                    // Get color from the FractalColorMap
-                    var fractalColor = m_colorMap[fraction];
+                    double fraction = x * FractionStep;
+                    var fractalColor = m_colorMap.GetColor(fraction);
 
                     // Set the pixel color
                     var color = System.Drawing.Color.FromArgb(
                         fractalColor.Red,
                         fractalColor.Green,
                         fractalColor.Blue);
-
                     bitmap.SetPixel(x, 0, color);
                 }
 
-                // Convert System.Drawing.FractalImage to WPF ImageSource
                 return ConvertBitmapToImageSource.Clone(bitmap);
             }
         }
@@ -167,7 +168,7 @@ namespace dotNetFractal.WPF.ViewModels
 
             // Create the new color
             var newColor = new EditableFractalColor(new FractalColor(red, green, blue, fraction));
-            newColor.ColorChanged += OnColorChanged;
+            newColor.PropertyChanged += OnColorChanged;
 
             // Insert on the selected row
             Colors.Insert(selectedIndex, newColor);
@@ -190,7 +191,7 @@ namespace dotNetFractal.WPF.ViewModels
             }
 
             // Remove the selected color
-            SelectedColor.ColorChanged -= OnColorChanged;
+            SelectedColor.PropertyChanged -= OnColorChanged;
             Colors.Remove(SelectedColor);
             SelectedColor = null;
 
@@ -212,7 +213,7 @@ namespace dotNetFractal.WPF.ViewModels
             // Clear existing colors
             foreach (var color in Colors)
             {
-                color.ColorChanged -= OnColorChanged;
+                color.PropertyChanged -= OnColorChanged;
             }
             Colors.Clear();
 
@@ -223,7 +224,7 @@ namespace dotNetFractal.WPF.ViewModels
             foreach (var color in m_colorMap.Colors)
             {
                 var editableColor = new EditableFractalColor(color);
-                editableColor.ColorChanged += OnColorChanged;
+                editableColor.PropertyChanged += OnColorChanged;
                 Colors.Add(editableColor);
             }
 

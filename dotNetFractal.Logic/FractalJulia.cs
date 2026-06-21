@@ -3,7 +3,7 @@ using System;
 namespace dotNetFractal.Logic
 {
     /// <summary>
-    /// Compute a Julia fractal.
+    /// Compute a JuliaSet fractal.
     /// </summary>
     public class FractalJulia<T> : Fractal<T> where T : IFractalUnit<T>, new()
     {
@@ -30,7 +30,7 @@ namespace dotNetFractal.Logic
 
             var displayArea = (DisplayArea<T>)Area.DisplayArea;
 
-            // plot Julia Set using Mandelbrot formula
+            // plot JuliaSet Set using Mandelbrot formula
             var Cx = m_startingPointX;
             var Cy = m_startingPointY;
             var maxRadius = (T)MaxRadius;
@@ -40,6 +40,11 @@ namespace dotNetFractal.Logic
 
                 for (var j = startIndexHeight; j < stopIndexHeight && !Stop; ++j)
                 {
+                    if (!Area.Pixels.Inside(i, j))
+                    {
+                        continue;
+                    }
+
                     var y0 = displayArea.GetY(j);
                     var x = x0;
                     var y = y0;

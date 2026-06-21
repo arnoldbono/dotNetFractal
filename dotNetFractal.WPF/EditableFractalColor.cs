@@ -1,5 +1,7 @@
+using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+
 using dotNetFractal.Logic;
 
 namespace dotNetFractal.WPF
@@ -7,12 +9,12 @@ namespace dotNetFractal.WPF
     /// <summary>
     /// Editable wrapper for FractalColor to support data binding and property change notifications
     /// </summary>
-    public class EditableFractalColor : INotifyPropertyChanged
+    public class EditableFractalColor(FractalColor color) : INotifyPropertyChanged
     {
-        private int m_red;
-        private int m_green;
-        private int m_blue;
-        private double m_fraction;
+        private int m_red = color.Red;
+        private int m_green = color.Green;
+        private int m_blue = color.Blue;
+        private double m_fraction = color.Fraction;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -23,9 +25,8 @@ namespace dotNetFractal.WPF
             {
                 if (m_red != value)
                 {
-                    m_red = value & 0xFF; // Clamp to 0-255
+                    m_red = ClampToByte(value);
                     OnPropertyChanged();
-                    OnColorChanged();
                 }
             }
         }
@@ -37,9 +38,8 @@ namespace dotNetFractal.WPF
             {
                 if (m_green != value)
                 {
-                    m_green = value & 0xFF; // Clamp to 0-255
+                    m_green = ClampToByte(value);
                     OnPropertyChanged();
-                    OnColorChanged();
                 }
             }
         }
@@ -51,9 +51,8 @@ namespace dotNetFractal.WPF
             {
                 if (m_blue != value)
                 {
-                    m_blue = value & 0xFF; // Clamp to 0-255
+                    m_blue = ClampToByte(value);
                     OnPropertyChanged();
-                    OnColorChanged();
                 }
             }
         }
@@ -65,21 +64,20 @@ namespace dotNetFractal.WPF
             {
                 if (m_fraction != value)
                 {
-                    m_fraction = value;
+                    m_fraction = ClampToFraction(value);
                     OnPropertyChanged();
-                    OnColorChanged();
                 }
             }
         }
 
-        public event System.Action ColorChanged;
-
-        public EditableFractalColor(FractalColor color)
+        private static int ClampToByte(int value)
         {
-            m_red = color.Red;
-            m_green = color.Green;
-            m_blue = color.Blue;
-            m_fraction = color.Fraction;
+            return Math.Max(0, Math.Min(255, value));
+        }
+
+        private static double ClampToFraction(double value)
+        {
+            return Math.Max(0.0, Math.Min(1.0, value));
         }
 
         public FractalColor ToFractalColor()
@@ -90,11 +88,6 @@ namespace dotNetFractal.WPF
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        private void OnColorChanged()
-        {
-            ColorChanged?.Invoke();
         }
     }
 }

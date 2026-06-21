@@ -30,7 +30,7 @@ namespace dotNetFractal.Logic
             {
                 var Cx = displayArea.GetX(i);
 
-                for (var j = startIndexHeight; j < stopIndexHeight; ++j)
+                for (var j = startIndexHeight; j < stopIndexHeight && !Stop; ++j)
                 {
                     if (!Area.Pixels.Inside(i, j))
                     {

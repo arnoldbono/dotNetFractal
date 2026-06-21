@@ -1,12 +1,18 @@
 ﻿using ReactiveUI;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 
 using dotNetFractal.Logic;
 
 namespace dotNetFractal.WPF.ViewModels
 {
-    public class FractalAreaViewModel : FractalAreaViewModel<FractalDecimal>
+    /// <summary>
+    /// The view model for the fractal area, which is used to display the fractal in the UI.
+    /// Here, we use decimals to have the best precision for the fractal area.
+    /// This view model is used by the XAML view to bind the fractal area properties to the UI elements.
+    /// </summary>
+    public sealed class FractalAreaViewModel : FractalAreaViewModelBase<FractalDecimal>
     {
         public FractalAreaViewModel() : base()
         {
@@ -14,7 +20,13 @@ namespace dotNetFractal.WPF.ViewModels
         }
     }
 
-    public class FractalAreaViewModel<T> : BaseViewModel where T : IFractalUnit<T>, new()
+    /// <summary>
+    /// INTERNAL USE ONLY - Do not use directly. Use FractalAreaViewModel instead.
+    /// This generic base class is not intended for public consumption.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public class FractalAreaViewModelBase<T> : BaseViewModel where T : IFractalUnit<T>, new()
     {
         private readonly T m_half = (T)0.5;
 
@@ -118,7 +130,7 @@ namespace dotNetFractal.WPF.ViewModels
             }
         }
 
-        public FractalAreaViewModel()
+        public FractalAreaViewModelBase()
         {
             this.WhenAnyValue(x => x.SelectedPlate).Subscribe(OnSelectedPlate);
         }

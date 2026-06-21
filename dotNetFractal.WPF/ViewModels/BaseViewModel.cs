@@ -52,7 +52,7 @@ namespace dotNetFractal.WPF.ViewModels
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
 
-        private void OnAccept(Window window)
+        private static void OnAccept(Window window)
         {
             window.DialogResult = true;
         }

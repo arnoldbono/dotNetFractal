@@ -26,9 +26,9 @@ namespace dotNetFractal.WPF.ViewModels
         private RelayCommand<EventArgs> m_goBackCommand;
         private RelayCommand<EventArgs> m_goForwardCommand;
 
-        private ImageResolutionViewModel m_imageResolution;
-        private FractalAreaViewModel m_fractalArea;
-        private FractalSettingsViewModel m_fractalSettings;
+        private ImageResolutionViewModel m_imageResolution = new ();
+        private FractalAreaViewModel m_fractalArea = new();
+        private FractalSettingsViewModel m_fractalSettings = new();
 
         private FractalStitcher m_stitcher;
         private readonly FractalReplay m_fractalReplay = new();
@@ -93,7 +93,7 @@ namespace dotNetFractal.WPF.ViewModels
         {
             m_dispatcher = Dispatcher.CurrentDispatcher;
             StartUpdateWorkerThread();
-            OnNewFractal();
+            StartFractalComputation();
         }
 
         public void Dispose()
@@ -129,8 +129,8 @@ namespace dotNetFractal.WPF.ViewModels
 
             if (m_stitcher == null) return;
 
-            int width = m_stitcher.DisplayArea.PixelsHorizontal;
-            int height = m_stitcher.DisplayArea.PixelsVertical;
+            int width = m_stitcher.FractalSettings.FractalArea.DisplayArea.PixelsHorizontal;
+            int height = m_stitcher.FractalSettings.FractalArea.DisplayArea.PixelsVertical;
             if ((m_bitmap == null) ||
                 (m_bitmap.Width != width) ||
                 (m_bitmap.Height != height))
@@ -218,18 +218,9 @@ namespace dotNetFractal.WPF.ViewModels
 
         public void OnNewFractal()
         {
-            m_imageResolution = new ImageResolutionViewModel
-            {
-                SelectedResolution = ResolutionEnum.Custom,
-                Width = 512,
-                Height = 512
-            };
-            m_fractalArea = new FractalAreaViewModel();
-            m_fractalSettings = new FractalSettingsViewModel
-            {
-                MaxIterations = 256,
-                MaxColorSteps = 16
-            };
+            m_imageResolution = new ();
+            m_fractalArea = new ();
+            m_fractalSettings = new ();
             StartFractalComputation();
         }
 
@@ -256,35 +247,15 @@ namespace dotNetFractal.WPF.ViewModels
                     m_currentHistoryIndex = m_fractalReplay.Add(displayArea);
                 }
 
-                // Here is where upgrade the from FractalDouble to FractalDecimal
-                bool useDecimal = false; // m_fractalArea.RequiresDecimalPrecision(displayArea);
-                IDisplayArea displayAreaConverted = DisplayAreaFactory.Convert(displayArea, useDecimal);
-
-                m_stitcher = new FractalStitcher(() =>
-                    {
-                        if (useDecimal)
-                        {
-                            var fractal = new FractalMandelbrot<FractalDecimal>
-                            {
-                                MaxIterations = m_fractalSettings.MaxIterations,
-                                MaxColors = m_fractalSettings.MaxColorSteps,
-                                SmoothColoring = m_fractalSettings.SmoothColoring
-                            };
-                            return fractal;
-                        }
-                        else
-                        {
-                            var fractal = new FractalMandelbrot<FractalDouble>
-                            {
-                                MaxIterations = m_fractalSettings.MaxIterations,
-                                MaxColors = m_fractalSettings.MaxColorSteps,
-                                SmoothColoring = m_fractalSettings.SmoothColoring
-                            };
-                            return fractal;
-                        }
-                    },
-                    DisplayAreaFactory.CreateFractalArea(displayAreaConverted)
+                var fractalSettings = new FractalSettings(displayArea,
+                    m_fractalSettings.MaxIterations,
+                    m_fractalSettings.MaxColorSteps,
+                    m_fractalSettings.SmoothColoring,
+                    m_fractalSettings.HighPrecision,
+                    m_fractalSettings.JuliaSet
                 );
+
+                m_stitcher = new FractalStitcher(fractalSettings);
 
                 if (MainImage != null)
                 {
@@ -414,6 +385,27 @@ namespace dotNetFractal.WPF.ViewModels
             StartFractalComputation(true);
         }
 
+        public void ComputeJuliaSet(double pixelX1, double pixelY1, double pixelX2, double pixelY2, double imageWidth, double imageHeight)
+        {
+            if (m_fractalArea == null || imageWidth == 0 || imageHeight == 0)
+                return;
+
+            var displayArea = m_fractalArea.GetDisplayArea((int)imageWidth, (int)imageHeight);
+
+            var displayAreaTyped = displayArea as DisplayArea<FractalDecimal> ?? throw new InvalidOperationException("Unsupported display area type.");
+
+            // Update the fractal area
+            m_fractalArea.CenterX = displayAreaTyped.GetCenterX((int)pixelX1, (int)pixelX2);
+            m_fractalArea.CenterY = displayAreaTyped.GetCenterY((int)pixelY1, (int)pixelY2);
+            m_fractalArea.Width = displayAreaTyped.GetWidth((int)pixelX1, (int)pixelX2);
+            m_fractalArea.Height = displayAreaTyped.GetHeight((int)pixelY1, (int)pixelY2);
+
+            m_fractalSettings.JuliaSet = true;
+
+            // Regenerate the fractal with the new area
+            StartFractalComputation(true);
+        }
+
         public void ZoomOutFromRectangle(double pixelX1, double pixelY1, double pixelX2, double pixelY2, double imageWidth, double imageHeight)
         {
             if (m_fractalArea == null || imageWidth == 0 || imageHeight == 0)
@@ -499,6 +491,8 @@ namespace dotNetFractal.WPF.ViewModels
                 m_fractalArea.CenterY = displayAreaTyped.CenterY;
                 m_fractalArea.Width = displayAreaTyped.Width;
                 m_fractalArea.Height = displayAreaTyped.Height;
+
+                m_fractalSettings.JuliaSet = false; // Ensure we're showing the Mandelbrot set when navigating history
 
                 // Regenerate the fractal with the historical area
                 StartFractalComputation(true);

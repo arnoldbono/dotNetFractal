@@ -95,7 +95,7 @@ namespace dotNetFractal.Logic
         public void GetColor(int index, out int red, out int green, out int blue)
         {
             var fraction = (index % MaxColors) / (double)MaxColors;
-            var color = m_colorMap[fraction];
+            var color = m_colorMap.GetColor(fraction);
             red = color.Red;
             green = color.Green;
             blue = color.Blue;

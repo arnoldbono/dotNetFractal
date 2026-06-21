@@ -9,29 +9,24 @@ using System.Drawing.Imaging;
 namespace dotNetFractal.Logic
 {
     /// <summary>
-    /// Subdivides FractalQuarters until the DisplayArea is no longer completely within one
-    /// whole FractalQuarter.
-    /// Also, subdivides those FractalQuarters whose pixels per Width is lower than the number
-    /// of pixels of the DisplayArea per Width.
+    /// Subdivides the display area into patches and computes these using worker threads.
     /// </summary>
     public class FractalStitcher : Worker
     {
-        private readonly Func<IFractal> m_fractalFunc;
+        private readonly FractalSettings m_fractalSettings;
         private readonly List<IFractal> m_fractalsToUpdate = [];
         private readonly AutoResetEvent m_bitmapUpdateEvent = new (false);
-        private readonly IFractalArea m_fractalArea;
 
         private static int PatchSize => 128;
 
-        public IDisplayArea DisplayArea => m_fractalArea.DisplayArea;
+        public FractalSettings FractalSettings => m_fractalSettings;
 
         public WaitHandle BitmapUpdateEvent => m_bitmapUpdateEvent;
 
-        public FractalStitcher(Func<IFractal> fractalFunc, IFractalArea fractalArea)
+        public FractalStitcher(FractalSettings fractalSettings)
         {
-            Debug.Assert(fractalFunc != null && fractalArea != null);
-            m_fractalFunc = fractalFunc;
-            m_fractalArea = fractalArea;
+            Debug.Assert(fractalSettings != null && fractalSettings.FractalArea != null);
+            m_fractalSettings = fractalSettings;
         }
 
         public bool HasFractalsToUpdate
@@ -65,8 +60,7 @@ namespace dotNetFractal.Logic
                     var startIndexHeight = j * PatchSize;
                     var stopIndexHeight = Math.Min(startIndexHeight + PatchSize, height);
 
-                    var fractal = m_fractalFunc();
-                    fractal.Area = m_fractalArea;
+                    var fractal = FractalFactory.CreateFractal(m_fractalSettings);
                     fractal.AreaPatch = new FractalAreaPatch(startIndexWidth, startIndexHeight, PatchSize);
                     patches.Add(fractal);
                 }
@@ -79,7 +73,7 @@ namespace dotNetFractal.Logic
         {
             Stop = false;
 
-            var waitingFractals = GetPatches(m_fractalArea.DisplayArea);
+            var waitingFractals = GetPatches(m_fractalSettings.FractalArea.DisplayArea);
 
             var processorCount = Environment.ProcessorCount;
             var startedFractals = new List<IFractal>();

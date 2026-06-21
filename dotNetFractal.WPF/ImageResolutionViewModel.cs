@@ -74,6 +74,8 @@ namespace dotNetFractal.WPF
         public ImageResolutionViewModel()
         {
             SelectedResolution = ResolutionEnum.Custom;
+            Width = 512;
+            Height = 512;
             this.WhenAnyValue(x => x.SelectedResolution).Subscribe(OnSelectedResolution);
         }
 

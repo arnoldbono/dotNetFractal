@@ -136,43 +136,54 @@ namespace dotNetFractal.WPF.Presentation
 
         private void SelectionCanvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            if (_isSelecting && m_selectionStart.HasValue)
+            if (DataContext is not MainViewModel viewModel)
+                return;
+
+            if (!_isSelecting || !m_selectionStart.HasValue)
+                return;
+
+            // Check if Shift key is pressed
+            var isShiftPressed = Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift);
+
+            _isSelecting = false;
+            SelectionCanvas.ReleaseMouseCapture();
+
+            // Calculate rectangle bounds
+            var x1 = Canvas.GetLeft(SelectionRectangle);
+            var y1 = Canvas.GetTop(SelectionRectangle);
+            var x2 = x1 + SelectionRectangle.Width;
+            var y2 = y1 + SelectionRectangle.Height;
+
+            // Only process if we have a meaningful rectangle (at least 5x5 pixels)
+            if (Math.Abs(x2 - x1) > 5 && Math.Abs(y2 - y1) > 5)
             {
-                _isSelecting = false;
-                SelectionCanvas.ReleaseMouseCapture();
-
-                // Calculate rectangle bounds
-                var x1 = Canvas.GetLeft(SelectionRectangle);
-                var y1 = Canvas.GetTop(SelectionRectangle);
-                var x2 = x1 + SelectionRectangle.Width;
-                var y2 = y1 + SelectionRectangle.Height;
-
-                // Only process if we have a meaningful rectangle (at least 5x5 pixels)
-                if (Math.Abs(x2 - x1) > 5 && Math.Abs(y2 - y1) > 5)
+                if (isShiftPressed)
                 {
-                    var viewModel = DataContext as MainViewModel;
-
+                    viewModel.ComputeJuliaSet(x1, y1, x2, y2, FractalImage.ActualWidth, FractalImage.ActualHeight);
+                }
+                else
+                {
                     var isCtrlPressed = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
                     if (isCtrlPressed)
                     {
                         // Zoom out with the selected rectangle as the new center
-                        viewModel?.ZoomOutFromRectangle(x1, y1, x2, y2, FractalImage.ActualWidth, FractalImage.ActualHeight);
+                        viewModel.ZoomOutFromRectangle(x1, y1, x2, y2, FractalImage.ActualWidth, FractalImage.ActualHeight);
                     }
                     else
                     {
                         // Zoom to the selected rectangle
-                        viewModel?.ZoomInToRectangle(x1, y1, x2, y2, FractalImage.ActualWidth, FractalImage.ActualHeight);
+                        viewModel.ZoomInToRectangle(x1, y1, x2, y2, FractalImage.ActualWidth, FractalImage.ActualHeight);
                     }
                 }
-
-                // Reset SelectionRectangle fill and show FractalImage
-                SelectionRectangle.Fill = System.Windows.Media.Brushes.Transparent;
-                FractalImage.Visibility = Visibility.Visible;
-
-                // Hide the selection rectangle
-                SelectionRectangle.Visibility = Visibility.Collapsed;
-                m_selectionStart = null;
             }
+
+            // Reset SelectionRectangle fill and show FractalImage
+            SelectionRectangle.Fill = System.Windows.Media.Brushes.Transparent;
+            FractalImage.Visibility = Visibility.Visible;
+
+            // Hide the selection rectangle
+            SelectionRectangle.Visibility = Visibility.Collapsed;
+            m_selectionStart = null;
         }
     }
 }

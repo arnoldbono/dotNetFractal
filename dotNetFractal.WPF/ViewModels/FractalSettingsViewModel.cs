@@ -2,9 +2,11 @@ namespace dotNetFractal.WPF.ViewModels
 {
     public class FractalSettingsViewModel : BaseViewModel
     {
-        private int m_maxIterations;
-        private int m_maxColorSteps;
-        private bool m_smoothColoring;
+        private int m_maxIterations = 256;
+        private int m_maxColorSteps = 16;
+        private bool m_smoothColoring = true;
+        private bool m_highPrecision = false;
+        private bool m_juliaSet = false;
 
         public int MaxIterations
         {
@@ -51,11 +53,38 @@ namespace dotNetFractal.WPF.ViewModels
             }
         }
 
+        public bool HighPrecision
+        {
+            get => m_highPrecision;
+            set
+            {
+                if (m_highPrecision == value)
+                {
+                    return;
+                }
+
+                m_highPrecision = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool JuliaSet
+        {
+            get => m_juliaSet;
+            set
+            {
+                if (m_juliaSet == value)
+                {
+                    return;
+                }
+
+                m_juliaSet = value;
+                OnPropertyChanged();
+            }
+        }
+
         public FractalSettingsViewModel()
         {
-            MaxIterations = 4096;
-            MaxColorSteps = 256;
-            SmoothColoring = true;
         }
     }
 }
