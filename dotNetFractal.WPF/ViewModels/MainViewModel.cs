@@ -93,7 +93,7 @@ namespace dotNetFractal.WPF.ViewModels
         {
             m_dispatcher = Dispatcher.CurrentDispatcher;
             StartUpdateWorkerThread();
-            StartFractalComputation();
+            StartFractalComputation(false, true);
         }
 
         public void Dispose()
@@ -221,10 +221,14 @@ namespace dotNetFractal.WPF.ViewModels
             m_imageResolution = new ();
             m_fractalArea = new ();
             m_fractalSettings = new ();
-            StartFractalComputation();
+            m_stitcher?.StopThread();
+            m_fractalReplay.ClearHistory();
+            m_currentHistoryIndex = 0;
+            m_stitcher = null;
+            StartFractalComputation(false, true);
         }
 
-        private void StartFractalComputation(bool force = false)
+        private void StartFractalComputation(bool juliaSet, bool force)
         {
             if (force || m_stitcher == null)
             {
@@ -258,12 +262,16 @@ namespace dotNetFractal.WPF.ViewModels
 
                 m_stitcher = new FractalStitcher(fractalSettings);
 
-                if (m_fractalSettings.JuliaSet)
+                if (juliaSet || oldFactalArea?.JuliaSet == true)
                     FractalAreaFactory.SetJuliaSet(m_stitcher.FractalSettings.FractalArea, oldFactalArea);
 
                 if (MainImage != null)
                 {
+                    var oldBitmap = m_bitmap;
                     m_bitmap = FractalStitcher.GetBitmap(Width, Height);
+                    // ROBOCOP:
+                    // Use the oldFactalArea to map the previous image to the new one by stretching.or shrinking it to fit the new dimensions,
+                    // so that we can show a preview of the new fractal while it's being computed.
                     MainImage = ConvertBitmapToImageSource.ConvertFast(m_bitmap);
                 }
 
@@ -283,7 +291,7 @@ namespace dotNetFractal.WPF.ViewModels
 
             if (dlg.ShowDialog() == true)
             {
-                StartFractalComputation(true);
+                StartFractalComputation(m_fractalArea.JuliaSet, true);
             }
         }
 
@@ -296,7 +304,7 @@ namespace dotNetFractal.WPF.ViewModels
 
             if (dlg.ShowDialog() == true)
             {
-                StartFractalComputation(true);
+                StartFractalComputation(m_fractalArea.JuliaSet, true);
             }
         }
 
@@ -305,7 +313,7 @@ namespace dotNetFractal.WPF.ViewModels
             var dlg = new ColorMapWindow();
             if (dlg.ShowDialog() == true)
             {
-                StartFractalComputation(true);
+                StartFractalComputation(m_fractalArea.JuliaSet, true);
             }
         }
 
@@ -318,7 +326,7 @@ namespace dotNetFractal.WPF.ViewModels
 
             if (dlg.ShowDialog() == true)
             {
-                StartFractalComputation(true);
+                StartFractalComputation(m_fractalArea.JuliaSet, true);
             }
         }
         public void OnCopy()
@@ -385,10 +393,9 @@ namespace dotNetFractal.WPF.ViewModels
             m_fractalArea.Width = displayAreaTyped.GetWidth((int)pixelX1, (int)pixelX2);
             m_fractalArea.Height = displayAreaTyped.GetHeight((int)pixelY1, (int)pixelY2);
 
-            m_fractalSettings.JuliaSet = true;
-
             // Regenerate the fractal with the new area
-            StartFractalComputation(true);
+            m_fractalArea.JuliaSet = true;
+            StartFractalComputation(m_fractalArea.JuliaSet, true);
         }
 
         public void ZoomInToRectangle(double pixelX1, double pixelY1, double pixelX2, double pixelY2, double imageWidth, double imageHeight)
@@ -407,7 +414,7 @@ namespace dotNetFractal.WPF.ViewModels
             m_fractalArea.Height = displayAreaTyped.GetHeight((int)pixelY1, (int)pixelY2);
 
             // Regenerate the fractal with the new area
-            StartFractalComputation(true);
+            StartFractalComputation(false, true);
         }
 
         public void ZoomOutFromRectangle(double pixelX1, double pixelY1, double pixelX2, double pixelY2, double imageWidth, double imageHeight)
@@ -446,7 +453,7 @@ namespace dotNetFractal.WPF.ViewModels
             m_fractalArea.Height = newHeight;
 
             // Regenerate the fractal with the new area
-            StartFractalComputation(true);
+            StartFractalComputation(false, true);
         }
 
         private bool CanGoBack()
@@ -496,10 +503,8 @@ namespace dotNetFractal.WPF.ViewModels
                 m_fractalArea.Width = displayAreaTyped.Width;
                 m_fractalArea.Height = displayAreaTyped.Height;
 
-                m_fractalSettings.JuliaSet = false; // Ensure we're showing the Mandelbrot set when navigating history
-
                 // Regenerate the fractal with the historical area
-                StartFractalComputation(true);
+                StartFractalComputation(false, true);
             }
             finally
             {

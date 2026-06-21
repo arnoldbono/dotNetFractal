@@ -1,9 +1,8 @@
-﻿using ReactiveUI;
+﻿using dotNetFractal.Logic;
+using ReactiveUI;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-
-using dotNetFractal.Logic;
 
 namespace dotNetFractal.WPF.ViewModels
 {
@@ -30,7 +29,15 @@ namespace dotNetFractal.WPF.ViewModels
     {
         private readonly T m_half = (T)0.5;
 
-        public readonly List<FractalPlate> m_plates =
+        private T m_centerX = new();
+        private T m_centerY = new();
+        private T m_width = new();
+        private T m_height = new();
+        private int m_selectedPlate = 0;
+        private bool m_juliaSet = false;
+        private List<FractalPlate> m_plates = [];
+
+        public readonly List<FractalPlate> m_mandelbrotPlates =
         [
             new("Plate 0",  -2.4,      -1.4,      1.4,      1.4),
             new("Plate 4",  -2.0,      -1.25,      0.5,      1.25),
@@ -43,13 +50,37 @@ namespace dotNetFractal.WPF.ViewModels
             new("Plate 9",  -0.745464,  0.112967, -0.745388, 0.113030)
         ];
 
-        private T m_centerX = new();
-        private T m_centerY = new();
-        private T m_width = new();
-        private T m_height = new();
-        private int m_selectedPlate = 0;
+        public readonly List<FractalPlate> m_juliaSetPlates =
+        [
+            new JuliaFractalPlate("Plate 12, A",  0.238498,  0.519198, 4.0, 4.0),
+            new JuliaFractalPlate("Plate 13, B", -0.743036,  0.113467, 4.0, 4.0),
+            new JuliaFractalPlate("Plate --, C", -0.192175,  0.656734, 4.0, 4.0),
+            new JuliaFractalPlate("Plate 14, D",  0.108294, -0.670487, 4.0, 4.0),
+            new JuliaFractalPlate("Plate --, E", -0.392488, -0.587966, 4.0, 4.0),
+            new JuliaFractalPlate("Plate --, F", -0.392488, -0.587966, 4.0, 4.0),
+            new JuliaFractalPlate("Plate 15, G",  0.138341,  0.649857, 4.0, 4.0),
+            new JuliaFractalPlate("Plate 16, H",  0.278560, -0.003483, 4.0, 4.0),
+            new JuliaFractalPlate("Plate --, I", -1.258842,  0.065330, 4.0, 4.0),
+            new JuliaFractalPlate("Plate --, J", -1.028482, -0.264756, 4.0, 4.0),
+            new JuliaFractalPlate("Plate --, K",  0.268545, -0.003483, 4.0, 4.0),
+            new JuliaFractalPlate("Plate 17, L",  0.268545, -0.003483, 4.0, 4.0),
+            new JuliaFractalPlate("Plate --, M",  0.268545, -0.003483, 4.0, 4.0),
+            new JuliaFractalPlate("Plate 18, N",  0.318623,  0.044699, 4.0, 4.0),
+            new JuliaFractalPlate("Plate 19, O",  0.318623,  0.429799, 4.0, 4.0)
+        ];
 
-        public List<FractalPlate> Plates => m_plates;
+        public List<FractalPlate> Plates
+        {
+            get => m_plates;
+            set
+            {
+                if (m_plates == value)
+                    return;
+
+                m_plates = value;
+                OnPropertyChanged();
+            }
+        }
 
         public IDisplayArea GetDisplayArea(int width, int height)
         {
@@ -120,24 +151,64 @@ namespace dotNetFractal.WPF.ViewModels
             get => m_selectedPlate;
             set
             {
-                if (m_selectedPlate == value)
+                // Clamp the value to valid range for current plates collection
+                var clampedValue = value;
+                if (clampedValue < 0)
+                    clampedValue = 0;
+                else if (m_plates.Count > 0 && clampedValue >= m_plates.Count)
+                    clampedValue = m_plates.Count - 1;
+
+                if (m_selectedPlate == clampedValue)
                 {
                     return;
                 }
 
-                m_selectedPlate = value;
+                m_selectedPlate = clampedValue;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool JuliaSet
+        {
+            get => m_juliaSet;
+            set
+            {
+                if (m_juliaSet == value)
+                {
+                    return;
+                }
+
+                m_juliaSet = value;
                 OnPropertyChanged();
             }
         }
 
         public FractalAreaViewModelBase()
         {
-            this.WhenAnyValue(x => x.SelectedPlate).Subscribe(OnSelectedPlate);
+            Plates = m_juliaSet ? m_juliaSetPlates : m_mandelbrotPlates;
+            this.WhenAnyValue(x => x.SelectedPlate).Subscribe(_ => OnSelectedPlate(SelectedPlate));
+            this.WhenAnyValue(x => x.JuliaSet).Subscribe(_ =>
+            {
+                var newPlates = JuliaSet ? m_juliaSetPlates : m_mandelbrotPlates;
+                // Reset to the first plate when switching between Mandelbrot and Julia sets
+                // Must be done BEFORE updating Plates to avoid index out of range
+                if (SelectedPlate >= newPlates.Count)
+                {
+                    SelectedPlate = 0;
+                }
+                Plates = newPlates;
+                OnSelectedPlate(SelectedPlate);
+            });
         }
 
         private void OnSelectedPlate(int plateIndex)
         {
-            var plate = Plates[plateIndex];
+            // Validate plate index is within bounds
+            var platesList = m_juliaSet ? m_juliaSetPlates : m_mandelbrotPlates;
+            if (plateIndex < 0 || plateIndex >= platesList.Count)
+                return;
+
+            var plate = platesList[plateIndex];
             CenterX = (T)(plate.MinX + plate.MaxX) * m_half;
             CenterY = (T)(plate.MinY + plate.MaxY) * m_half;
             Width = (T)(plate.MaxX - plate.MinX);
