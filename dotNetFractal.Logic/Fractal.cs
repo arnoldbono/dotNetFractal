@@ -10,24 +10,11 @@ namespace dotNetFractal.Logic
     {
         private readonly FractalColorMap m_colorMap = FractalColorMap.GetInstance();
 
-        private IFractalArea m_area = null;
+        private FractalSettings m_settings;
         private FractalAreaPatch m_areaPatch = null;
         private double m_maxRadius = 4.0;
-        private int m_maxIterations = 256;
-        private int m_maxColors = 16;
-        private bool m_smoothColoring = true;
 
-        public IFractalArea Area
-        {
-            get { return m_area; }
-            set
-            {
-                if (m_area != null)
-                    base.StopThread();
-
-                m_area = value;
-            }
-        }
+        public IFractalArea Area => m_settings.FractalArea;
 
         public FractalAreaPatch AreaPatch
         {
@@ -47,37 +34,22 @@ namespace dotNetFractal.Logic
             set { m_maxRadius = value; }
         }
 
-        public int MaxIterations
-        {
-            get { return m_maxIterations; }
-            set { m_maxIterations = value; }
-        }
+        public FractalSettings Settings => m_settings;
 
-        public int MaxColors
+        public Fractal(FractalSettings settings)
         {
-            get { return m_maxColors; }
-            set { m_maxColors = value; }
-        }
-
-        public bool SmoothColoring
-        {
-            get { return m_smoothColoring; }
-            set { m_smoothColoring = value; }
-        }
-
-        public Fractal()
-        {
+            m_settings = settings;
         }
 
         public Color ComputeColor(IFractalPixel pixel)
         {
             var iteration = pixel.Iteration;
-            if (iteration >= MaxIterations)
+            if (iteration >= Settings.MaxIterations)
                 return Color.Black;
 
             GetColor(iteration, out var red, out var green, out var blue);
 
-            if (iteration != 0 && SmoothColoring)
+            if (iteration != 0 && Settings.SmoothColoring)
             {
                 var fraction = pixel.GetEscapeFraction((double)MaxRadius);
                 System.Diagnostics.Debug.Assert(fraction < 1.0);
@@ -94,7 +66,7 @@ namespace dotNetFractal.Logic
 
         public void GetColor(int index, out int red, out int green, out int blue)
         {
-            var fraction = (index % MaxColors) / (double)MaxColors;
+            var fraction = (index % Settings.MaxColorSteps) / (double)Settings.MaxColorSteps;
             var color = m_colorMap.GetColor(fraction);
             red = color.Red;
             green = color.Green;

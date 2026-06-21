@@ -251,11 +251,15 @@ namespace dotNetFractal.WPF.ViewModels
                     m_fractalSettings.MaxIterations,
                     m_fractalSettings.MaxColorSteps,
                     m_fractalSettings.SmoothColoring,
-                    m_fractalSettings.HighPrecision,
-                    m_fractalSettings.JuliaSet
+                    m_fractalSettings.HighPrecision
                 );
 
+                var oldFactalArea = m_stitcher != null ? m_stitcher.FractalSettings.FractalArea : default;
+
                 m_stitcher = new FractalStitcher(fractalSettings);
+
+                if (m_fractalSettings.JuliaSet)
+                    FractalAreaFactory.SetJuliaSet(m_stitcher.FractalSettings.FractalArea, oldFactalArea);
 
                 if (MainImage != null)
                 {
@@ -366,25 +370,6 @@ namespace dotNetFractal.WPF.ViewModels
             dlg.ShowDialog();
         }
 
-        public void ZoomInToRectangle(double pixelX1, double pixelY1, double pixelX2, double pixelY2, double imageWidth, double imageHeight)
-        {
-            if (m_fractalArea == null || imageWidth == 0 || imageHeight == 0)
-                return;
-
-            var displayArea = m_fractalArea.GetDisplayArea((int)imageWidth, (int)imageHeight);
-
-            var displayAreaTyped = displayArea as DisplayArea<FractalDecimal> ?? throw new InvalidOperationException("Unsupported display area type.");
-
-            // Update the fractal area
-            m_fractalArea.CenterX = displayAreaTyped.GetCenterX((int)pixelX1, (int)pixelX2);
-            m_fractalArea.CenterY = displayAreaTyped.GetCenterY((int)pixelY1, (int)pixelY2);
-            m_fractalArea.Width = displayAreaTyped.GetWidth((int)pixelX1, (int)pixelX2);
-            m_fractalArea.Height = displayAreaTyped.GetHeight((int)pixelY1, (int)pixelY2);
-
-            // Regenerate the fractal with the new area
-            StartFractalComputation(true);
-        }
-
         public void ComputeJuliaSet(double pixelX1, double pixelY1, double pixelX2, double pixelY2, double imageWidth, double imageHeight)
         {
             if (m_fractalArea == null || imageWidth == 0 || imageHeight == 0)
@@ -401,6 +386,25 @@ namespace dotNetFractal.WPF.ViewModels
             m_fractalArea.Height = displayAreaTyped.GetHeight((int)pixelY1, (int)pixelY2);
 
             m_fractalSettings.JuliaSet = true;
+
+            // Regenerate the fractal with the new area
+            StartFractalComputation(true);
+        }
+
+        public void ZoomInToRectangle(double pixelX1, double pixelY1, double pixelX2, double pixelY2, double imageWidth, double imageHeight)
+        {
+            if (m_fractalArea == null || imageWidth == 0 || imageHeight == 0)
+                return;
+
+            var displayArea = m_fractalArea.GetDisplayArea((int)imageWidth, (int)imageHeight);
+
+            var displayAreaTyped = displayArea as DisplayArea<FractalDecimal> ?? throw new InvalidOperationException("Unsupported display area type.");
+
+            // Update the fractal area
+            m_fractalArea.CenterX = displayAreaTyped.GetCenterX((int)pixelX1, (int)pixelX2);
+            m_fractalArea.CenterY = displayAreaTyped.GetCenterY((int)pixelY1, (int)pixelY2);
+            m_fractalArea.Width = displayAreaTyped.GetWidth((int)pixelX1, (int)pixelX2);
+            m_fractalArea.Height = displayAreaTyped.GetHeight((int)pixelY1, (int)pixelY2);
 
             // Regenerate the fractal with the new area
             StartFractalComputation(true);

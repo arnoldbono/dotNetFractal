@@ -8,17 +8,15 @@ namespace dotNetFractal.Logic
     /// </summary>
     public interface IFractal
     {
-        IFractalArea Area { get; set; }
+        FractalSettings Settings { get; }
+
+        IFractalArea Area { get; }
 
         FractalAreaPatch AreaPatch { get; set; }
 
         bool Stopped { get; }
 
-        double MaxRadius { get; set; }
-
-        int MaxIterations { get; set; }
-
-        bool SmoothColoring { get; set; }
+        double MaxRadius { get; }
 
         Color ComputeColor(IFractalPixel pixel);
 

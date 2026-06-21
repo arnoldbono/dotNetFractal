@@ -13,7 +13,7 @@ namespace dotNetFractal.Logic
         public T StartingPointX => m_startingPointX;
         public T StartingPointY => m_startingPointY;
 
-        public FractalJulia()
+        public FractalJulia(FractalSettings settings) : base(settings)
         {
             ; // Empty
         }
@@ -34,6 +34,8 @@ namespace dotNetFractal.Logic
             var Cx = m_startingPointX;
             var Cy = m_startingPointY;
             var maxRadius = (T)MaxRadius;
+            var maxIterations = Settings.MaxIterations;
+
             for (var i = startIndexWidth; i < stopIndexWidth && !Stop; ++i)
             {
                 var x0 = displayArea.GetX(i);
@@ -51,7 +53,7 @@ namespace dotNetFractal.Logic
                     int teller = 0;
                     T Radius2 = new();
                     T PrevRadius2 = new();
-                    while (++teller < MaxIterations)
+                    while (++teller < maxIterations)
                     {
                         PrevRadius2 = Radius2;
 

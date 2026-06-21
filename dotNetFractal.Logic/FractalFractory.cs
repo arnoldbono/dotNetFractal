@@ -19,30 +19,16 @@ public static class FractalFactory
 
     private static IFractal CreateFractal<T>(FractalSettings fractalSettings) where T : IFractalUnit<T>, new()
     {
-        IFractal fractal;
-        if (fractalSettings.JuliaSet)
+        if (fractalSettings.FractalArea.JuliaSet)
         {
-            var juliaSet = new FractalJulia<T>
-            {
-                MaxIterations = fractalSettings.MaxIterations,
-                MaxColors = fractalSettings.MaxColorSteps,
-                SmoothColoring = fractalSettings.SmoothColoring
-            };
-            var displayArea = fractalSettings.FractalArea.DisplayArea as DisplayArea<T> ?? throw new InvalidOperationException("Unsupported display area type.");
-            juliaSet.SetStartingPoint(displayArea.CenterX, displayArea.CenterY);
-            fractal = juliaSet;
+            var juliaSet = new FractalJulia<T>(fractalSettings);
+            var fractalArea = fractalSettings.FractalArea as FractalArea<T> ?? throw new InvalidOperationException("Unsupported fractal area type.");
+            juliaSet.SetStartingPoint(fractalArea.JuliaSetX, fractalArea.JuliaSetY);
+            return juliaSet;
         }
         else
         {
-            fractal = new FractalMandelbrot<T>
-            {
-                MaxIterations = fractalSettings.MaxIterations,
-                MaxColors = fractalSettings.MaxColorSteps,
-                SmoothColoring = fractalSettings.SmoothColoring
-            };
+            return new FractalMandelbrot<T>(fractalSettings);
         }
-        fractal.Area = fractalSettings.FractalArea;
-        // TODO fractal.Settings = fractalSettings;
-        return fractal;
     }
 }

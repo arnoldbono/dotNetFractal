@@ -7,7 +7,7 @@ namespace dotNetFractal.Logic
     /// </summary>
     public class FractalMandelbrot<T> : Fractal<T> where T : IFractalUnit<T>, new()
     {
-        public FractalMandelbrot()
+        public FractalMandelbrot(FractalSettings settings) : base(settings)
         {
             ; // Empty
         }
@@ -24,6 +24,7 @@ namespace dotNetFractal.Logic
 
             var displayArea = (DisplayArea<T>)Area.DisplayArea;
             var maxRadius = (T)MaxRadius;
+            var maxIterations = Settings.MaxIterations;
 
             // Compute Mandelbrot fractal for the given area patch
             for (var i = startIndexWidth; i < stopIndexWidth && !Stop; ++i)
@@ -43,7 +44,7 @@ namespace dotNetFractal.Logic
                     int teller = 0;
                     var Radius2 = new T();
                     var PrevRadius2 = new T();
-                    while (++teller < MaxIterations)
+                    while (++teller < maxIterations)
                     {
                         PrevRadius2 = Radius2;
 

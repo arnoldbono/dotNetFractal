@@ -74,7 +74,7 @@ namespace dotNetFractal.Logic
                 return;
 
             // Wait for the thread pool work item to complete
-            m_threadCompletedEvent?.WaitOne();
+            m_threadCompletedEvent?.WaitOne(1000);
 
             if (m_waitHandle != null)
             {

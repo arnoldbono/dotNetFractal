@@ -17,9 +17,7 @@ namespace dotNetFractal.Logic
 
         public bool HighPrecision { get; private set; }
 
-        public bool JuliaSet { get; private set; }
-
-        public FractalSettings(IDisplayArea displayArea, int maxIterations, int maxColorSteps, bool smoothColoring, bool highPrecision, bool juliaSet)
+        public FractalSettings(IDisplayArea displayArea, int maxIterations, int maxColorSteps, bool smoothColoring, bool highPrecision)
         {
             Debug.Assert(displayArea != null);
 
@@ -31,7 +29,6 @@ namespace dotNetFractal.Logic
             MaxColorSteps = maxColorSteps;
             SmoothColoring = smoothColoring;
             HighPrecision = highPrecision;
-            JuliaSet = juliaSet;
         }
     }
 }

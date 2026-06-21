@@ -8,7 +8,15 @@ namespace dotNetFractal.Logic
         private IDisplayArea m_area;
         private FractalPixels m_pixels;
 
-        public FractalPixels Pixels => m_pixels;
+        public T JuliaSetX { get; private set; } = new T();
+
+        public T JuliaSetY { get; private set; } = new T();
+
+        public bool JuliaSet { get; private set; } = false;
+
+    public FractalPixels Pixels => m_pixels;
+
+        public IDisplayArea DisplayArea => m_area;
 
         private FractalArea()
         {
@@ -21,11 +29,16 @@ namespace dotNetFractal.Logic
             m_pixels = new FractalPixels(area.PixelsHorizontal, area.PixelsVertical);
         }
 
-        public IDisplayArea DisplayArea => m_area;
-
         public IFractalPixel GetPixel(int i, int j)
         {
             return m_pixels.GetPixel(i, j);
+        }
+
+        public void SetJulieSet(T x, T y)
+        {
+            JuliaSetX = x;
+            JuliaSetY = y;
+            JuliaSet = true;
         }
 
         public void Write(string path)

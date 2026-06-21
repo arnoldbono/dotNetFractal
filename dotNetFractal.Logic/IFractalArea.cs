@@ -11,6 +11,8 @@ namespace dotNetFractal.Logic
 
         IFractalPixel GetPixel(int i, int j);
 
+        bool JuliaSet { get; }
+
         void Read(BinaryReader br);
 
         void Write(BinaryWriter bw);
