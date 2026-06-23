@@ -9,9 +9,9 @@ namespace dotNetFractal.Logic
 
         int PixelsVertical { get; }
 
-        void Write(BinaryWriter bw);
+        void Resize(int pixelsHorizontal, int pixelsVertical);
 
-        void JuliaSetResetCenter();
+        void Write(BinaryWriter bw);
 
         IDisplayArea ZoomIn(int i1, int j1, int i2, int j2, int horizontal, int vertical);
     }

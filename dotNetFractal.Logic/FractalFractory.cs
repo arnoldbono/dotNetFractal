@@ -21,10 +21,7 @@ public static class FractalFactory
     {
         if (fractalSettings.FractalArea.JuliaSet)
         {
-            var juliaSet = new FractalJulia<T>(fractalSettings);
-            var fractalArea = fractalSettings.FractalArea as FractalArea<T> ?? throw new InvalidOperationException("Unsupported fractal area type.");
-            juliaSet.SetStartingPoint(fractalArea.JuliaSetX, fractalArea.JuliaSetY);
-            return juliaSet;
+            return new FractalJuliaSet<T>(fractalSettings);
         }
         else
         {

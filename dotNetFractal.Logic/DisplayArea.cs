@@ -8,6 +8,10 @@ namespace dotNetFractal.Logic
         private readonly T m_half = (T)0.5;
         private readonly T m_one = (T)1.0;
 
+        public T Cx { get; private set; }
+
+        public T Cy { get; private set; }
+
         public T CenterX { get; private set; }
 
         public T CenterY { get; private set; }
@@ -30,17 +34,21 @@ namespace dotNetFractal.Logic
 
         public DisplayArea(IDisplayArea displayArea)
         {
-            var displayAreaTyped = displayArea as DisplayArea<T> ?? throw new ArgumentException("Invalid display area type", nameof(displayArea));
-            CenterX = displayAreaTyped.CenterX;
-            CenterY = displayAreaTyped.CenterY;
-            PixelsHorizontal = displayAreaTyped.PixelsHorizontal;
-            PixelsVertical = displayAreaTyped.PixelsVertical;
-            Width = displayAreaTyped.Width;
-            Height = displayAreaTyped.Height;
+            var da = displayArea as DisplayArea<T> ?? throw new ArgumentException("Invalid display area type", nameof(displayArea));
+            Cx = da.Cx;
+            Cy = da.Cy;
+            CenterX = da.CenterX;
+            CenterY = da.CenterY;
+            Width = da.Width;
+            Height = da.Height;
+            PixelsHorizontal = da.PixelsHorizontal;
+            PixelsVertical = da.PixelsVertical;
         }
 
-        public DisplayArea(T centerX, T centerY, T width, T height, int horizontal, int vertical)
+        public DisplayArea(T centerX, T centerY, T width, T height, T cx, T cy, int horizontal, int vertical)
         {
+            Cx = cx;
+            Cy = cy;
             CenterX = centerX;
             CenterY = centerY;
             PixelsHorizontal = horizontal;
@@ -51,10 +59,14 @@ namespace dotNetFractal.Logic
             Height = ratio * length;
         }
 
-        public void JuliaSetResetCenter()
+        public void Resize(int pixelsHorizontal, int pixelsVertical)
         {
-            CenterX = (T)0.0;
-            CenterY = (T)0.0;
+            PixelsHorizontal = pixelsHorizontal;
+            PixelsVertical = pixelsVertical;
+            var ratio = (T)PixelsVertical / (T)PixelsHorizontal;
+            var length = T.Max(Width, Height);
+            Width = length;
+            Height = ratio * length;
         }
 
         public IDisplayArea ZoomIn(int i1, int j1, int i2, int j2, int horizontal, int vertical)
@@ -138,9 +150,11 @@ namespace dotNetFractal.Logic
             var centerY = (T)(decimal)br.ReadDecimal();
             var width = (T)(decimal)br.ReadDecimal();
             var height = (T)(decimal)br.ReadDecimal();
+            var cx = (T)(decimal)br.ReadDecimal();
+            var cy = (T)(decimal)br.ReadDecimal();
             var pixelsHorizontal = br.ReadInt32();
             var pixelsVertical = br.ReadInt32();
-            return new DisplayArea<T>(centerX, centerY, width, height, pixelsHorizontal, pixelsVertical);
+            return new DisplayArea<T>(centerX, centerY, width, height, cx, cy, pixelsHorizontal, pixelsVertical);
         }
 
         public void Write(BinaryWriter bw)
@@ -149,6 +163,8 @@ namespace dotNetFractal.Logic
             bw.Write((decimal)CenterY);
             bw.Write((decimal)Width);
             bw.Write((decimal)Height);
+            bw.Write((decimal)Cx);
+            bw.Write((decimal)Cy);
             bw.Write(PixelsHorizontal);
             bw.Write(PixelsVertical);
         }

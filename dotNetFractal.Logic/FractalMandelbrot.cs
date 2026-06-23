@@ -12,6 +12,12 @@ namespace dotNetFractal.Logic
             ; // Empty
         }
 
+        /// <summary>
+        /// Compute Mandelbrot fractal for the given area patch
+        /// For each pixel at position (Cx, Cy):
+        /// Start with z₀ = (Cx, Cy)
+        /// Iterate: z_{n+1} = z_n² + c, where c = (Cx, Cy)
+        /// </summary>
         protected override void ThreadProc()
         {
             Stop = false;
@@ -26,7 +32,6 @@ namespace dotNetFractal.Logic
             var maxRadius = (T)MaxRadius;
             var maxIterations = Settings.MaxIterations;
 
-            // Compute Mandelbrot fractal for the given area patch
             for (var i = startIndexWidth; i < stopIndexWidth && !Stop; ++i)
             {
                 var Cx = displayArea.GetX(i);
@@ -41,6 +46,7 @@ namespace dotNetFractal.Logic
                     var Cy = displayArea.GetY(j);
                     var x = Cx;
                     var y = Cy;
+              
                     int teller = 0;
                     var Radius2 = new T();
                     var PrevRadius2 = new T();
@@ -48,17 +54,17 @@ namespace dotNetFractal.Logic
                     {
                         PrevRadius2 = Radius2;
 
-                        var xx = x * x;
-                        var yy = y * y;
+                        var xx = x * x;      // x²
+                        var yy = y * y;      // y²
 
                         if ((Radius2 = xx + yy) > maxRadius)
                         {
                             break;
                         }
 
-                        y *= x;
-                        y += y + Cy;
-                        x = xx - yy + Cx;
+                        y *= x;              // y = x*y (temporary)
+                        y += y + Cy;         // y = (x*y) + (x*y) + Cy = 2*x*y + Cy
+                        x = xx - yy + Cx;    // x = x² - y² + Cx
                     }
 
                     Area.Pixels.SetPixel(i, j, new FractalPixel<T>(teller, Radius2, PrevRadius2));

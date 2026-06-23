@@ -3,21 +3,17 @@ using System;
 namespace dotNetFractal.Logic
 {
     /// <summary>
-    /// Compute a JuliaSet fractal.
+    /// Compute a Julia Set fractal.
     /// </summary>
-    public class FractalJulia<T> : Fractal<T> where T : IFractalUnit<T>, new()
+    public class FractalJuliaSet<T>(FractalSettings settings) : Fractal<T>(settings) where T : IFractalUnit<T>, new()
     {
-        private T m_startingPointX = new();
-        private T m_startingPointY = new();
-
-        public T StartingPointX => m_startingPointX;
-        public T StartingPointY => m_startingPointY;
-
-        public FractalJulia(FractalSettings settings) : base(settings)
-        {
-            ; // Empty
-        }
-
+        /// <summary>
+        /// Compute the Julia Set fractal for the given area patch.
+        /// z_{n+1} = z_n² + c
+        /// In component form:
+        /// Real:      x_{n+1} = x_n² - y_n² + Cx
+        /// Imaginary: y_{n+1} = 2x_n y_n + Cy
+        /// </summary>
         protected override void ThreadProc()
         {
             Stop = false;
@@ -30,9 +26,9 @@ namespace dotNetFractal.Logic
 
             var displayArea = (DisplayArea<T>)Area.DisplayArea;
 
-            // plot JuliaSet Set using Mandelbrot formula
-            var Cx = m_startingPointX;
-            var Cy = m_startingPointY;
+            var Cx = displayArea.Cx;
+            var Cy = displayArea.Cy;
+
             var maxRadius = (T)MaxRadius;
             var maxIterations = Settings.MaxIterations;
 
@@ -57,17 +53,17 @@ namespace dotNetFractal.Logic
                     {
                         PrevRadius2 = Radius2;
 
-                        var xx = x * x;
-                        var yy = y * y;
+                        var xx = x * x;      // x²
+                        var yy = y * y;      // y²
 
                         if ((Radius2 = xx + yy) > maxRadius)
                         {
                             break;
                         }
 
-                        y *= x;
-                        y += y + Cy;
-                        x = xx - yy + Cx;
+                        y *= x;              // y = x*y (temporary)
+                        y += y + Cy;         // y = (x*y) + (x*y) + Cy = 2*x*y + Cy
+                        x = xx - yy + Cx;    // x = x² - y² + Cx
                     }
 
                     Area.Pixels.SetPixel(i, j, new FractalPixel<T>(teller, Radius2, PrevRadius2));
@@ -77,12 +73,6 @@ namespace dotNetFractal.Logic
             UpdateAreaPatchFractalImage();
 
             Stopped = true;
-        }
-
-        public void SetStartingPoint(T x, T y)
-        {
-            m_startingPointX = x;
-            m_startingPointY = y;
         }
     }
 }

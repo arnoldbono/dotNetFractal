@@ -27,8 +27,8 @@ namespace dotNetFractal.WPF.ViewModels
     [EditorBrowsable(EditorBrowsableState.Never)]
     public class FractalAreaViewModelBase<T> : BaseViewModel where T : IFractalUnit<T>, new()
     {
-        private readonly T m_half = (T)0.5;
-
+        private T m_cx = new();
+        private T m_cy = new();
         private T m_centerX = new();
         private T m_centerY = new();
         private T m_width = new();
@@ -52,6 +52,8 @@ namespace dotNetFractal.WPF.ViewModels
 
         public readonly List<FractalPlate> m_juliaSetPlates =
         [
+            new JuliaFractalPlate("Golden    0", -0.264508,  0.457591, 4.0, 4.0),
+            new JuliaFractalPlate("Daunting  1",  0.315479,  0.027924, 4.0, 4.0),
             new JuliaFractalPlate("Plate 12, A",  0.238498,  0.519198, 4.0, 4.0),
             new JuliaFractalPlate("Plate 13, B", -0.743036,  0.113467, 4.0, 4.0),
             new JuliaFractalPlate("Plate --, C", -0.192175,  0.656734, 4.0, 4.0),
@@ -84,7 +86,37 @@ namespace dotNetFractal.WPF.ViewModels
 
         public IDisplayArea GetDisplayArea(int width, int height)
         {
-            return new DisplayArea<T>(CenterX, CenterY, Width, Height, width, height);
+            return new DisplayArea<T>(CenterX, CenterY, Width, Height, Cx, Cy, width, height);
+        }
+
+        public T Cx
+        {
+            get => m_cx;
+            set
+            {
+                if (m_cx == value)
+                {
+                    return;
+                }
+
+                m_cx = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public T Cy
+        {
+            get => m_cy;
+            set
+            {
+                if (m_cy == value)
+                {
+                    return;
+                }
+
+                m_cy = value;
+                OnPropertyChanged();
+            }
         }
 
         public T CenterX
@@ -204,15 +236,27 @@ namespace dotNetFractal.WPF.ViewModels
         private void OnSelectedPlate(int plateIndex)
         {
             // Validate plate index is within bounds
-            var platesList = m_juliaSet ? m_juliaSetPlates : m_mandelbrotPlates;
+            var platesList = JuliaSet ? m_juliaSetPlates : m_mandelbrotPlates;
             if (plateIndex < 0 || plateIndex >= platesList.Count)
                 return;
 
             var plate = platesList[plateIndex];
-            CenterX = (T)(plate.MinX + plate.MaxX) * m_half;
-            CenterY = (T)(plate.MinY + plate.MaxY) * m_half;
-            Width = (T)(plate.MaxX - plate.MinX);
-            Height = (T)(plate.MaxY - plate.MinY);
+            if (JuliaSet)
+            {
+                Cx = (T)plate.Cx;
+                Cy = (T)plate.Cy;
+                CenterX = (T)0.0;
+                CenterY = (T)0.0;
+            }
+            else
+            {
+                Cx = (T)0.0;
+                Cy = (T)0.0;
+                CenterX = (T)plate.CenterX;
+                CenterY = (T)plate.CenterY;
+            }
+            Width = (T)plate.Width;
+            Height = (T)plate.Height;
         }
     }
 }
