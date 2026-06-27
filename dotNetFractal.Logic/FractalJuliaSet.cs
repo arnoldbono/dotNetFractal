@@ -72,6 +72,8 @@ namespace dotNetFractal.Logic
 
             UpdateAreaPatchFractalImage();
 
+            m_state = ComputationState.NoneMaxIterationsReached; // Fake it to not get the fractal subdivided.
+
             Stopped = true;
         }
     }

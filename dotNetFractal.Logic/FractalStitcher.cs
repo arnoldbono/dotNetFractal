@@ -53,7 +53,6 @@ namespace dotNetFractal.Logic
             for (int i = 0; i < horizontalPatches; ++i)
             {
                 var startIndexWidth = i * PatchSize;
-                var stopIndexWidth = Math.Min(startIndexWidth + PatchSize, width);
 
                 for (int j = 0; j < vertitalPatches; ++j)
                 {
@@ -133,8 +132,16 @@ namespace dotNetFractal.Logic
                     if (fractal.Stopped)
                     {
                         LockMutex();
+                        bool subdivide = fractal.State == ComputationState.SomeMaxIterationsReached;
+                        if (subdivide)
+                        {
+                            var subdividedFractals = fractal.Subdivide();
+                            waitingFractals.InsertRange(0, subdividedFractals);
+                        }
+
                         m_fractalsToUpdate.Add(fractal);
                         ++fractalCount;
+
                         UnlockMutex();
 
                         startedFractals.Remove(fractal);

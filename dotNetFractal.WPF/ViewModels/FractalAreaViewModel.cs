@@ -53,6 +53,7 @@ namespace dotNetFractal.WPF.ViewModels
         public readonly List<FractalPlate> m_juliaSetPlates =
         [
             new JuliaFractalPlate("Golden    0", -0.264508,  0.457591, 4.0, 4.0),
+            new JuliaFractalPlate("Rainbow   0",  0.266893,  0.002671, 4.0, 4.0),
             new JuliaFractalPlate("Daunting  1",  0.315479,  0.027924, 4.0, 4.0),
             new JuliaFractalPlate("Plate 12, A",  0.238498,  0.519198, 4.0, 4.0),
             new JuliaFractalPlate("Plate 13, B", -0.743036,  0.113467, 4.0, 4.0),

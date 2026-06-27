@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 
 namespace dotNetFractal.Logic
@@ -10,9 +11,10 @@ namespace dotNetFractal.Logic
     {
         private readonly FractalColorMap m_colorMap = FractalColorMap.GetInstance();
 
-        private FractalSettings m_settings;
+        private readonly FractalSettings m_settings;
         private FractalAreaPatch m_areaPatch = null;
         private double m_maxRadius = 4.0;
+        protected ComputationState m_state = ComputationState.NotStarted;
 
         public IFractalArea Area => m_settings.FractalArea;
 
@@ -35,6 +37,8 @@ namespace dotNetFractal.Logic
         }
 
         public FractalSettings Settings => m_settings;
+
+        public ComputationState State => m_state;
 
         public Fractal(FractalSettings settings)
         {
@@ -98,6 +102,29 @@ namespace dotNetFractal.Logic
                     }
                 }
             }
+        }
+
+        public IFractal[] Subdivide()
+        {
+            var patchSize = AreaPatch.Size / 2;
+            var fractals = new IFractal[4];
+
+            (int startLocationX, int startLocationY)[] sizes = 
+            [
+                (AreaPatch.StartIndexWidth, AreaPatch.StartIndexHeight),
+                (AreaPatch.StartIndexWidth + patchSize, AreaPatch.StartIndexHeight),
+                (AreaPatch.StartIndexWidth, AreaPatch.StartIndexHeight + patchSize),
+                (AreaPatch.StartIndexWidth + patchSize, AreaPatch.StartIndexHeight + patchSize)
+            ];
+
+            int i = 0;
+            foreach (var size in sizes)
+            {
+                var fractal = FractalFactory.CreateFractal(m_settings);
+                fractal.AreaPatch = new FractalAreaPatch(size.startLocationX, size.startLocationY, patchSize);
+                fractals[i++] = fractal;
+            }
+            return fractals;
         }
     }
 }
