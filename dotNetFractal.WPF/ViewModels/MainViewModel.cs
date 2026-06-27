@@ -28,6 +28,7 @@ namespace dotNetFractal.WPF.ViewModels
         private RelayCommand<EventArgs> m_goForwardCommand;
         private RelayCommand<EventArgs> m_displaySettingsCommand;
         private RelayCommand<EventArgs> m_toggleStretchImageCommand;
+        private RelayCommand<EventArgs> m_toggleFullScreenCommand;
 
         private ImageResolutionViewModel m_imageResolution = new ();
         private FractalAreaViewModel m_fractalArea = new();
@@ -46,6 +47,9 @@ namespace dotNetFractal.WPF.ViewModels
         private ImageSource m_mainImageSource;
         private int m_width;
         private int m_height;
+        private bool m_isFullScreen;
+        private System.Windows.WindowStyle m_windowStyle = System.Windows.WindowStyle.SingleBorderWindow;
+        private System.Windows.WindowState m_windowState = System.Windows.WindowState.Normal;
 
         public ImageSource MainImage
         {
@@ -107,6 +111,51 @@ namespace dotNetFractal.WPF.ViewModels
             }
         }
 
+        public System.Windows.WindowStyle WindowStyle
+        {
+            get => m_windowStyle;
+            set
+            {
+                if (m_windowStyle == value)
+                {
+                    return;
+                }
+
+                m_windowStyle = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public System.Windows.WindowState WindowState
+        {
+            get => m_windowState;
+            set
+            {
+                if (m_windowState == value)
+                {
+                    return;
+                }
+
+                m_windowState = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool IsFullScreen
+        {
+            get => m_isFullScreen;
+            set
+            {
+                if (m_isFullScreen == value)
+                {
+                    return;
+                }
+
+                m_isFullScreen = value;
+                OnPropertyChanged();
+            }
+        }
+
 
         public MainViewModel()
         {
@@ -147,6 +196,8 @@ namespace dotNetFractal.WPF.ViewModels
         public ICommand DisplaySettingsCommand => m_displaySettingsCommand ??= new RelayCommand<EventArgs>(param => OnDisplaySettings());
 
         public ICommand ToggleStretchImageCommand => m_toggleStretchImageCommand ??= new RelayCommand<EventArgs>(param => OnToggleStretchImage());
+
+        public ICommand ToggleFullScreenCommand => m_toggleFullScreenCommand ??= new RelayCommand<EventArgs>(param => OnToggleFullScreen());
 
         private void UpdateBitmap()
         {
@@ -367,6 +418,24 @@ namespace dotNetFractal.WPF.ViewModels
         public void OnToggleStretchImage()
         {
             StretchImage = !StretchImage;
+        }
+
+        public void OnToggleFullScreen()
+        {
+            IsFullScreen = !IsFullScreen;
+
+            if (IsFullScreen)
+            {
+                // Enter full screen
+                WindowStyle = System.Windows.WindowStyle.None;
+                WindowState = System.Windows.WindowState.Maximized;
+            }
+            else
+            {
+                // Exit full screen
+                WindowStyle = System.Windows.WindowStyle.SingleBorderWindow;
+                WindowState = System.Windows.WindowState.Normal;
+            }
         }
 
         public void OnCopy()

@@ -7,12 +7,15 @@
         xmlns:vm="clr-namespace:dotNetFractal.WPF.ViewModels"
         xmlns:converters="clr-namespace:dotNetFractal.WPF"
         mc:Ignorable="d"
-        Title=".NET Fractal (WPF Version)" Height="450" Width="800">
+        Title=".NET Fractal (WPF Version)" Height="450" Width="800"
+        WindowStyle="{Binding WindowStyle}"
+        WindowState="{Binding WindowState}">
     <Window.Resources>
         <converters:BoolToStretchConverter x:Key="BoolToStretchConverter" />
         <converters:BoolToScrollBarVisibilityConverter x:Key="BoolToScrollBarVisibilityConverter" />
         <converters:BoolToAlignmentConverter x:Key="BoolToAlignmentConverter" />
         <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
+        <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />
     </Window.Resources>
     <Window.DataContext>
         <vm:MainViewModel />
@@ -21,9 +24,10 @@
         <KeyBinding Command="{Binding GoBackCommand}" Key="Z" Modifiers="Ctrl" />
         <KeyBinding Command="{Binding GoForwardCommand}" Key="Y" Modifiers="Ctrl" />
         <KeyBinding Command="{Binding ToggleStretchImageCommand}" Key="F10" />
+        <KeyBinding Command="{Binding ToggleFullScreenCommand}" Key="F11" />
     </Window.InputBindings>
     <DockPanel>
-        <Menu DockPanel.Dock="Top">
+        <Menu DockPanel.Dock="Top" Visibility="{Binding IsFullScreen, Converter={StaticResource InverseBoolToVisibilityConverter}}">
             <MenuItem Header="_File">
                 <MenuItem Header="_New" Command="{Binding NewFractalCommand}" />
                 <MenuItem Header="Save _As" Command="{Binding SaveAsCommand}" />
