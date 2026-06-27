@@ -82,6 +82,94 @@ namespace dotNetFractal.Logic
             base.StartThread(threadPoolExecutor);
         }
 
+        protected abstract FractalPixel<T> Compute(T maxRadius, int maxIterations, DisplayArea<T> displayArea, int i, int j);
+
+        protected override void ThreadProc()
+        {
+            Stop = false;
+            Stopped = false;
+
+            var startIndexWidth = AreaPatch.StartIndexWidth;
+            var stopIndexWidth = AreaPatch.StopIndexWidth;
+            var startIndexHeight = AreaPatch.StartIndexHeight;
+            var stopIndexHeight = AreaPatch.StopIndexHeight;
+
+            var displayArea = (DisplayArea<T>)Area.DisplayArea;
+            var maxRadius = (T)MaxRadius;
+            var maxIterations = Settings.MaxIterations;
+
+            bool allMaxIteractionReached = true;
+            bool someMaxIteractionReached = false;
+            m_state = ComputationState.Running;
+            for (var i = startIndexWidth; i < stopIndexWidth && !Stop; ++i)
+            {
+                for (var j = startIndexHeight; j < stopIndexHeight && !Stop; ++j)
+                {
+                    if (!Area.Pixels.Inside(i, j) ||
+                        i > startIndexWidth && i < stopIndexWidth - 1 && j > startIndexHeight && j < stopIndexHeight - 1)
+                    {
+                        continue;
+                    }
+
+                    var pixel = Compute(maxRadius, maxIterations, displayArea, i, j);
+                    Area.Pixels.SetPixel(i, j, pixel);
+
+                    if (pixel.Iteration < maxIterations)
+                    {
+                        allMaxIteractionReached = false;
+                    }
+                    else
+                    {
+                        someMaxIteractionReached = true;
+                    }
+                }
+            }
+            {
+                if (allMaxIteractionReached)
+                {
+                    m_state = ComputationState.AllMaxIterationsReached;
+                    for (var i = startIndexWidth + 1; i < stopIndexWidth - 1 && !Stop; ++i)
+                    {
+                        for (var j = startIndexHeight + 1; j < stopIndexHeight - 1 && !Stop; ++j)
+                        {
+                            if (!Area.Pixels.Inside(i, j))
+                            {
+                                continue;
+                            }
+
+                            Area.Pixels.SetPixel(i, j, new FractalPixel<T>(maxIterations, maxRadius, maxRadius));
+                        }
+                    }
+                }
+                else
+                {
+                    m_state = someMaxIteractionReached && AreaPatch.Size > 16 ?
+                        ComputationState.SomeMaxIterationsReached :
+                        ComputationState.NoneMaxIterationsReached;
+                    if (m_state == ComputationState.NoneMaxIterationsReached)
+                    {
+                        for (var i = startIndexWidth + 1; i < stopIndexWidth - 1 && !Stop; ++i)
+                        {
+                            for (var j = startIndexHeight + 1; j < stopIndexHeight - 1 && !Stop; ++j)
+                            {
+                                if (!Area.Pixels.Inside(i, j))
+                                {
+                                    continue;
+                                }
+
+                                var pixel = Compute(maxRadius, maxIterations, displayArea, i, j);
+                                Area.Pixels.SetPixel(i, j, pixel);
+                            }
+                        }
+                    } // else fractal gets subdivided later on and skip the inner pixels for now
+                }
+            }
+
+            UpdateAreaPatchFractalImage();
+
+            Stopped = true;
+        }
+
         protected void UpdateAreaPatchFractalImage()
         {
             var fractalArea = Area;

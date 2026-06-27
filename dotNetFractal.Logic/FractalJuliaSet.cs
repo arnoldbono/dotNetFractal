@@ -14,67 +14,34 @@ namespace dotNetFractal.Logic
         /// Real:      x_{n+1} = x_n² - y_n² + Cx
         /// Imaginary: y_{n+1} = 2x_n y_n + Cy
         /// </summary>
-        protected override void ThreadProc()
+        protected override FractalPixel<T> Compute(T maxRadius, int maxIterations, DisplayArea<T> displayArea, int i, int j)
         {
-            Stop = false;
-            Stopped = false;
-
-            var startIndexWidth = AreaPatch.StartIndexWidth;
-            var stopIndexWidth = AreaPatch.StopIndexWidth;
-            var startIndexHeight = AreaPatch.StartIndexHeight;
-            var stopIndexHeight = AreaPatch.StopIndexHeight;
-
-            var displayArea = (DisplayArea<T>)Area.DisplayArea;
-
             var Cx = displayArea.Cx;
             var Cy = displayArea.Cy;
+            var x = displayArea.GetX(i);
+            var y = displayArea.GetY(j);
 
-            var maxRadius = (T)MaxRadius;
-            var maxIterations = Settings.MaxIterations;
-
-            for (var i = startIndexWidth; i < stopIndexWidth && !Stop; ++i)
+            int iteration = 0;
+            var radius2 = new T();
+            var prevRadius2 = new T();
+            while (iteration++ < maxIterations)
             {
-                var x0 = displayArea.GetX(i);
+                prevRadius2 = radius2;
 
-                for (var j = startIndexHeight; j < stopIndexHeight && !Stop; ++j)
+                var xx = x * x;      // x²
+                var yy = y * y;      // y²
+
+                if ((radius2 = xx + yy) > maxRadius)
                 {
-                    if (!Area.Pixels.Inside(i, j))
-                    {
-                        continue;
-                    }
-
-                    var y0 = displayArea.GetY(j);
-                    var x = x0;
-                    var y = y0;
-                    int teller = 0;
-                    T Radius2 = new();
-                    T PrevRadius2 = new();
-                    while (++teller < maxIterations)
-                    {
-                        PrevRadius2 = Radius2;
-
-                        var xx = x * x;      // x²
-                        var yy = y * y;      // y²
-
-                        if ((Radius2 = xx + yy) > maxRadius)
-                        {
-                            break;
-                        }
-
-                        y *= x;              // y = x*y (temporary)
-                        y += y + Cy;         // y = (x*y) + (x*y) + Cy = 2*x*y + Cy
-                        x = xx - yy + Cx;    // x = x² - y² + Cx
-                    }
-
-                    Area.Pixels.SetPixel(i, j, new FractalPixel<T>(teller, Radius2, PrevRadius2));
+                    break;
                 }
+
+                y *= x;              // y = x*y (temporary)
+                y += y + Cy;         // y = (x*y) + (x*y) + Cy = 2*x*y + Cy
+                x = xx - yy + Cx;    // x = x² - y² + Cx
             }
 
-            UpdateAreaPatchFractalImage();
-
-            m_state = ComputationState.NoneMaxIterationsReached; // Fake it to not get the fractal subdivided.
-
-            Stopped = true;
+            return new FractalPixel<T>(iteration, radius2, prevRadius2);
         }
     }
 }

@@ -132,8 +132,7 @@ namespace dotNetFractal.Logic
                     if (fractal.Stopped)
                     {
                         LockMutex();
-                        bool subdivide = fractal.State == ComputationState.SomeMaxIterationsReached;
-                        if (subdivide)
+                        if (fractal.State == ComputationState.SomeMaxIterationsReached)
                         {
                             var subdividedFractals = fractal.Subdivide();
                             waitingFractals.InsertRange(0, subdividedFractals);
@@ -141,7 +140,6 @@ namespace dotNetFractal.Logic
 
                         m_fractalsToUpdate.Add(fractal);
                         ++fractalCount;
-
                         UnlockMutex();
 
                         startedFractals.Remove(fractal);

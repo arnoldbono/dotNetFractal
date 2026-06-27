@@ -2,8 +2,8 @@ namespace dotNetFractal.WPF.ViewModels
 {
     public class FractalSettingsViewModel : BaseViewModel
     {
-        private int m_maxIterations = 256;
-        private int m_maxColorSteps = 16;
+        private int m_maxIterations = 1024;
+        private int m_maxColorSteps = 128;
         private bool m_smoothColoring = true;
         private bool m_highPrecision = false;
 
