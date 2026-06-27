@@ -9,6 +9,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using dotNetFractal.Logic;
 using System.Windows;
+using ReactiveUI;
 
 namespace dotNetFractal.WPF.ViewModels
 {
@@ -25,10 +26,13 @@ namespace dotNetFractal.WPF.ViewModels
         private RelayCommand<EventArgs> m_copyCommand;
         private RelayCommand<EventArgs> m_goBackCommand;
         private RelayCommand<EventArgs> m_goForwardCommand;
+        private RelayCommand<EventArgs> m_displaySettingsCommand;
+        private RelayCommand<EventArgs> m_toggleStretchImageCommand;
 
         private ImageResolutionViewModel m_imageResolution = new ();
         private FractalAreaViewModel m_fractalArea = new();
         private FractalSettingsViewModel m_fractalSettings = new();
+        private DisplaySettingsViewModel m_displaySettings = new();
 
         private FractalStitcher m_stitcher;
         private readonly FractalReplay m_fractalReplay = new();
@@ -88,10 +92,29 @@ namespace dotNetFractal.WPF.ViewModels
             }
         }
 
+        public bool StretchImage
+        {
+            get => m_displaySettings.StretchImage;
+            set
+            {
+                if (m_displaySettings.StretchImage == value)
+                {
+                    return;
+                }
+
+                m_displaySettings.StretchImage = value;
+                OnPropertyChanged();
+            }
+        }
+
 
         public MainViewModel()
         {
             m_dispatcher = Dispatcher.CurrentDispatcher;
+
+            // Subscribe to StretchImage changes from the DisplaySettingsViewModel
+            m_displaySettings.WhenAnyValue(x => x.StretchImage).Subscribe(_ => OnPropertyChanged(nameof(StretchImage)));
+
             StartUpdateWorkerThread();
             StartFractalComputation(false, true);
         }
@@ -120,6 +143,10 @@ namespace dotNetFractal.WPF.ViewModels
         public ICommand GoBackCommand => m_goBackCommand ??= new RelayCommand<EventArgs>(param => OnGoBack(), param => CanGoBack());
 
         public ICommand GoForwardCommand => m_goForwardCommand ??= new RelayCommand<EventArgs>(param => OnGoForward(), param => CanGoForward());
+
+        public ICommand DisplaySettingsCommand => m_displaySettingsCommand ??= new RelayCommand<EventArgs>(param => OnDisplaySettings());
+
+        public ICommand ToggleStretchImageCommand => m_toggleStretchImageCommand ??= new RelayCommand<EventArgs>(param => OnToggleStretchImage());
 
         private void UpdateBitmap()
         {
@@ -326,6 +353,22 @@ namespace dotNetFractal.WPF.ViewModels
                 StartFractalComputation(m_fractalArea.JuliaSet, true);
             }
         }
+
+        public void OnDisplaySettings()
+        {
+            var dlg = new DisplaySettingsWindow
+            {
+                DataContext = m_displaySettings
+            };
+
+            dlg.ShowDialog();
+        }
+
+        public void OnToggleStretchImage()
+        {
+            StretchImage = !StretchImage;
+        }
+
         public void OnCopy()
         {
             Clipboard.SetImage((System.Windows.Media.Imaging.BitmapSource)MainImage);

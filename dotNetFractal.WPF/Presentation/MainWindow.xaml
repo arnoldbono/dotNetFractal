@@ -5,14 +5,22 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:dotNetFractal.WPF.Presentation"
         xmlns:vm="clr-namespace:dotNetFractal.WPF.ViewModels"
+        xmlns:converters="clr-namespace:dotNetFractal.WPF"
         mc:Ignorable="d"
         Title=".NET Fractal (WPF Version)" Height="450" Width="800">
+    <Window.Resources>
+        <converters:BoolToStretchConverter x:Key="BoolToStretchConverter" />
+        <converters:BoolToScrollBarVisibilityConverter x:Key="BoolToScrollBarVisibilityConverter" />
+        <converters:BoolToAlignmentConverter x:Key="BoolToAlignmentConverter" />
+        <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
+    </Window.Resources>
     <Window.DataContext>
         <vm:MainViewModel />
     </Window.DataContext>
     <Window.InputBindings>
         <KeyBinding Command="{Binding GoBackCommand}" Key="Z" Modifiers="Ctrl" />
         <KeyBinding Command="{Binding GoForwardCommand}" Key="Y" Modifiers="Ctrl" />
+        <KeyBinding Command="{Binding ToggleStretchImageCommand}" Key="F10" />
     </Window.InputBindings>
     <DockPanel>
         <Menu DockPanel.Dock="Top">
@@ -29,15 +37,22 @@
             <MenuItem Header="_Preferences">
                 <MenuItem Header="_Fractal Area" Command="{Binding FractalAreaCommand}" />
                 <MenuItem Header="_Image Resolution" Command="{Binding ImageResolutionCommand}" />
+                <MenuItem Header="_Display Settings" Command="{Binding DisplaySettingsCommand}" />
                 <MenuItem Header="_Color Map" Command="{Binding ColorMapCommand}" />
                 <MenuItem Header="Fractal _Settings" Command="{Binding FractalSettingsCommand}" />
             </MenuItem>
         </Menu>
-        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer HorizontalScrollBarVisibility="{Binding StretchImage, Converter={StaticResource BoolToScrollBarVisibilityConverter}}" 
+                      VerticalScrollBarVisibility="{Binding StretchImage, Converter={StaticResource BoolToScrollBarVisibilityConverter}}">
             <Grid>
-                <Image x:Name="FractalImage" Stretch="None" Source="{Binding MainImage}" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+                <Image x:Name="FractalImage" 
+                       Stretch="{Binding StretchImage, Converter={StaticResource BoolToStretchConverter}}" 
+                       Source="{Binding MainImage}" 
+                       VerticalAlignment="{Binding StretchImage, Converter={StaticResource BoolToAlignmentConverter}}" 
+                       HorizontalAlignment="{Binding StretchImage, Converter={StaticResource BoolToAlignmentConverter}}"/>
                 <Canvas x:Name="SelectionCanvas" 
                         Background="Transparent"
+                        IsEnabled="{Binding StretchImage, Converter={StaticResource InverseBooleanConverter}}"
                         MouseLeftButtonDown="SelectionCanvas_MouseLeftButtonDown"
                         MouseMove="SelectionCanvas_MouseMove"
                         MouseLeftButtonUp="SelectionCanvas_MouseLeftButtonUp"
