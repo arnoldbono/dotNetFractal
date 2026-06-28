@@ -38,7 +38,9 @@ namespace dotNetFractal.WPF.ViewModels
         private ImageResolutionViewModel m_imageResolution = new ();
         private FractalAreaViewModel m_fractalArea = new();
         private FractalSettingsViewModel m_fractalSettings = new();
+        private ColorMapViewModel m_colorMap = new();
         private DisplaySettingsViewModel m_displaySettings = new();
+        private PropertiesPanelViewModel m_propertiesPanel;
 
         private FractalStitcher m_stitcher;
         private readonly FractalReplay m_fractalReplay = new();
@@ -53,8 +55,8 @@ namespace dotNetFractal.WPF.ViewModels
         private int m_width;
         private int m_height;
         private bool m_isFullScreen;
-        private System.Windows.WindowStyle m_windowStyle = System.Windows.WindowStyle.SingleBorderWindow;
-        private System.Windows.WindowState m_windowState = System.Windows.WindowState.Normal;
+        private WindowStyle m_windowStyle = WindowStyle.SingleBorderWindow;
+        private WindowState m_windowState = WindowState.Normal;
         private bool m_isPropertiesPanelVisible = true;
         private bool m_arePropertiesExpanded = true;
 
@@ -118,7 +120,7 @@ namespace dotNetFractal.WPF.ViewModels
             }
         }
 
-        public System.Windows.WindowStyle WindowStyle
+        public WindowStyle WindowStyle
         {
             get => m_windowStyle;
             set
@@ -159,6 +161,13 @@ namespace dotNetFractal.WPF.ViewModels
                 }
 
                 m_isFullScreen = value;
+
+                // Sync with PropertiesPanelViewModel
+                if (m_propertiesPanel != null)
+                {
+                    m_propertiesPanel.IsFullScreen = value;
+                }
+
                 OnPropertyChanged();
             }
         }
@@ -174,6 +183,13 @@ namespace dotNetFractal.WPF.ViewModels
                 }
 
                 m_isPropertiesPanelVisible = value;
+
+                // Sync with PropertiesPanelViewModel
+                if (m_propertiesPanel != null)
+                {
+                    m_propertiesPanel.IsPropertiesPanelVisible = value;
+                }
+
                 OnPropertyChanged();
             }
         }
@@ -189,6 +205,13 @@ namespace dotNetFractal.WPF.ViewModels
                 }
 
                 m_arePropertiesExpanded = value;
+
+                // Sync with PropertiesPanelViewModel
+                if (m_propertiesPanel != null)
+                {
+                    m_propertiesPanel.ArePropertiesExpanded = value;
+                }
+
                 OnPropertyChanged();
             }
         }
@@ -197,10 +220,48 @@ namespace dotNetFractal.WPF.ViewModels
 
         public ImageResolutionViewModel ImageResolutionViewModel => m_imageResolution;
 
+        public ColorMapViewModel ColorMapViewModel => m_colorMap;
+
+        public DisplaySettingsViewModel DisplaySettingsViewModel => m_displaySettings;
+
+        public FractalSettingsViewModel FractalSettingsViewModel => m_fractalSettings;
+
+        public PropertiesPanelViewModel PropertiesPanelViewModel => m_propertiesPanel;
+
 
         public MainViewModel()
         {
             m_dispatcher = Dispatcher.CurrentDispatcher;
+
+            // Initialize PropertiesPanelViewModel with child view models and callback
+            m_propertiesPanel = new PropertiesPanelViewModel(
+                m_fractalArea,
+                m_imageResolution,
+                m_colorMap,
+                m_displaySettings,
+                m_fractalSettings,
+                juliaSet => StartFractalComputation(juliaSet, true));
+
+            // Subscribe to property changes from PropertiesPanelViewModel to keep MainViewModel in sync
+            m_propertiesPanel.WhenAnyValue(x => x.IsPropertiesPanelVisible)
+                .Subscribe(value =>
+                {
+                    if (m_isPropertiesPanelVisible != value)
+                    {
+                        m_isPropertiesPanelVisible = value;
+                        OnPropertyChanged(nameof(IsPropertiesPanelVisible));
+                    }
+                });
+
+            m_propertiesPanel.WhenAnyValue(x => x.ArePropertiesExpanded)
+                .Subscribe(value =>
+                {
+                    if (m_arePropertiesExpanded != value)
+                    {
+                        m_arePropertiesExpanded = value;
+                        OnPropertyChanged(nameof(ArePropertiesExpanded));
+                    }
+                });
 
             // Subscribe to StretchImage changes from the DisplaySettingsViewModel
             m_displaySettings.WhenAnyValue(x => x.StretchImage).Subscribe(_ => OnPropertyChanged(nameof(StretchImage)));
@@ -446,7 +507,10 @@ namespace dotNetFractal.WPF.ViewModels
 
         public void OnColorMap()
         {
-            var dlg = new ColorMapWindow();
+            var dlg = new ColorMapWindow
+            {
+                DataContext = m_colorMap
+            };
             if (dlg.ShowDialog() == true)
             {
                 StartFractalComputation(m_fractalArea.JuliaSet, true);

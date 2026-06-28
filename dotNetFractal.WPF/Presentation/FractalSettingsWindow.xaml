@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:dotNetFractal.WPF"
         xmlns:vm="clr-namespace:dotNetFractal.WPF.ViewModels"
+        xmlns:presentation="clr-namespace:dotNetFractal.WPF.Presentation"
         mc:Ignorable="d"
         Title="Fractal Settings" 
         SizeToContent="WidthAndHeight" 
@@ -21,27 +22,10 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <GroupBox Header="Settings:" Grid.Row="0">
-            <Grid Margin="0,5,0,0" VerticalAlignment="Center">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <Label Content="Max Iterations:" Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left"/>
-                <TextBox Text="{Binding MaxIterations}" Width="80" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" HorizontalContentAlignment="Right" VerticalAlignment="Center"/>
-                <Label Content="Max Color Steps:" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left"/>
-                <TextBox Text="{Binding MaxColorSteps}" Width="80" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right" HorizontalContentAlignment="Right" VerticalAlignment="Center"/>
-                <CheckBox Content="Smooth Coloring" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" IsChecked="{Binding SmoothColoring}" VerticalAlignment="Center" Margin="5,5,0,0"/>
-                <CheckBox Content="High Precision" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" IsChecked="{Binding HighPrecision}" VerticalAlignment="Center" Margin="5,5,0,0"/>
-            </Grid>
-        </GroupBox>
+
+        <!-- Use the FractalSettingsEditor UserControl -->
+        <presentation:FractalSettingsEditor Grid.Row="0" DataContext="{Binding}" />
+
         <StackPanel Grid.Row="1" Margin="0,5,0,0" Orientation="Horizontal" HorizontalAlignment="Right" >
             <Button Content="Cancel" IsCancel="True" Width="60" Margin="0,0,10,0" />
             <Button Content="OK" IsDefault="True" Width="60" Command="{Binding AcceptCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}" />

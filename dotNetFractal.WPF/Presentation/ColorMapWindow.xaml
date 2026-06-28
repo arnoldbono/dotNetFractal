@@ -4,79 +4,25 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:dotNetFractal.WPF"
+        xmlns:presentation="clr-namespace:dotNetFractal.WPF.Presentation"
         xmlns:vm="clr-namespace:dotNetFractal.WPF.ViewModels"
         mc:Ignorable="d"
-        Title="Fractal Color Map" Height="420" Width="450" ResizeMode="CanResize">
-    <Window.DataContext>
-        <vm:ColorMapViewModel />
-    </Window.DataContext>
+        Title="Fractal Color Map" Height="420" Width="450" ResizeMode="CanResize"
+        d:DataContext="{d:DesignInstance Type=vm:ColorMapViewModel, IsDesignTimeCreatable=True}">
     <Grid Margin="10">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        
-        <!-- Color map bitmap display -->
-        <GroupBox Grid.Row="0" Header="Color Gradient Preview" Margin="0,0,0,10">
-            <Border x:Name="ColorMapBorder" BorderBrush="Black" BorderThickness="1" Height="20" Margin="5">
-                <Image x:Name="ColorMap" Source="{Binding ColorMapImage}"
-                       RenderOptions.BitmapScalingMode="NearestNeighbor" Stretch="Fill"/>
-            </Border>
-        </GroupBox>
 
-        <!-- Color table -->
-        <GroupBox x:Name="ColorTable" Grid.Row="1" Header="Color Map Values" Margin="0,0,0,10">
-            <Grid Margin="5">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+        <!-- Color Map Editor Control -->
+        <presentation:ColorMapEditor Grid.Row="0" />
 
-                <DataGrid Grid.Column="0"
-                          x:Name="ColorDataGrid"
-                          ItemsSource="{Binding Colors}" 
-                          SelectedItem="{Binding SelectedColor}"
-                          AutoGenerateColumns="False"
-                          CanUserAddRows="False"
-                          CanUserDeleteRows="False"
-                          CanUserReorderColumns="False">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Red" 
-                                            Binding="{Binding Red, UpdateSourceTrigger=PropertyChanged}" 
-                                            Width="60"/>
-                        <DataGridTextColumn Header="Green" 
-                                            Binding="{Binding Green, UpdateSourceTrigger=PropertyChanged}" 
-                                            Width="60"/>
-                        <DataGridTextColumn Header="Blue" 
-                                            Binding="{Binding Blue, UpdateSourceTrigger=PropertyChanged}" 
-                                            Width="60"/>
-                        <DataGridTextColumn Header="Fraction" 
-                                            Binding="{Binding Fraction, UpdateSourceTrigger=PropertyChanged, StringFormat=F6}" 
-                                            Width="*"/>
-                    </DataGrid.Columns>
-                </DataGrid>
-
-                <StackPanel Grid.Column="1" Margin="5,0,0,0" VerticalAlignment="Center">
-                    <Button Content="Add" 
-                            Width="60" 
-                            Margin="0,0,0,5"
-                            Command="{Binding AddColorCommand}"/>
-                    <Button Content="Delete" 
-                            Width="60"
-                            Margin="0,0,0,5"
-                            Command="{Binding DeleteColorCommand}"/>
-                    <Button Content="Reset" 
-                            Width="60"
-                            Command="{Binding ResetColorCommand}"/>
-                </StackPanel>
-            </Grid>
-        </GroupBox>
-        
         <!-- OK button -->
-        <Button Grid.Row="2" Content="OK" 
+        <Button Grid.Row="1" Content="OK" 
                 IsDefault="True" 
                 Width="60" 
+                Margin="0,10,0,0"
                 HorizontalAlignment="Right"
                 Command="{Binding AcceptCommand}" 
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}" />
