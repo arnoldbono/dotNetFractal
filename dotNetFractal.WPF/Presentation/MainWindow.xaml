@@ -17,9 +17,7 @@
         <converters:BoolToAlignmentConverter x:Key="BoolToAlignmentConverter" />
         <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
         <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />
-        <converters:BoolToCollapseSymbolConverter x:Key="BoolToCollapseSymbolConverter" />
         <converters:BoolToColumnSpanConverter x:Key="BoolToColumnSpanConverter" />
-        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     </Window.Resources>
     <Window.DataContext>
         <vm:MainViewModel />

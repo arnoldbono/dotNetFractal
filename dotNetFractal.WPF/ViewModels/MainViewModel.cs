@@ -40,7 +40,7 @@ namespace dotNetFractal.WPF.ViewModels
         private FractalSettingsViewModel m_fractalSettings = new();
         private ColorMapViewModel m_colorMap = new();
         private DisplaySettingsViewModel m_displaySettings = new();
-        private PropertiesPanelViewModel m_propertiesPanel;
+        private PropertiesPanelViewModel m_propertiesPanel = default;
 
         private FractalStitcher m_stitcher;
         private readonly FractalReplay m_fractalReplay = new();
@@ -135,7 +135,7 @@ namespace dotNetFractal.WPF.ViewModels
             }
         }
 
-        public System.Windows.WindowState WindowState
+        public WindowState WindowState
         {
             get => m_windowState;
             set
@@ -161,13 +161,6 @@ namespace dotNetFractal.WPF.ViewModels
                 }
 
                 m_isFullScreen = value;
-
-                // Sync with PropertiesPanelViewModel
-                if (m_propertiesPanel != null)
-                {
-                    m_propertiesPanel.IsFullScreen = value;
-                }
-
                 OnPropertyChanged();
             }
         }
@@ -183,13 +176,6 @@ namespace dotNetFractal.WPF.ViewModels
                 }
 
                 m_isPropertiesPanelVisible = value;
-
-                // Sync with PropertiesPanelViewModel
-                if (m_propertiesPanel != null)
-                {
-                    m_propertiesPanel.IsPropertiesPanelVisible = value;
-                }
-
                 OnPropertyChanged();
             }
         }
@@ -205,26 +191,9 @@ namespace dotNetFractal.WPF.ViewModels
                 }
 
                 m_arePropertiesExpanded = value;
-
-                // Sync with PropertiesPanelViewModel
-                if (m_propertiesPanel != null)
-                {
-                    m_propertiesPanel.ArePropertiesExpanded = value;
-                }
-
                 OnPropertyChanged();
             }
         }
-
-        public FractalAreaViewModel FractalAreaViewModel => m_fractalArea;
-
-        public ImageResolutionViewModel ImageResolutionViewModel => m_imageResolution;
-
-        public ColorMapViewModel ColorMapViewModel => m_colorMap;
-
-        public DisplaySettingsViewModel DisplaySettingsViewModel => m_displaySettings;
-
-        public FractalSettingsViewModel FractalSettingsViewModel => m_fractalSettings;
 
         public PropertiesPanelViewModel PropertiesPanelViewModel => m_propertiesPanel;
 
@@ -265,6 +234,29 @@ namespace dotNetFractal.WPF.ViewModels
 
             // Subscribe to StretchImage changes from the DisplaySettingsViewModel
             m_displaySettings.WhenAnyValue(x => x.StretchImage).Subscribe(_ => OnPropertyChanged(nameof(StretchImage)));
+
+            // Sync with PropertiesPanelViewModel
+            this.WhenAnyValue(x => x.IsFullScreen).Subscribe(value =>
+            {
+                if (m_propertiesPanel != null && m_propertiesPanel.IsFullScreen != value)
+                {
+                    m_propertiesPanel.IsFullScreen = value;
+                }
+            });
+            this.WhenAnyValue(x => x.IsPropertiesPanelVisible).Subscribe(value =>
+            {
+                if (m_propertiesPanel != null && m_propertiesPanel.IsPropertiesPanelVisible != value)
+                {
+                    m_propertiesPanel.IsPropertiesPanelVisible = value;
+                }
+            });
+            this.WhenAnyValue(x => x.ArePropertiesExpanded).Subscribe(value =>
+            {
+                if (m_propertiesPanel != null && m_propertiesPanel.ArePropertiesExpanded != value)
+                {
+                    m_propertiesPanel.ArePropertiesExpanded = value;
+                }
+            });
 
             StartUpdateWorkerThread();
             StartFractalComputation(false, true);
@@ -552,14 +544,14 @@ namespace dotNetFractal.WPF.ViewModels
             if (IsFullScreen)
             {
                 // Enter full screen
-                WindowStyle = System.Windows.WindowStyle.None;
-                WindowState = System.Windows.WindowState.Maximized;
+                WindowStyle = WindowStyle.None;
+                WindowState = WindowState.Maximized;
             }
             else
             {
                 // Exit full screen
-                WindowStyle = System.Windows.WindowStyle.SingleBorderWindow;
-                WindowState = System.Windows.WindowState.Normal;
+                WindowStyle = WindowStyle.SingleBorderWindow;
+                WindowState = WindowState.Normal;
             }
         }
 
