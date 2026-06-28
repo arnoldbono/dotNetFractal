@@ -29,6 +29,11 @@ namespace dotNetFractal.WPF.ViewModels
         private RelayCommand<EventArgs> m_displaySettingsCommand;
         private RelayCommand<EventArgs> m_toggleStretchImageCommand;
         private RelayCommand<EventArgs> m_toggleFullScreenCommand;
+        private RelayCommand<EventArgs> m_applyFractalAreaCommand;
+        private RelayCommand<EventArgs> m_applyImageResolutionCommand;
+        private RelayCommand<EventArgs> m_togglePropertiesPanelCommand;
+        private RelayCommand<EventArgs> m_collapsePropertiesCommand;
+        private RelayCommand<EventArgs> m_hidePropertiesCommand;
 
         private ImageResolutionViewModel m_imageResolution = new ();
         private FractalAreaViewModel m_fractalArea = new();
@@ -50,6 +55,8 @@ namespace dotNetFractal.WPF.ViewModels
         private bool m_isFullScreen;
         private System.Windows.WindowStyle m_windowStyle = System.Windows.WindowStyle.SingleBorderWindow;
         private System.Windows.WindowState m_windowState = System.Windows.WindowState.Normal;
+        private bool m_isPropertiesPanelVisible = true;
+        private bool m_arePropertiesExpanded = true;
 
         public ImageSource MainImage
         {
@@ -156,6 +163,40 @@ namespace dotNetFractal.WPF.ViewModels
             }
         }
 
+        public bool IsPropertiesPanelVisible
+        {
+            get => m_isPropertiesPanelVisible;
+            set
+            {
+                if (m_isPropertiesPanelVisible == value)
+                {
+                    return;
+                }
+
+                m_isPropertiesPanelVisible = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool ArePropertiesExpanded
+        {
+            get => m_arePropertiesExpanded;
+            set
+            {
+                if (m_arePropertiesExpanded == value)
+                {
+                    return;
+                }
+
+                m_arePropertiesExpanded = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public FractalAreaViewModel FractalAreaViewModel => m_fractalArea;
+
+        public ImageResolutionViewModel ImageResolutionViewModel => m_imageResolution;
+
 
         public MainViewModel()
         {
@@ -198,6 +239,16 @@ namespace dotNetFractal.WPF.ViewModels
         public ICommand ToggleStretchImageCommand => m_toggleStretchImageCommand ??= new RelayCommand<EventArgs>(param => OnToggleStretchImage());
 
         public ICommand ToggleFullScreenCommand => m_toggleFullScreenCommand ??= new RelayCommand<EventArgs>(param => OnToggleFullScreen());
+
+        public ICommand ApplyFractalAreaCommand => m_applyFractalAreaCommand ??= new RelayCommand<EventArgs>(param => OnApplyFractalArea());
+
+        public ICommand ApplyImageResolutionCommand => m_applyImageResolutionCommand ??= new RelayCommand<EventArgs>(param => OnApplyImageResolution());
+
+        public ICommand TogglePropertiesPanelCommand => m_togglePropertiesPanelCommand ??= new RelayCommand<EventArgs>(param => OnTogglePropertiesPanel());
+
+        public ICommand CollapsePropertiesCommand => m_collapsePropertiesCommand ??= new RelayCommand<EventArgs>(param => OnCollapseProperties());
+
+        public ICommand HidePropertiesCommand => m_hidePropertiesCommand ??= new RelayCommand<EventArgs>(param => OnHideProperties());
 
         private void UpdateBitmap()
         {
@@ -370,6 +421,11 @@ namespace dotNetFractal.WPF.ViewModels
             }
         }
 
+        private void OnApplyImageResolution()
+        {
+            StartFractalComputation(m_fractalArea.JuliaSet, true);
+        }
+
         public void OnFractalAreaCommand()
         {
             var dlg = new FractalAreaWindow
@@ -381,6 +437,11 @@ namespace dotNetFractal.WPF.ViewModels
             {
                 StartFractalComputation(m_fractalArea.JuliaSet, true);
             }
+        }
+
+        private void OnApplyFractalArea()
+        {
+            StartFractalComputation(m_fractalArea.JuliaSet, true);
         }
 
         public void OnColorMap()
@@ -436,6 +497,31 @@ namespace dotNetFractal.WPF.ViewModels
                 WindowStyle = System.Windows.WindowStyle.SingleBorderWindow;
                 WindowState = System.Windows.WindowState.Normal;
             }
+        }
+
+        private void OnTogglePropertiesPanel()
+        {
+            if (!IsPropertiesPanelVisible)
+            {
+                // When showing the panel, always show it expanded
+                IsPropertiesPanelVisible = true;
+                ArePropertiesExpanded = true;
+            }
+            else
+            {
+                // When hiding, just toggle visibility
+                IsPropertiesPanelVisible = false;
+            }
+        }
+
+        private void OnCollapseProperties()
+        {
+            ArePropertiesExpanded = !ArePropertiesExpanded;
+        }
+
+        private void OnHideProperties()
+        {
+            IsPropertiesPanelVisible = false;
         }
 
         public void OnCopy()

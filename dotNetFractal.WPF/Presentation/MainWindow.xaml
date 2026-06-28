@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:dotNetFractal.WPF.Presentation"
+        xmlns:presentation="clr-namespace:dotNetFractal.WPF.Presentation"
         xmlns:vm="clr-namespace:dotNetFractal.WPF.ViewModels"
         xmlns:converters="clr-namespace:dotNetFractal.WPF"
         mc:Ignorable="d"
@@ -16,6 +17,8 @@
         <converters:BoolToAlignmentConverter x:Key="BoolToAlignmentConverter" />
         <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
         <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />
+        <converters:BoolToCollapseSymbolConverter x:Key="BoolToCollapseSymbolConverter" />
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     </Window.Resources>
     <Window.DataContext>
         <vm:MainViewModel />
@@ -25,6 +28,7 @@
         <KeyBinding Command="{Binding GoForwardCommand}" Key="Y" Modifiers="Ctrl" />
         <KeyBinding Command="{Binding ToggleStretchImageCommand}" Key="F10" />
         <KeyBinding Command="{Binding ToggleFullScreenCommand}" Key="F11" />
+        <KeyBinding Command="{Binding TogglePropertiesPanelCommand}" Key="F2" />
     </Window.InputBindings>
     <DockPanel>
         <Menu DockPanel.Dock="Top" Visibility="{Binding IsFullScreen, Converter={StaticResource InverseBoolToVisibilityConverter}}">
@@ -46,30 +50,137 @@
                 <MenuItem Header="Fractal _Settings" Command="{Binding FractalSettingsCommand}" />
             </MenuItem>
         </Menu>
-        <ScrollViewer HorizontalScrollBarVisibility="{Binding StretchImage, Converter={StaticResource BoolToScrollBarVisibilityConverter}}" 
-                      VerticalScrollBarVisibility="{Binding StretchImage, Converter={StaticResource BoolToScrollBarVisibilityConverter}}">
-            <Grid>
-                <Image x:Name="FractalImage" 
-                       Stretch="{Binding StretchImage, Converter={StaticResource BoolToStretchConverter}}" 
-                       Source="{Binding MainImage}" 
-                       VerticalAlignment="{Binding StretchImage, Converter={StaticResource BoolToAlignmentConverter}}" 
-                       HorizontalAlignment="{Binding StretchImage, Converter={StaticResource BoolToAlignmentConverter}}"/>
-                <Canvas x:Name="SelectionCanvas" 
-                        Background="Transparent"
-                        IsEnabled="{Binding StretchImage, Converter={StaticResource InverseBooleanConverter}}"
-                        MouseLeftButtonDown="SelectionCanvas_MouseLeftButtonDown"
-                        MouseMove="SelectionCanvas_MouseMove"
-                        MouseLeftButtonUp="SelectionCanvas_MouseLeftButtonUp"
-                        VerticalAlignment="Top" 
-                        HorizontalAlignment="Left">
-                    <Rectangle x:Name="SelectionRectangle" 
-                               Stroke="White" 
-                               StrokeThickness="2" 
-                               StrokeDashArray="4,2"
-                               Fill="Transparent" 
-                               Visibility="Collapsed"/>
-                </Canvas>
-            </Grid>
-        </ScrollViewer>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Main Content Area -->
+            <ScrollViewer Grid.Column="0"
+                          HorizontalScrollBarVisibility="{Binding StretchImage, Converter={StaticResource BoolToScrollBarVisibilityConverter}}" 
+                          VerticalScrollBarVisibility="{Binding StretchImage, Converter={StaticResource BoolToScrollBarVisibilityConverter}}">
+                <Grid>
+                    <Image x:Name="FractalImage" 
+                           Stretch="{Binding StretchImage, Converter={StaticResource BoolToStretchConverter}}" 
+                           Source="{Binding MainImage}" 
+                           VerticalAlignment="{Binding StretchImage, Converter={StaticResource BoolToAlignmentConverter}}" 
+                           HorizontalAlignment="{Binding StretchImage, Converter={StaticResource BoolToAlignmentConverter}}"/>
+                    <Canvas x:Name="SelectionCanvas" 
+                            Background="Transparent"
+                            IsEnabled="{Binding StretchImage, Converter={StaticResource InverseBooleanConverter}}"
+                            MouseLeftButtonDown="SelectionCanvas_MouseLeftButtonDown"
+                            MouseMove="SelectionCanvas_MouseMove"
+                            MouseLeftButtonUp="SelectionCanvas_MouseLeftButtonUp"
+                            VerticalAlignment="Top" 
+                            HorizontalAlignment="Left">
+                        <Rectangle x:Name="SelectionRectangle" 
+                                   Stroke="White" 
+                                   StrokeThickness="2" 
+                                   StrokeDashArray="4,2"
+                                   Fill="Transparent" 
+                                   Visibility="Collapsed"/>
+                    </Canvas>
+                </Grid>
+            </ScrollViewer>
+
+            <!-- Properties Panel - Expanded View -->
+            <Border Grid.Column="1" BorderBrush="Gray" BorderThickness="1,0,0,0" 
+                    Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"
+                    MinWidth="250" MaxWidth="300">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Visible"/>
+                        <Style.Triggers>
+                            <!-- Hide if panel is not visible OR if collapsed -->
+                            <DataTrigger Binding="{Binding IsPropertiesPanelVisible}" Value="False">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding ArePropertiesExpanded}" Value="False">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <DockPanel>
+                    <!-- Header with buttons -->
+                    <Grid DockPanel.Dock="Top" Margin="5,5,5,10">
+                        <Label Content="Properties" FontWeight="Bold" FontSize="14" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <!-- Collapse Button -->
+                            <Button Content="◀" 
+                                    Width="24" Height="24" Margin="0,0,2,0" 
+                                    Command="{Binding CollapsePropertiesCommand}"
+                                    ToolTip="Collapse Panel"
+                                    FontSize="12" Padding="0"/>
+                            <!-- Hide Button -->
+                            <Button Content="✕" Width="24" Height="24" 
+                                    Command="{Binding HidePropertiesCommand}"
+                                    ToolTip="Hide Panel (F2 to show)"
+                                    FontSize="12" Padding="0"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Single Apply Button at bottom - MUST be before ScrollViewer -->
+                    <Border DockPanel.Dock="Bottom" Padding="5" BorderBrush="Gray" BorderThickness="0,1,0,0">
+                        <Button Content="Apply" Padding="15,5" 
+                                Command="{Binding ApplyFractalAreaCommand}" 
+                                HorizontalAlignment="Center"
+                                ToolTip="Apply all property changes and recompute fractal"/>
+                    </Border>
+
+                    <!-- Scrollable content - fills remaining space -->
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="5,0,5,5">
+                            <!-- Fractal Area Expander -->
+                            <Expander Header="Fractal Area" IsExpanded="True" Margin="0,0,0,5">
+                                <StackPanel Margin="5">
+                                    <!-- Fractal Area Editor Control -->
+                                    <presentation:FractalAreaEditor DataContext="{Binding FractalAreaViewModel}" />
+                                </StackPanel>
+                            </Expander>
+
+                            <!-- Image Resolution Expander -->
+                            <Expander Header="Image Resolution" IsExpanded="False" Margin="0,0,0,5">
+                                <StackPanel Margin="5">
+                                    <!-- Image Resolution Editor Control -->
+                                    <presentation:ImageResolutionEditor DataContext="{Binding ImageResolutionViewModel}" />
+                                </StackPanel>
+                            </Expander>
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+
+            <!-- Properties Panel - Collapsed View (Narrow Strip) -->
+            <Border Grid.Column="1" BorderBrush="Gray" BorderThickness="1,0,0,0" 
+                    Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"
+                    Width="auto">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <!-- Show collapsed strip only if panel is visible AND collapsed -->
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding IsPropertiesPanelVisible}" Value="True"/>
+                                    <Condition Binding="{Binding ArePropertiesExpanded}" Value="False"/>
+                                    <Condition Binding="{Binding IsFullScreen}" Value="False"/>
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </MultiDataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Button Content="▶" 
+                        Width="24" Height="24" 
+                        Margin="3,5,3,0"
+                        VerticalAlignment="Top"
+                        Command="{Binding CollapsePropertiesCommand}"
+                        ToolTip="Expand Properties Panel (F2)"
+                        FontSize="12" Padding="0"/>
+            </Border>
+        </Grid>
     </DockPanel>
 </Window>
