@@ -27,6 +27,7 @@ namespace dotNetFractal.WPF.ViewModels
         private RelayCommand<EventArgs> m_togglePropertiesPanelCommand;
         private RelayCommand<EventArgs> m_collapsePropertiesCommand;
         private RelayCommand<EventArgs> m_hidePropertiesCommand;
+        private RelayCommand<EventArgs> m_stopSelectionCommand;
 
         private ImageResolutionViewModel m_imageResolution = new ();
         private FractalAreaViewModel m_fractalArea = new();
@@ -52,6 +53,9 @@ namespace dotNetFractal.WPF.ViewModels
         private WindowState m_windowState = WindowState.Normal;
         private bool m_isPropertiesPanelVisible = true;
         private bool m_arePropertiesExpanded = true;
+        private System.Windows.Point? m_selectionStart;
+        private bool m_isSelecting;
+
 
         public ImageSource MainImage
         {
@@ -190,6 +194,35 @@ namespace dotNetFractal.WPF.ViewModels
 
         public PropertiesPanelViewModel PropertiesPanelViewModel => m_propertiesPanel;
 
+        public System.Windows.Point? SelectionStart
+        {
+            get => m_selectionStart;
+            set
+            {
+                if (m_selectionStart == value)
+                {
+                    return;
+                }
+
+                m_selectionStart = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool IsSelecting
+        {
+            get => m_isSelecting;
+            set
+            {
+                if (m_isSelecting == value)
+                {
+                    return;
+                }
+
+                m_isSelecting = value;
+                OnPropertyChanged();
+            }
+        }
 
         public MainViewModel()
         {
@@ -281,6 +314,8 @@ namespace dotNetFractal.WPF.ViewModels
         public ICommand CollapsePropertiesCommand => m_collapsePropertiesCommand ??= new RelayCommand<EventArgs>(param => OnCollapseProperties());
 
         public ICommand HidePropertiesCommand => m_hidePropertiesCommand ??= new RelayCommand<EventArgs>(param => OnHideProperties());
+
+        public ICommand StopSelectionCommand => m_stopSelectionCommand ??= new RelayCommand<EventArgs>(param => OnStopSelection());
 
         private void UpdateBitmap()
         {
@@ -491,6 +526,12 @@ namespace dotNetFractal.WPF.ViewModels
         private void OnHideProperties()
         {
             IsPropertiesPanelVisible = false;
+        }
+
+        private void OnStopSelection()
+        {
+            IsSelecting = false;
+            SelectionStart = null;
         }
 
         public void OnCopy()

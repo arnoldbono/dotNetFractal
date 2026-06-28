@@ -28,6 +28,7 @@
         <KeyBinding Command="{Binding ToggleStretchImageCommand}" Key="F10" />
         <KeyBinding Command="{Binding ToggleFullScreenCommand}" Key="F11" />
         <KeyBinding Command="{Binding TogglePropertiesPanelCommand}" Key="F2" />
+        <KeyBinding Command="{Binding StopSelectionCommand}" Key="Esc" />
     </Window.InputBindings>
     <DockPanel>
         <Menu DockPanel.Dock="Top" Visibility="{Binding IsFullScreen, Converter={StaticResource InverseBoolToVisibilityConverter}}">

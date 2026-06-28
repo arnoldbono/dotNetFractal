@@ -11,8 +11,7 @@ namespace dotNetFractal.WPF.Presentation
     /// </summary>
     public partial class MainWindow : Window
     {
-        private Point? m_selectionStart;
-        private bool _isSelecting;
+        private MainViewModel ViewModel => DataContext as MainViewModel;
 
         public MainWindow()
         {
@@ -34,8 +33,8 @@ namespace dotNetFractal.WPF.Presentation
             if (position.X >= 0 && position.X < FractalImage.ActualWidth &&
                 position.Y >= 0 && position.Y < FractalImage.ActualHeight)
             {
-                m_selectionStart = position;
-                _isSelecting = true;
+                ViewModel.SelectionStart = position;
+                ViewModel.IsSelecting = true;
                 Canvas.SetLeft(SelectionRectangle, position.X);
                 Canvas.SetTop(SelectionRectangle, position.Y);
                 SelectionRectangle.Width = 1;
@@ -47,8 +46,12 @@ namespace dotNetFractal.WPF.Presentation
 
         private void SelectionCanvas_MouseMove(object sender, MouseEventArgs e)
         {
-            if (!_isSelecting || !m_selectionStart.HasValue)
+            if (!ViewModel.IsSelecting || !ViewModel.SelectionStart.HasValue)
+            {
+                StopSelection();
                 return;
+            }
+
             if (FractalImage.ActualWidth == 0 || FractalImage.ActualHeight == 0)
                 return;
 
@@ -59,8 +62,8 @@ namespace dotNetFractal.WPF.Presentation
             currentPosition.Y = Math.Max(0, Math.Min(currentPosition.Y, FractalImage.ActualHeight));
 
             // Calculate the desired width and height
-            var deltaX = currentPosition.X - m_selectionStart.Value.X;
-            var deltaY = currentPosition.Y - m_selectionStart.Value.Y;
+            var deltaX = currentPosition.X - ViewModel.SelectionStart.Value.X;
+            var deltaY = currentPosition.Y - ViewModel.SelectionStart.Value.Y;
 
             // Calculate the aspect ratio of the image
             double aspectRatio = FractalImage.ActualWidth / FractalImage.ActualHeight;
@@ -90,10 +93,10 @@ namespace dotNetFractal.WPF.Presentation
             }
 
             // Calculate the end point based on constrained dimensions
-            var startX = m_selectionStart.Value.X - width;
-            var startY = m_selectionStart.Value.Y - height;
-            var endX = m_selectionStart.Value.X + width;
-            var endY = m_selectionStart.Value.Y + height;
+            var startX = ViewModel.SelectionStart.Value.X - width;
+            var startY = ViewModel.SelectionStart.Value.Y - height;
+            var endX = ViewModel.SelectionStart.Value.X + width;
+            var endY = ViewModel.SelectionStart.Value.Y + height;
 
             // Calculate final rectangle position and size
             var x = Math.Min(startX, endX);
@@ -139,14 +142,14 @@ namespace dotNetFractal.WPF.Presentation
             if (DataContext is not MainViewModel viewModel)
                 return;
 
-            if (!_isSelecting || !m_selectionStart.HasValue)
+            if (!ViewModel.IsSelecting || !ViewModel.SelectionStart.HasValue)
+            {
+                StopSelection();
                 return;
+            }
 
             // Check if Shift key is pressed
             var isShiftPressed = Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift);
-
-            _isSelecting = false;
-            SelectionCanvas.ReleaseMouseCapture();
 
             // Calculate rectangle bounds
             var x1 = Canvas.GetLeft(SelectionRectangle);
@@ -177,13 +180,21 @@ namespace dotNetFractal.WPF.Presentation
                 }
             }
 
-            // Reset SelectionRectangle fill and show FractalImage
-            SelectionRectangle.Fill = System.Windows.Media.Brushes.Transparent;
-            FractalImage.Visibility = Visibility.Visible;
+            StopSelection();
+        }
+
+        private void StopSelection()
+        {
+            ViewModel.IsSelecting = false;
+            SelectionCanvas.ReleaseMouseCapture();
 
             // Hide the selection rectangle
             SelectionRectangle.Visibility = Visibility.Collapsed;
-            m_selectionStart = null;
+            ViewModel.SelectionStart = null;
+
+            // Reset SelectionRectangle fill and show FractalImage
+            SelectionRectangle.Fill = System.Windows.Media.Brushes.Transparent;
+            FractalImage.Visibility = Visibility.Visible;
         }
     }
 }
