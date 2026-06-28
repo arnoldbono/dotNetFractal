@@ -41,13 +41,6 @@
                 <Separator />
                 <MenuItem Header="_Copy" Command="{Binding CopyCommand}"/>
             </MenuItem>
-            <MenuItem Header="_Preferences">
-                <MenuItem Header="_Fractal Area" Command="{Binding FractalAreaCommand}" />
-                <MenuItem Header="_Image Resolution" Command="{Binding ImageResolutionCommand}" />
-                <MenuItem Header="_Display Settings" Command="{Binding DisplaySettingsCommand}" />
-                <MenuItem Header="_Color Map" Command="{Binding ColorMapCommand}" />
-                <MenuItem Header="Fractal _Settings" Command="{Binding FractalSettingsCommand}" />
-            </MenuItem>
         </Menu>
         <Grid>
             <Grid.ColumnDefinitions>

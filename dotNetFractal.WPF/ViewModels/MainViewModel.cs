@@ -18,19 +18,12 @@ namespace dotNetFractal.WPF.ViewModels
         private static readonly FractalDecimal m_half = (FractalDecimal)0.5;
 
         private RelayCommand<EventArgs> m_newFractalCommand;
-        private RelayCommand<EventArgs> m_imageResolutionCommand;
-        private RelayCommand<EventArgs> m_fractalAreaCommand;
-        private RelayCommand<EventArgs> m_colorMapCommand;
         private RelayCommand<EventArgs> m_saveAsCommand;
-        private RelayCommand<EventArgs> m_fractalSettingsCommand;
         private RelayCommand<EventArgs> m_copyCommand;
         private RelayCommand<EventArgs> m_goBackCommand;
         private RelayCommand<EventArgs> m_goForwardCommand;
-        private RelayCommand<EventArgs> m_displaySettingsCommand;
         private RelayCommand<EventArgs> m_toggleStretchImageCommand;
         private RelayCommand<EventArgs> m_toggleFullScreenCommand;
-        private RelayCommand<EventArgs> m_applyFractalAreaCommand;
-        private RelayCommand<EventArgs> m_applyImageResolutionCommand;
         private RelayCommand<EventArgs> m_togglePropertiesPanelCommand;
         private RelayCommand<EventArgs> m_collapsePropertiesCommand;
         private RelayCommand<EventArgs> m_hidePropertiesCommand;
@@ -271,15 +264,7 @@ namespace dotNetFractal.WPF.ViewModels
 
         public ICommand NewFractalCommand => m_newFractalCommand ??= new RelayCommand<EventArgs>(param => OnNewFractal());
 
-        public ICommand ImageResolutionCommand => m_imageResolutionCommand ??= new RelayCommand<EventArgs>(param => OnImageResolution());
-
-        public ICommand FractalAreaCommand => m_fractalAreaCommand ??= new RelayCommand<EventArgs>(param => OnFractalAreaCommand());
-
-        public ICommand ColorMapCommand => m_colorMapCommand ??= new RelayCommand<EventArgs>(param => OnColorMap());
-
         public ICommand SaveAsCommand => m_saveAsCommand ??= new RelayCommand<EventArgs>(param => OnSaveAs());
-
-        public ICommand FractalSettingsCommand => m_fractalSettingsCommand ??= new RelayCommand<EventArgs>(param => OnFractalSettings());
 
         public ICommand CopyCommand => m_copyCommand ??= new RelayCommand<EventArgs>(param => OnCopy());
 
@@ -287,15 +272,9 @@ namespace dotNetFractal.WPF.ViewModels
 
         public ICommand GoForwardCommand => m_goForwardCommand ??= new RelayCommand<EventArgs>(param => OnGoForward(), param => CanGoForward());
 
-        public ICommand DisplaySettingsCommand => m_displaySettingsCommand ??= new RelayCommand<EventArgs>(param => OnDisplaySettings());
-
         public ICommand ToggleStretchImageCommand => m_toggleStretchImageCommand ??= new RelayCommand<EventArgs>(param => OnToggleStretchImage());
 
         public ICommand ToggleFullScreenCommand => m_toggleFullScreenCommand ??= new RelayCommand<EventArgs>(param => OnToggleFullScreen());
-
-        public ICommand ApplyFractalAreaCommand => m_applyFractalAreaCommand ??= new RelayCommand<EventArgs>(param => OnApplyFractalArea());
-
-        public ICommand ApplyImageResolutionCommand => m_applyImageResolutionCommand ??= new RelayCommand<EventArgs>(param => OnApplyImageResolution());
 
         public ICommand TogglePropertiesPanelCommand => m_togglePropertiesPanelCommand ??= new RelayCommand<EventArgs>(param => OnTogglePropertiesPanel());
 
@@ -461,75 +440,9 @@ namespace dotNetFractal.WPF.ViewModels
             CommandManager.InvalidateRequerySuggested();
         }
 
-        public void OnImageResolution()
-        {
-            var dlg = new ImageResolutionWindow
-            {
-                DataContext = m_imageResolution
-            };
-
-            if (dlg.ShowDialog() == true)
-            {
-                StartFractalComputation(m_fractalArea.JuliaSet, true);
-            }
-        }
-
-        private void OnApplyImageResolution()
-        {
-            StartFractalComputation(m_fractalArea.JuliaSet, true);
-        }
-
-        public void OnFractalAreaCommand()
-        {
-            var dlg = new FractalAreaWindow
-            {
-                DataContext = m_fractalArea
-            };
-
-            if (dlg.ShowDialog() == true)
-            {
-                StartFractalComputation(m_fractalArea.JuliaSet, true);
-            }
-        }
-
         private void OnApplyFractalArea()
         {
             StartFractalComputation(m_fractalArea.JuliaSet, true);
-        }
-
-        public void OnColorMap()
-        {
-            var dlg = new ColorMapWindow
-            {
-                DataContext = m_colorMap
-            };
-            if (dlg.ShowDialog() == true)
-            {
-                StartFractalComputation(m_fractalArea.JuliaSet, true);
-            }
-        }
-
-        public void OnFractalSettings()
-        {
-            var dlg = new FractalSettingsWindow
-            {
-                DataContext = m_fractalSettings
-            };
-
-            if (dlg.ShowDialog() == true)
-            {
-                StartFractalComputation(m_fractalArea.JuliaSet, true);
-            }
-        }
-
-        public void OnDisplaySettings()
-        {
-            var dlg = new DisplaySettingsWindow
-            {
-                DataContext = m_displaySettings
-            };
-
-            dlg.ShowDialog();
         }
 
         public void OnToggleStretchImage()
@@ -621,12 +534,6 @@ namespace dotNetFractal.WPF.ViewModels
                 }
                 m_stitcher.UnlockMutex();
             }
-        }
-
-        public static void OnShowColorMap()
-        {
-            var dlg = new ColorMapWindow();
-            dlg.ShowDialog();
         }
 
         public void ComputeJuliaSet(double pixelX1, double pixelY1, double pixelX2, double pixelY2, double imageWidth, double imageHeight)
