@@ -55,6 +55,8 @@ namespace dotNetFractal.WPF.ViewModels
         private bool m_arePropertiesExpanded = true;
         private System.Windows.Point? m_selectionStart;
         private bool m_isSelecting;
+        private double m_computationProgress;
+        private bool m_isComputing;
 
 
         public ImageSource MainImage
@@ -224,6 +226,36 @@ namespace dotNetFractal.WPF.ViewModels
             }
         }
 
+        public double ComputationProgress
+        {
+            get => m_computationProgress;
+            set
+            {
+                if (Math.Abs(m_computationProgress - value) < 0.01)
+                {
+                    return;
+                }
+
+                m_computationProgress = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool IsComputing
+        {
+            get => m_isComputing;
+            set
+            {
+                if (m_isComputing == value)
+                {
+                    return;
+                }
+
+                m_isComputing = value;
+                OnPropertyChanged();
+            }
+        }
+
         public MainViewModel()
         {
             m_dispatcher = Dispatcher.CurrentDispatcher;
@@ -335,7 +367,8 @@ namespace dotNetFractal.WPF.ViewModels
             Debug.Assert(m_dispatcher?.CheckAccess() ?? true,
                 "UpdateBitmap must be called on the main UI thread");
 
-            if (m_stitcher == null) return;
+            if (m_stitcher == null)
+                return;
 
             int width = m_stitcher.FractalSettings.FractalArea.DisplayArea.PixelsHorizontal;
             int height = m_stitcher.FractalSettings.FractalArea.DisplayArea.PixelsVertical;
@@ -415,6 +448,14 @@ namespace dotNetFractal.WPF.ViewModels
 
                         // Call UpdateBitmap on the UI thread
                         m_dispatcher.Invoke(UpdateBitmap);
+
+                        // Update progress on the UI thread
+                        var progress = m_stitcher.Progress;
+                        m_dispatcher.Invoke(() =>
+                        {
+                            ComputationProgress = progress;
+                            IsComputing = progress < 100.0;
+                        });
                     }
                 }
                 catch (Exception ex)
@@ -440,16 +481,6 @@ namespace dotNetFractal.WPF.ViewModels
             var height = m_fractalArea.Height;
 
             StartFractalComputation(false, centerX, centerY, width, height);
-        }
-
-        private void OnApplyFractalArea()
-        {
-            var centerX = m_fractalArea.CenterX;
-            var centerY = m_fractalArea.CenterY;
-            var width = m_fractalArea.Width;
-            var height = m_fractalArea.Height;
-
-            StartFractalComputation(m_fractalArea.JuliaSet, centerX, centerY, width, height);
         }
 
         public void OnToggleStretchImage()
@@ -749,6 +780,10 @@ namespace dotNetFractal.WPF.ViewModels
                 }
                 MainImage = ConvertBitmapToImageSource.ConvertFast(m_bitmap);
             }
+
+            // Initialize progress tracking
+            ComputationProgress = 0.0;
+            IsComputing = true;
 
             m_stitcher.StartThread();
 

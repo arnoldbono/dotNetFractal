@@ -16,6 +16,7 @@ namespace dotNetFractal.Logic
         private readonly FractalSettings m_fractalSettings;
         private readonly List<IFractal> m_fractalsToUpdate = [];
         private readonly AutoResetEvent m_bitmapUpdateEvent = new (false);
+        private double m_progress = 0.0;
 
         private static int PatchSize => 128;
 
@@ -37,6 +38,17 @@ namespace dotNetFractal.Logic
                 var hasFractals = m_fractalsToUpdate.Count > 0;
                 UnlockMutex();
                 return hasFractals;
+            }
+        }
+
+        public double Progress
+        {
+            get
+            {
+                LockMutex();
+                var progress = m_progress;
+                UnlockMutex();
+                return progress;
             }
         }
 
@@ -71,8 +83,11 @@ namespace dotNetFractal.Logic
         protected override void ThreadProc()
         {
             Stop = false;
+            m_progress = 0.0;
 
             var waitingFractals = GetPatches(m_fractalSettings.FractalArea.DisplayArea);
+            var totalFractals = waitingFractals.Count;
+            var completedFractals = 0;
 
             var processorCount = Environment.ProcessorCount;
             var startedFractals = new List<IFractal>();
@@ -136,10 +151,16 @@ namespace dotNetFractal.Logic
                         {
                             var subdividedFractals = fractal.Subdivide();
                             waitingFractals.InsertRange(0, subdividedFractals);
+                            totalFractals += subdividedFractals.Length;
                         }
 
                         m_fractalsToUpdate.Add(fractal);
                         ++fractalCount;
+                        ++completedFractals;
+
+                        // Update progress percentage
+                        m_progress = completedFractals * 100.0 / totalFractals;
+
                         UnlockMutex();
 
                         startedFractals.Remove(fractal);
@@ -167,6 +188,7 @@ namespace dotNetFractal.Logic
             completionEvent = null;
             semaphore.Dispose();
             semaphore = null;
+            m_progress = 100.0; // Ensure progress is set to 100% when complete
             Stopped = true;
             UnlockMutex();
         }
@@ -222,7 +244,9 @@ namespace dotNetFractal.Logic
             var image = (Bitmap)fractalImage.Image;
 
             Graphics grfx = Graphics.FromImage(bitmap);
-            grfx.DrawImage(image, areaPatch.GetTargetRectangle(bitmap.Width, bitmap.Height), areaPatch.GetSourceRectangle(bitmap.Width, bitmap.Height), GraphicsUnit.Pixel);
+            var targetRect = areaPatch.GetTargetRectangle(bitmap.Width, bitmap.Height);
+            var sourceRect = areaPatch.GetSourceRectangle(bitmap.Width, bitmap.Height);
+            grfx.DrawImage(image, targetRect, sourceRect, GraphicsUnit.Pixel);
         }
     }
 }

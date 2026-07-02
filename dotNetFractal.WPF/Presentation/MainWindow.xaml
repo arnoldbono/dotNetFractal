@@ -18,6 +18,7 @@
         <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
         <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />
         <converters:BoolToColumnSpanConverter x:Key="BoolToColumnSpanConverter" />
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
     </Window.Resources>
     <Window.DataContext>
         <vm:MainViewModel />
@@ -104,6 +105,16 @@
 
             <!-- Properties Panel UserControl -->
             <presentation:PropertiesPanel Grid.Column="2" DataContext="{Binding PropertiesPanelViewModel}" />
+
+            <!-- Progress Bar Overlay -->
+            <ProgressBar Minimum="0" 
+                                 Maximum="100" 
+                                 Value="{Binding ComputationProgress}"
+                                 Height="30"
+                                 Margin="20"
+                                 VerticalAlignment="Bottom"
+                                 HorizontalAlignment="Stretch"
+                                 Visibility="{Binding IsComputing, Converter={StaticResource BoolToVisibilityConverter}}"/>
         </Grid>
     </DockPanel>
 </Window>
