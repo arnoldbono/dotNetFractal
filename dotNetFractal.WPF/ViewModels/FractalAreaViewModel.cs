@@ -17,6 +17,22 @@ namespace dotNetFractal.WPF.ViewModels
         {
             ; // Empty
         }
+
+        public FractalAreaViewModel Clone()
+        {
+            var clone = new FractalAreaViewModel
+            {
+                Cx = this.Cx,
+                Cy = this.Cy,
+                CenterX = this.CenterX,
+                CenterY = this.CenterY,
+                Width = this.Width,
+                Height = this.Height,
+                SelectedPlate = this.SelectedPlate,
+                JuliaSet = this.JuliaSet
+            };
+            return clone;
+        }
     }
 
     /// <summary>
