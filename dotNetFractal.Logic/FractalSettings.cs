@@ -17,7 +17,9 @@ namespace dotNetFractal.Logic
 
         public bool HighPrecision { get; private set; }
 
-        public FractalSettings(IDisplayArea displayArea, int maxIterations, int maxColorSteps, bool smoothColoring, bool highPrecision)
+        public int[] DistributionGraph { get; private set; }
+
+        public FractalSettings(IDisplayArea displayArea, int maxIterations, int maxColorSteps, bool smoothColoring, bool highPrecision, int[] distributionGraph = null)
         {
             Debug.Assert(displayArea != null);
 
@@ -29,6 +31,7 @@ namespace dotNetFractal.Logic
             MaxColorSteps = maxColorSteps;
             SmoothColoring = smoothColoring;
             HighPrecision = highPrecision;
+            DistributionGraph = distributionGraph;
         }
     }
 }

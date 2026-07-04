@@ -6,6 +6,7 @@ namespace dotNetFractal.WPF.ViewModels
         private int m_maxColorSteps = 128;
         private bool m_smoothColoring = true;
         private bool m_highPrecision = false;
+        private int[] m_distributionGraph;
 
         public int MaxIterations
         {
@@ -18,6 +19,7 @@ namespace dotNetFractal.WPF.ViewModels
                 }
 
                 m_maxIterations = value;
+                m_distributionGraph = new int[m_maxIterations];
                 OnPropertyChanged();
             }
         }
@@ -67,8 +69,24 @@ namespace dotNetFractal.WPF.ViewModels
             }
         }
 
+        public int[] DistributionGraph
+        {
+            get => m_distributionGraph;
+            set
+            {
+                if (m_distributionGraph == value)
+                {
+                    return;
+                }
+
+                m_distributionGraph = value;
+                OnPropertyChanged();
+            }
+        }
+
         public FractalSettingsViewModel()
         {
+            m_distributionGraph = new int[m_maxIterations];
         }
     }
 }

@@ -84,6 +84,14 @@ namespace dotNetFractal.Logic
 
         protected abstract FractalPixel<T> Compute(T maxRadius, int maxIterations, DisplayArea<T> displayArea, int i, int j);
 
+        private void IncrementDistributionGraph(int iteration)
+        {
+            if (Settings.DistributionGraph != null && iteration >= 0 && iteration < Settings.DistributionGraph.Length)
+            {
+                System.Threading.Interlocked.Increment(ref Settings.DistributionGraph[iteration]);
+            }
+        }
+
         protected override void ThreadProc()
         {
             Stop = false;
@@ -113,6 +121,7 @@ namespace dotNetFractal.Logic
 
                     var pixel = Compute(maxRadius, maxIterations, displayArea, i, j);
                     Area.Pixels.SetPixel(i, j, pixel);
+                    IncrementDistributionGraph(pixel.Iteration);
 
                     if (pixel.Iteration < maxIterations)
                     {
@@ -138,6 +147,7 @@ namespace dotNetFractal.Logic
                             }
 
                             Area.Pixels.SetPixel(i, j, new FractalPixel<T>(maxIterations, maxRadius, maxRadius));
+                            IncrementDistributionGraph(maxIterations);
                         }
                     }
                 }
@@ -159,6 +169,7 @@ namespace dotNetFractal.Logic
 
                                 var pixel = Compute(maxRadius, maxIterations, displayArea, i, j);
                                 Area.Pixels.SetPixel(i, j, pixel);
+                                IncrementDistributionGraph(pixel.Iteration);
                             }
                         }
                     } // else fractal gets subdivided later on and skip the inner pixels for now

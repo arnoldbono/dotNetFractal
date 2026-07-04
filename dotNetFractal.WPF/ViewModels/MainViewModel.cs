@@ -40,6 +40,7 @@ namespace dotNetFractal.WPF.ViewModels
         private readonly FractalReplay m_fractalReplay = new();
         private int m_currentHistoryIndex = -1;
         private bool m_isNavigating = false;
+        private Presentation.DistributionGraphWindow m_distributionGraphWindow;
 
         private Thread m_updateWorkerThread;
         private volatile bool m_stopWorkerThread;
@@ -337,6 +338,10 @@ namespace dotNetFractal.WPF.ViewModels
             StopUpdateWorkerThread();
             m_stitcher?.StopThread();
             m_bitmap?.Dispose();
+
+            // Close the distribution graph window if it's open
+            m_distributionGraphWindow?.Close();
+            m_distributionGraphWindow = null;
         }
 
         public ICommand NewFractalCommand => m_newFractalCommand ??= new RelayCommand<EventArgs>(param => OnNewFractal());
@@ -474,6 +479,13 @@ namespace dotNetFractal.WPF.ViewModels
             m_fractalReplay.ClearHistory();
             m_currentHistoryIndex = 0;
             m_stitcher = null;
+
+            // Close the distribution graph window when creating a new fractal
+            if (m_distributionGraphWindow != null)
+            {
+                m_distributionGraphWindow.Close();
+                m_distributionGraphWindow = null;
+            }
 
             var centerX = m_fractalArea.CenterX;
             var centerY = m_fractalArea.CenterY;
@@ -736,10 +748,12 @@ namespace dotNetFractal.WPF.ViewModels
                 m_fractalSettings.MaxIterations,
                 m_fractalSettings.MaxColorSteps,
                 m_fractalSettings.SmoothColoring,
-                m_fractalSettings.HighPrecision
+                m_fractalSettings.HighPrecision,
+                m_fractalSettings.DistributionGraph
             );
 
             m_stitcher = new FractalStitcher(fractalSettings);
+            m_stitcher.ComputationCompleted += OnComputationCompleted;
             fractalSettings.FractalArea.JuliaSet = juliaSet;
 
             if (MainImage != null)
@@ -789,6 +803,67 @@ namespace dotNetFractal.WPF.ViewModels
 
             // Update command states
             CommandManager.InvalidateRequerySuggested();
+        }
+
+        private void OnComputationCompleted(object sender, EventArgs e)
+        {
+            // Show the distribution graph on the UI thread
+            m_dispatcher.Invoke(() =>
+            {
+                // Check if distribution graph is enabled and has data
+                if (m_fractalSettings?.DistributionGraph != null)
+                {
+                    // Reuse existing window if it exists and is open
+                    if (m_distributionGraphWindow != null)
+                    {
+                        try
+                        {
+                            // Check if window is still open (not closed by user)
+                            if (m_distributionGraphWindow.IsLoaded)
+                            {
+                                m_distributionGraphWindow.UpdateGraph(m_fractalSettings.DistributionGraph);
+
+                                // Bring the window to front if it's minimized or behind other windows
+                                if (m_distributionGraphWindow.WindowState == WindowState.Minimized)
+                                {
+                                    m_distributionGraphWindow.WindowState = WindowState.Normal;
+                                }
+                                m_distributionGraphWindow.Activate();
+                                return; // Successfully updated existing window
+                            }
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            // Window was closed, clear the reference and create a new one
+                            m_distributionGraphWindow = null;
+                        }
+                    }
+
+                    // Create a new window
+                    m_distributionGraphWindow = new Presentation.DistributionGraphWindow(m_fractalSettings.DistributionGraph);
+
+                    // Only set the owner if MainWindow exists and has been shown
+                    var mainWindow = Application.Current.MainWindow;
+                    if (mainWindow != null && mainWindow.IsLoaded)
+                    {
+                        m_distributionGraphWindow.Owner = mainWindow;
+                    }
+
+                    // Handle the Closed event to clear the reference
+                    m_distributionGraphWindow.Closed += (s, args) => m_distributionGraphWindow = null;
+
+                    m_distributionGraphWindow.Show();
+                }
+                else
+                {
+                    // Distribution graph is disabled, close the window if it's open
+                    if (m_distributionGraphWindow != null)
+                    {
+                        m_distributionGraphWindow.Close();
+                        m_distributionGraphWindow = null;
+                    }
+                }
+            });
         }
     }
 }

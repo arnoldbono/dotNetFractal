@@ -20,6 +20,8 @@ namespace dotNetFractal.Logic
 
         private static int PatchSize => 128;
 
+        public event EventHandler ComputationCompleted;
+
         public FractalSettings FractalSettings => m_fractalSettings;
 
         public WaitHandle BitmapUpdateEvent => m_bitmapUpdateEvent;
@@ -84,6 +86,15 @@ namespace dotNetFractal.Logic
         {
             Stop = false;
             m_progress = 0.0;
+
+            // Initialize DistributionGraph to zero
+            if (m_fractalSettings.DistributionGraph != null)
+            {
+                for (int i = 0; i < m_fractalSettings.DistributionGraph.Length; i++)
+                {
+                    m_fractalSettings.DistributionGraph[i] = 0;
+                }
+            }
 
             var waitingFractals = GetPatches(m_fractalSettings.FractalArea.DisplayArea);
             var totalFractals = waitingFractals.Count;
@@ -191,6 +202,9 @@ namespace dotNetFractal.Logic
             m_progress = 100.0; // Ensure progress is set to 100% when complete
             Stopped = true;
             UnlockMutex();
+
+            // Raise the completion event
+            ComputationCompleted?.Invoke(this, EventArgs.Empty);
         }
 
         public bool Update(Bitmap bitmap)
