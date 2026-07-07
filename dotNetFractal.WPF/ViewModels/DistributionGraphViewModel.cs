@@ -94,7 +94,7 @@ namespace dotNetFractal.WPF.ViewModels
             }
 
             GraphPoints = points;
-            MaxIteration = maxIteration;
+            MaxIteration = maxIteration + 1; // Correcting for zero-based index
             TotalPixels = distributionGraph.Sum();
         }
     }

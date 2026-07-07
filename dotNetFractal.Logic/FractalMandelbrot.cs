@@ -29,8 +29,9 @@ namespace dotNetFractal.Logic
             int iteration = 0;
             var radius2 = new T();
             var prevRadius2 = new T();
-            while (iteration++ < maxIterations)
+            do
             {
+                ++iteration;
                 prevRadius2 = radius2;
 
                 var xx = x * x;      // x²
@@ -45,6 +46,7 @@ namespace dotNetFractal.Logic
                 y += y + Cy;         // y = (x*y) + (x*y) + Cy = 2*x*y + Cy
                 x = xx - yy + Cx;    // x = x² - y² + Cx
             }
+            while (iteration < maxIterations);
 
             return new FractalPixel<T>(iteration, radius2, prevRadius2);
         }

@@ -96,8 +96,11 @@ namespace dotNetFractal.Logic
 
         private void IncrementDistributionGraph(int iteration)
         {
-            if (Settings.DistributionGraph != null && iteration >= 0 && iteration < Settings.DistributionGraph.Length)
+            --iteration; // 1...maxIterations, but DistributionGraph is 0...maxIterations-1, so decrement by 1
+            if (Settings.DistributionGraph != null)
             {
+                if (iteration < 0 || iteration >= Settings.DistributionGraph.Length)
+                    throw new ArgumentOutOfRangeException(nameof(iteration));
                 System.Threading.Interlocked.Increment(ref Settings.DistributionGraph[iteration]);
             }
         }
