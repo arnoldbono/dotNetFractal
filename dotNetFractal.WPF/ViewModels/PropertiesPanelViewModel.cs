@@ -6,6 +6,7 @@ namespace dotNetFractal.WPF.ViewModels
     public class PropertiesPanelViewModel : BaseViewModel
     {
         private readonly Action<bool> m_onApplyChanges;
+        private readonly Action m_showDistributionGraph;
         private RelayCommand<EventArgs> m_applyFractalAreaCommand;
         private RelayCommand<EventArgs> m_collapsePropertiesCommand;
         private RelayCommand<EventArgs> m_hidePropertiesCommand;
@@ -142,6 +143,8 @@ namespace dotNetFractal.WPF.ViewModels
 
         public ICommand ApplyFractalAreaCommand => m_applyFractalAreaCommand ??= new RelayCommand<EventArgs>(param => OnApplyFractalArea());
 
+        public ICommand ShowDistributionGraphCommand => new RelayCommand<EventArgs>(param => OnShowDistributionGraph());
+
         public ICommand CollapsePropertiesCommand => m_collapsePropertiesCommand ??= new RelayCommand<EventArgs>(param => OnCollapseProperties());
 
         public ICommand HidePropertiesCommand => m_hidePropertiesCommand ??= new RelayCommand<EventArgs>(param => OnHideProperties());
@@ -152,7 +155,8 @@ namespace dotNetFractal.WPF.ViewModels
             ColorMapViewModel colorMapViewModel,
             DisplaySettingsViewModel displaySettingsViewModel,
             FractalSettingsViewModel fractalSettingsViewModel,
-            Action<bool> onApplyChanges)
+            Action<bool> onApplyChanges,
+            Action showDistributionGraph)
         {
             m_fractalArea = fractalAreaViewModel ?? throw new ArgumentNullException(nameof(fractalAreaViewModel));
             m_imageResolution = imageResolutionViewModel ?? throw new ArgumentNullException(nameof(imageResolutionViewModel));
@@ -160,12 +164,19 @@ namespace dotNetFractal.WPF.ViewModels
             m_displaySettings = displaySettingsViewModel ?? throw new ArgumentNullException(nameof(displaySettingsViewModel));
             m_fractalSettings = fractalSettingsViewModel ?? throw new ArgumentNullException(nameof(fractalSettingsViewModel));
             m_onApplyChanges = onApplyChanges ?? throw new ArgumentNullException(nameof(onApplyChanges));
+            m_showDistributionGraph = showDistributionGraph ?? throw new ArgumentNullException(nameof(showDistributionGraph));
         }
 
         private void OnApplyFractalArea()
         {
             // Delegate to MainViewModel to start fractal computation
             m_onApplyChanges?.Invoke(m_fractalArea.JuliaSet);
+        }
+
+        private void OnShowDistributionGraph()
+        {
+            // Delegate to MainViewModel to show distribution graph
+            m_showDistributionGraph?.Invoke();
         }
 
         private void OnCollapseProperties()

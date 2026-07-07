@@ -275,7 +275,8 @@ namespace dotNetFractal.WPF.ViewModels
                     var width = m_fractalArea.Width;
                     var height = m_fractalArea.Height;
                     StartFractalComputation(juliaSet, centerX, centerY, width, height);
-                });
+                },
+                () => OnShowDistributionGraph());
 
             // Subscribe to property changes from PropertiesPanelViewModel to keep MainViewModel in sync
             m_propertiesPanel.WhenAnyValue(x => x.IsPropertiesPanelVisible)
@@ -747,6 +748,7 @@ namespace dotNetFractal.WPF.ViewModels
             var fractalSettings = new FractalSettings(displayArea,
                 m_fractalSettings.MaxIterations,
                 m_fractalSettings.MaxColorSteps,
+                m_fractalSettings.FirstColorStep,
                 m_fractalSettings.SmoothColoring,
                 m_fractalSettings.HighPrecision,
                 m_fractalSettings.DistributionGraph
@@ -807,9 +809,26 @@ namespace dotNetFractal.WPF.ViewModels
 
         private void OnComputationCompleted(object sender, EventArgs e)
         {
+            m_dispatcher.Invoke(() =>
+            {
+                if (m_distributionGraphWindow?.IsLoaded == true && m_fractalSettings?.DistributionGraph != null)
+                {
+                    m_distributionGraphWindow.UpdateGraph(m_fractalSettings.DistributionGraph);
+                }
+            });
+        }
+
+        private void OnShowDistributionGraph()
+        {
             // Show the distribution graph on the UI thread
             m_dispatcher.Invoke(() =>
             {
+                if (m_distributionGraphWindow?.IsLoaded == true && m_fractalSettings?.DistributionGraph != null)
+                {
+                    m_distributionGraphWindow.UpdateGraph(m_fractalSettings.DistributionGraph);
+                    return; // Already open and now updated
+                }
+
                 // Check if distribution graph is enabled and has data
                 if (m_fractalSettings?.DistributionGraph != null)
                 {
@@ -857,11 +876,8 @@ namespace dotNetFractal.WPF.ViewModels
                 else
                 {
                     // Distribution graph is disabled, close the window if it's open
-                    if (m_distributionGraphWindow != null)
-                    {
-                        m_distributionGraphWindow.Close();
-                        m_distributionGraphWindow = null;
-                    }
+                    m_distributionGraphWindow?.Close();
+                    m_distributionGraphWindow = null;
                 }
             });
         }

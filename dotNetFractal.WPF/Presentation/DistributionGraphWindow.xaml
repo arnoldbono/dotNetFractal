@@ -8,8 +8,8 @@
         Title="Iteration Distribution Graph" 
         Height="600" 
         Width="900"
-        WindowStartupLocation="CenterOwner"
         Background="#FF2D2D30">
+    <!-- WindowStartupLocation="CenterOwner" -->
     <Window.Resources>
         <Style TargetType="TextBlock">
             <Setter Property="Foreground" Value="White"/>
@@ -22,7 +22,6 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- Title -->
@@ -31,7 +30,7 @@
                    FontSize="20" 
                    FontWeight="Bold" 
                    HorizontalAlignment="Center" 
-                   Margin="0,0,0,10"/>
+                   Margin="0,0,0,8"/>
 
         <!-- Statistics -->
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
@@ -55,9 +54,9 @@
                     <RowDefinition Height="30"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="30"/>
+                    <ColumnDefinition Width="40"/>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="30"/>
+                    <ColumnDefinition Width="20"/>
                 </Grid.ColumnDefinitions>
 
                 <!-- Y-axis label -->
@@ -79,6 +78,7 @@
                 <!-- X-axis label -->
                 <TextBlock Grid.Row="2" 
                            Grid.Column="1" 
+                           FontSize="14"
                            Text="Iteration Number" 
                            HorizontalAlignment="Center" 
                            VerticalAlignment="Center"/>
@@ -88,23 +88,14 @@
                         Grid.Row="1" 
                         Grid.Column="1" 
                         Background="#FF252526"
-                        Margin="5"
-                        ClipToBounds="True"/>
+                        Margin="10"/>
             </Grid>
         </Border>
 
         <!-- Legend -->
-        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,0">
             <Rectangle Width="20" Height="10" Fill="#FF0078D7" Margin="0,0,5,0"/>
             <TextBlock Text="Iteration Distribution (scaled to max = 100)" VerticalAlignment="Center"/>
         </StackPanel>
-
-        <!-- Close button -->
-        <Button Grid.Row="4" 
-                Content="Close" 
-                Width="100" 
-                Height="30" 
-                HorizontalAlignment="Center"
-                Click="CloseButton_Click"/>
     </Grid>
 </Window>

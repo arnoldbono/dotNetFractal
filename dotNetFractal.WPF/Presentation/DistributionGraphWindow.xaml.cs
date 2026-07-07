@@ -50,19 +50,15 @@ namespace dotNetFractal.WPF.Presentation
                 return;
             }
 
-            // Draw grid lines
-            DrawGridLines(canvasWidth, canvasHeight);
-
             // Calculate bar width to fit exactly within canvas
-            int pointCount = m_viewModel.GraphPoints.Count;
-            double spacing = 1;
-            double totalSpacing = spacing * (pointCount - 1);
-            double barWidth = Math.Max(1, (canvasWidth - totalSpacing) / pointCount);
+            int maxIteration = m_viewModel.MaxIteration;
+            double spacing = (canvasWidth / maxIteration) * 0.1;
+            double barWidth = (canvasWidth / maxIteration) * 0.9;
 
             // Draw bars
-            for (int i = 0; i < m_viewModel.GraphPoints.Count; i++)
+            foreach (var point in m_viewModel.GraphPoints)
             {
-                var point = m_viewModel.GraphPoints[i];
+                var i = point.Iteration - 1;
                 double barHeight = (point.ScaledValue / 100.0) * canvasHeight;
                 double x = i * (barWidth + spacing);
                 double y = canvasHeight - barHeight;
@@ -79,13 +75,12 @@ namespace dotNetFractal.WPF.Presentation
                 Canvas.SetLeft(bar, x);
                 Canvas.SetTop(bar, y);
                 GraphCanvas.Children.Add(bar);
-
-                // Add tooltip with details
-                bar.ToolTip = $"Iteration: {point.Iteration}\nCount: {point.Count}\nScaled: {point.ScaledValue:F2}";
             }
+
+            DrawGridLines(canvasWidth, canvasHeight, spacing, barWidth);
         }
 
-        private void DrawGridLines(double width, double height)
+        private void DrawGridLines(double width, double height, double spacing, double barWidth)
         {
             var gridBrush = new SolidColorBrush(Color.FromArgb(40, 255, 255, 255));
 
@@ -111,55 +106,43 @@ namespace dotNetFractal.WPF.Presentation
                     Foreground = Brushes.LightGray,
                     FontSize = 10
                 };
-                Canvas.SetLeft(label, -35);
+                Canvas.SetLeft(label, -15);
                 Canvas.SetTop(label, y - 7);
                 GraphCanvas.Children.Add(label);
             }
 
             // Draw vertical grid lines (every ~10% of iterations)
-            if (m_viewModel.MaxIteration > 0)
+            double maxIteration = m_viewModel.MaxIteration;
+            if (maxIteration <= 0)
+                return;
+
+            int step = Math.Max(1, (int)(maxIteration / 10));
+
+            for (int iteration = 0; iteration <= maxIteration; iteration += step)
             {
-                int step = Math.Max(1, m_viewModel.MaxIteration / 10);
-                int pointCount = m_viewModel.GraphPoints.Count;
-                double spacing = 1;
-                double totalSpacing = spacing * (pointCount - 1);
-                double barWidth = Math.Max(1, (width - totalSpacing) / pointCount);
-
-                for (int iteration = 0; iteration <= m_viewModel.MaxIteration; iteration += step)
+                double x = iteration * (barWidth + spacing);
+                var line = new Line
                 {
-                    int index = m_viewModel.GraphPoints.FindIndex(p => p.Iteration >= iteration);
-                    if (index >= 0)
-                    {
-                        double x = index * (barWidth + spacing);
-                        var line = new Line
-                        {
-                            X1 = x,
-                            Y1 = 0,
-                            X2 = x,
-                            Y2 = height,
-                            Stroke = gridBrush,
-                            StrokeThickness = 1
-                        };
-                        GraphCanvas.Children.Add(line);
+                    X1 = x,
+                    Y1 = 0,
+                    X2 = x,
+                    Y2 = height,
+                    Stroke = gridBrush,
+                    StrokeThickness = 1
+                };
+                GraphCanvas.Children.Add(line);
 
-                        // Add X-axis labels
-                        var label = new TextBlock
-                        {
-                            Text = iteration.ToString(),
-                            Foreground = Brushes.LightGray,
-                            FontSize = 10
-                        };
-                        Canvas.SetLeft(label, x - 10);
-                        Canvas.SetTop(label, height + 5);
-                        GraphCanvas.Children.Add(label);
-                    }
-                }
+                // Add X-axis labels
+                var label = new TextBlock
+                {
+                    Text = iteration.ToString(),
+                    Foreground = Brushes.LightGray,
+                    FontSize = 10
+                };
+                Canvas.SetLeft(label, x - 5);
+                Canvas.SetTop(label, height + 5);
+                GraphCanvas.Children.Add(label);
             }
-        }
-
-        private void CloseButton_Click(object sender, RoutedEventArgs e)
-        {
-            Close();
         }
 
         /// <summary>

@@ -70,6 +70,16 @@ namespace dotNetFractal.Logic
 
         public void GetColor(int index, out int red, out int green, out int blue)
         {
+            if (index < Settings.FirstColorStep)
+            {
+                red = 255;
+                green = 255;
+                blue = 255;
+                return;
+            }
+
+            index -= Settings.FirstColorStep;
+
             var fraction = (index % Settings.MaxColorSteps) / (double)Settings.MaxColorSteps;
             var color = m_colorMap.GetColor(fraction);
             red = color.Red;
@@ -92,15 +102,23 @@ namespace dotNetFractal.Logic
             }
         }
 
+        private void UpdatePixel(int i, int j, IFractalPixel pixel)
+        {
+            Area.Pixels.SetPixel(i, j, pixel);
+            IncrementDistributionGraph(pixel.Iteration);
+        }
+
         protected override void ThreadProc()
         {
             Stop = false;
             Stopped = false;
 
+            var pixels = Area.Pixels;
+
             var startIndexWidth = AreaPatch.StartIndexWidth;
-            var stopIndexWidth = AreaPatch.StopIndexWidth;
+            var stopIndexWidth = Math.Min(AreaPatch.StopIndexWidth, pixels.Width);
             var startIndexHeight = AreaPatch.StartIndexHeight;
-            var stopIndexHeight = AreaPatch.StopIndexHeight;
+            var stopIndexHeight = Math.Min(AreaPatch.StopIndexHeight, pixels.Height);
 
             var displayArea = (DisplayArea<T>)Area.DisplayArea;
             var maxRadius = (T)MaxRadius;
@@ -113,15 +131,13 @@ namespace dotNetFractal.Logic
             {
                 for (var j = startIndexHeight; j < stopIndexHeight && !Stop; ++j)
                 {
-                    if (!Area.Pixels.Inside(i, j) ||
-                        i > startIndexWidth && i < stopIndexWidth - 1 && j > startIndexHeight && j < stopIndexHeight - 1)
+                    if (i > startIndexWidth && i < stopIndexWidth - 1 && j > startIndexHeight && j < stopIndexHeight - 1)
                     {
                         continue;
                     }
 
                     var pixel = Compute(maxRadius, maxIterations, displayArea, i, j);
-                    Area.Pixels.SetPixel(i, j, pixel);
-                    IncrementDistributionGraph(pixel.Iteration);
+                    UpdatePixel(i, j, pixel);
 
                     if (pixel.Iteration < maxIterations)
                     {
@@ -133,47 +149,40 @@ namespace dotNetFractal.Logic
                     }
                 }
             }
-            {
-                if (allMaxIteractionReached)
-                {
-                    m_state = ComputationState.AllMaxIterationsReached;
-                    for (var i = startIndexWidth + 1; i < stopIndexWidth - 1 && !Stop; ++i)
-                    {
-                        for (var j = startIndexHeight + 1; j < stopIndexHeight - 1 && !Stop; ++j)
-                        {
-                            if (!Area.Pixels.Inside(i, j))
-                            {
-                                continue;
-                            }
 
-                            Area.Pixels.SetPixel(i, j, new FractalPixel<T>(maxIterations, maxRadius, maxRadius));
-                            IncrementDistributionGraph(maxIterations);
-                        }
+            ++startIndexWidth;
+            --stopIndexWidth;
+            ++startIndexHeight;
+            --stopIndexHeight;
+
+            if (allMaxIteractionReached)
+            {
+                for (var i = startIndexWidth; i < stopIndexWidth && !Stop; ++i)
+                {
+                    for (var j = startIndexHeight; j < stopIndexHeight && !Stop; ++j)
+                    {
+                        UpdatePixel(i, j, new FractalPixel<T>(maxIterations, maxRadius, maxRadius));
                     }
                 }
-                else
+                m_state = ComputationState.AllMaxIterationsReached;
+            }
+            else
+            {
+                var state = someMaxIteractionReached && AreaPatch.Size > 16 ?
+                    ComputationState.SomeMaxIterationsReached :
+                    ComputationState.NoneMaxIterationsReached;
+                if (state == ComputationState.NoneMaxIterationsReached)
                 {
-                    m_state = someMaxIteractionReached && AreaPatch.Size > 16 ?
-                        ComputationState.SomeMaxIterationsReached :
-                        ComputationState.NoneMaxIterationsReached;
-                    if (m_state == ComputationState.NoneMaxIterationsReached)
+                    for (var i = startIndexWidth; i < stopIndexWidth && !Stop; ++i)
                     {
-                        for (var i = startIndexWidth + 1; i < stopIndexWidth - 1 && !Stop; ++i)
+                        for (var j = startIndexHeight; j < stopIndexHeight && !Stop; ++j)
                         {
-                            for (var j = startIndexHeight + 1; j < stopIndexHeight - 1 && !Stop; ++j)
-                            {
-                                if (!Area.Pixels.Inside(i, j))
-                                {
-                                    continue;
-                                }
-
-                                var pixel = Compute(maxRadius, maxIterations, displayArea, i, j);
-                                Area.Pixels.SetPixel(i, j, pixel);
-                                IncrementDistributionGraph(pixel.Iteration);
-                            }
+                            var pixel = Compute(maxRadius, maxIterations, displayArea, i, j);
+                            UpdatePixel(i, j, pixel);
                         }
-                    } // else fractal gets subdivided later on and skip the inner pixels for now
-                }
+                    }
+                } // else fractal gets subdivided later on and skip the inner pixels for now
+                m_state = state;
             }
 
             UpdateAreaPatchFractalImage();

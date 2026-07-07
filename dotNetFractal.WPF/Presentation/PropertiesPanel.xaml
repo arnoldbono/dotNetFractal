@@ -52,12 +52,18 @@
                     </StackPanel>
                 </Grid>
 
-                <!-- Single Apply Button at bottom - MUST be before ScrollViewer -->
+                <!-- Buttons at bottom - MUST be before ScrollViewer -->
                 <Border DockPanel.Dock="Bottom" Padding="5" BorderBrush="Gray" BorderThickness="0,1,0,0">
-                    <Button Content="Apply" Padding="15,5" 
+                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Center" Margin="5,0,5,0">
+                        <Button Content="Apply" Padding="5,2" Margin="5,0,5,0"
                             Command="{Binding ApplyFractalAreaCommand}" 
                             HorizontalAlignment="Center"
                             ToolTip="Apply all property changes and recompute fractal"/>
+                        <Button Content="Distribution" Padding="5,2" Margin="0,0,5,0"
+                            Command="{Binding ShowDistributionGraphCommand}" 
+                            HorizontalAlignment="Center"
+                            ToolTip="Show distribution graph"/>
+                    </StackPanel>
                 </Border>
 
                 <!-- Scrollable content - fills remaining space -->

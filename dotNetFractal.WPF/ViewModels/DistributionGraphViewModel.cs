@@ -64,72 +64,38 @@ namespace dotNetFractal.WPF.ViewModels
         {
             if (distributionGraph == null || distributionGraph.Length == 0)
             {
-                GraphPoints = new List<DistributionGraphPoint>();
+                GraphPoints = [];
                 MaxIteration = 0;
+                TotalPixels = 0;
                 return;
             }
 
             // Find the maximum count for scaling
-            int maxCount = distributionGraph.Max();
-            if (maxCount == 0)
-                maxCount = 1; // Avoid division by zero
+            int maxValue = distributionGraph.Max();
+            if (maxValue == 0)
+                maxValue = 1; // Avoid division by zero
 
             // Create graph points with scaled values
             var points = new List<DistributionGraphPoint>();
+            int maxIteration = -1;
             for (int i = 0; i < distributionGraph.Length; i++)
             {
-                if (distributionGraph[i] > 0) // Only include iterations with non-zero counts
+                if (distributionGraph[i] == 0) // Only include iterations with non-zero counts
+                    continue;
+
+                points.Add(new DistributionGraphPoint
                 {
-                    points.Add(new DistributionGraphPoint
-                    {
-                        Iteration = i,
-                        Count = distributionGraph[i],
-                        ScaledValue = (distributionGraph[i] / (double)maxCount) * 100.0
-                    });
-                }
+                    Iteration = i,
+                    Count = distributionGraph[i],
+                    ScaledValue = (distributionGraph[i] / (double)maxValue) * 100.0
+                });
+
+                maxIteration = i;
             }
 
-            // Update properties - setting GraphPoints first, then MaxIteration
-            // This ensures the UI can properly redraw with the new data
-            MaxIteration = distributionGraph.Length - 1;
             GraphPoints = points;
-
-            if (distributionGraph == null || distributionGraph.Length == 0)
-            {
-                GraphPoints = new List<DistributionGraphPoint>();
-                return;
-            }
-
-            // Find the maximum value in the distribution graph
-            int maxValue = distributionGraph.Max();
-
-            if (maxValue == 0)
-            {
-                GraphPoints = new List<DistributionGraphPoint>();
-                return;
-            }
-
-            // Calculate total pixels
+            MaxIteration = maxIteration;
             TotalPixels = distributionGraph.Sum();
-
-            // Scale values to 0-100 range
-            var scaledPoints = new List<DistributionGraphPoint>();
-            for (int i = 0; i < distributionGraph.Length; i++)
-            {
-                if (distributionGraph[i] > 0)
-                {
-                    double scaledValue = (distributionGraph[i] / (double)maxValue) * 100.0;
-                    scaledPoints.Add(new DistributionGraphPoint
-                    {
-                        Iteration = i,
-                        Count = distributionGraph[i],
-                        ScaledValue = scaledValue
-                    });
-                    MaxIteration = i;
-                }
-            }
-
-            GraphPoints = scaledPoints;
         }
     }
 
