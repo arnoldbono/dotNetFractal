@@ -1,13 +1,13 @@
 using System;
-using System.Collections.Generic;
 using System.Drawing;
+using System.Numerics;
 
 namespace dotNetFractal.Logic
 {
     /// <summary>
     /// Compute a Fractal from left to right.
     /// </summary>
-    abstract public class Fractal<T> : Worker, IFractal where T : IFractalUnit<T>, new()
+    abstract public class Fractal<T> : Worker, IFractal where T : INumber<T>, new()
     {
         private readonly FractalColorMap m_colorMap = FractalColorMap.GetInstance();
 
@@ -124,7 +124,7 @@ namespace dotNetFractal.Logic
             var stopIndexHeight = Math.Min(AreaPatch.StopIndexHeight, pixels.Height);
 
             var displayArea = (DisplayArea<T>)Area.DisplayArea;
-            var maxRadius = (T)MaxRadius;
+            var maxRadius = T.CreateChecked(MaxRadius);
             var maxIterations = Settings.MaxIterations;
 
             bool allMaxIteractionReached = true;

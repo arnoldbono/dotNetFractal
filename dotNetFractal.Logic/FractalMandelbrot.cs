@@ -1,12 +1,11 @@
-using Microsoft.VisualBasic;
-using System;
+using System.Numerics;
 
 namespace dotNetFractal.Logic
 {
     /// <summary>
     /// Computes the Mandelbrot fractal.
     /// </summary>
-    public class FractalMandelbrot<T> : Fractal<T> where T : IFractalUnit<T>, new()
+    public class FractalMandelbrot<T> : Fractal<T> where T : INumber<T>, new()
     {
         public FractalMandelbrot(FractalSettings settings) : base(settings)
         {

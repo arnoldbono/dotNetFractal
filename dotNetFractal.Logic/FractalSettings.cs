@@ -25,7 +25,7 @@ namespace dotNetFractal.Logic
         {
             Debug.Assert(displayArea != null);
 
-            // Here is where upgrade the from FractalDouble to FractalDecimal, when 'highPrecision' is set.
+            // Here is where upgrade the from double to decimal, when 'highPrecision' is set.
             var displayAreaConverted = DisplayAreaFactory.Convert(displayArea, highPrecision);
             m_fractalArea = DisplayAreaFactory.CreateFractalArea(displayAreaConverted);
 

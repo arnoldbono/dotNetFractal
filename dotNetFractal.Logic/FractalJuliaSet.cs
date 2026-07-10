@@ -1,11 +1,12 @@
 using System;
+using System.Numerics;
 
 namespace dotNetFractal.Logic
 {
     /// <summary>
     /// Compute a Julia Set fractal.
     /// </summary>
-    public class FractalJuliaSet<T>(FractalSettings settings) : Fractal<T>(settings) where T : IFractalUnit<T>, new()
+    public class FractalJuliaSet<T>(FractalSettings settings) : Fractal<T>(settings) where T : INumber<T>, new()
     {
         /// <summary>
         /// Compute the Julia Set fractal for the given area patch.

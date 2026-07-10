@@ -15,7 +15,7 @@ namespace dotNetFractal.WPF.ViewModels
 {
     public class MainViewModel : BaseViewModel
     {
-        private static readonly FractalDecimal m_half = (FractalDecimal)0.5;
+        private static readonly decimal m_half = 0.5m;
 
         private RelayCommand<EventArgs> m_newFractalCommand;
         private RelayCommand<EventArgs> m_saveAsCommand;
@@ -600,7 +600,7 @@ namespace dotNetFractal.WPF.ViewModels
 
             var displayArea = m_fractalArea.GetDisplayArea((int)imageWidth, (int)imageHeight);
 
-            var displayAreaTyped = displayArea as DisplayArea<FractalDecimal> ?? throw new InvalidOperationException("Unsupported display area type.");
+            var displayAreaTyped = displayArea as DisplayArea<decimal> ?? throw new InvalidOperationException("Unsupported display area type.");
 
             // Update the fractal area
             var centerX = displayAreaTyped.GetCenterX((int)pixelX1, (int)pixelX2);
@@ -619,7 +619,7 @@ namespace dotNetFractal.WPF.ViewModels
 
             var displayArea = m_fractalArea.GetDisplayArea((int)imageWidth, (int)imageHeight);
 
-            var displayAreaTyped = displayArea as DisplayArea<FractalDecimal> ?? throw new InvalidOperationException("Unsupported display area type.");
+            var displayAreaTyped = displayArea as DisplayArea<decimal> ?? throw new InvalidOperationException("Unsupported display area type.");
 
             // Update the fractal area
             var centerX = displayAreaTyped.GetCenterX((int)pixelX1, (int)pixelX2);
@@ -637,20 +637,20 @@ namespace dotNetFractal.WPF.ViewModels
                 return;
 
             var displayArea = m_fractalArea.GetDisplayArea((int)imageWidth, (int)imageHeight);
-            var displayAreaTyped = displayArea as DisplayArea<FractalDecimal> ?? throw new InvalidOperationException("Unsupported display area type.");
+            var displayAreaTyped = displayArea as DisplayArea<decimal> ?? throw new InvalidOperationException("Unsupported display area type.");
 
             // Get the center of the selected rectangle in fractal coordinates
-            var centerPixelX = (FractalDecimal)(pixelX1 + pixelX2) * m_half;
-            var centerPixelY = (FractalDecimal)(pixelY1 + pixelY2) * m_half;
-            var centerFractalX = displayAreaTyped.GetX(FractalDecimal.Floor(centerPixelX));
-            var centerFractalY = displayAreaTyped.GetY(FractalDecimal.Floor(centerPixelY));
+            var centerPixelX = (decimal)(pixelX1 + pixelX2) * m_half;
+            var centerPixelY = (decimal)(pixelY1 + pixelY2) * m_half;
+            var centerFractalX = displayAreaTyped.GetX((int)Math.Floor(centerPixelX));
+            var centerFractalY = displayAreaTyped.GetY((int)Math.Floor(centerPixelY));
 
             // Calculate the zoom-out ratio based on the rectangle size
-            var rectWidth = (FractalDecimal)Math.Abs(pixelX2 - pixelX1);
-            var rectHeight = (FractalDecimal)Math.Abs(pixelY2 - pixelY1);
-            var widthRatio = (FractalDecimal)imageWidth / rectWidth;
-            var heightRatio = (FractalDecimal)imageHeight / rectHeight;
-            var zoomOutRatio = FractalDecimal.Min(widthRatio, heightRatio);
+            var rectWidth = (decimal)Math.Abs(pixelX2 - pixelX1);
+            var rectHeight = (decimal)Math.Abs(pixelY2 - pixelY1);
+            var widthRatio = (decimal)imageWidth / rectWidth;
+            var heightRatio = (decimal)imageHeight / rectHeight;
+            var zoomOutRatio = Math.Min(widthRatio, heightRatio);
 
             // Calculate the new fractal area dimensions (zoomed out)
             var newWidth = m_fractalArea.Width * zoomOutRatio;
@@ -701,7 +701,7 @@ namespace dotNetFractal.WPF.ViewModels
             try
             {
                 // Regenerate the fractal with the historical area
-                var displayAreaTyped = displayArea as DisplayArea<FractalDecimal> ?? throw new InvalidOperationException("Unsupported display area type.");
+                var displayAreaTyped = displayArea as DisplayArea<decimal> ?? throw new InvalidOperationException("Unsupported display area type.");
                 StartFractalComputation(m_fractalArea.JuliaSet, displayAreaTyped.CenterX, displayAreaTyped.CenterY, displayAreaTyped.Width, displayAreaTyped.Height);
             }
             finally
@@ -710,7 +710,7 @@ namespace dotNetFractal.WPF.ViewModels
             }
         }
 
-        private void StartFractalComputation(bool juliaSet, FractalDecimal centerX, FractalDecimal centerY, FractalDecimal width, FractalDecimal height)
+        private void StartFractalComputation(bool juliaSet, decimal centerX, decimal centerY, decimal width, decimal height)
         {
             var previousFractalArea = m_fractalArea.Clone();
 

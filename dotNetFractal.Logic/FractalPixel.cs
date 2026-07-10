@@ -1,9 +1,9 @@
 using System;
-using System.IO;
+using System.Numerics;
 
 namespace dotNetFractal.Logic
 {
-    public class FractalPixel<T> : IFractalPixel where T : IFractalUnit<T>, new()
+    public class FractalPixel<T> : IFractalPixel where T : INumber<T>, new()
     {
         public int Iteration { get; private set; }
 
@@ -15,7 +15,7 @@ namespace dotNetFractal.Logic
         {
             // PRE: radius > MaxRadius (otherwise the fractal computation loop should not have stopped).
             // PRE: previousRadius < MaxRadius.
-            return Math.Sqrt((double)(((T)maxRadius - PreviousRadius) / (Radius - PreviousRadius)));
+            return Math.Sqrt(double.CreateChecked((T.CreateChecked(maxRadius) - PreviousRadius) / (Radius - PreviousRadius)));
         }
 
         private FractalPixel()
@@ -28,23 +28,6 @@ namespace dotNetFractal.Logic
             Iteration = iteration;
             Radius = radius;
             PreviousRadius = previousRadius;
-        }
-
-        public void Write(BinaryWriter bw)
-        {
-            bw.Write((Int32)Iteration);
-            bw.Write((decimal)Radius);
-            bw.Write((decimal)PreviousRadius);
-        }
-
-        public static IFractalPixel Read(BinaryReader br)
-        {
-            return new FractalPixel<T>
-            {
-                Iteration = br.ReadInt32(),
-                Radius = (T)br.ReadDecimal(),
-                PreviousRadius = (T)br.ReadDecimal()
-            };
         }
     }
 }

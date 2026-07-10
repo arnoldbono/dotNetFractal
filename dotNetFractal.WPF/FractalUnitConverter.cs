@@ -1,4 +1,3 @@
-using dotNetFractal.Logic;
 using System;
 using System.Globalization;
 using System.Windows.Data;
@@ -6,7 +5,7 @@ using System.Windows.Data;
 namespace dotNetFractal.WPF
 {
     /// <summary>
-    /// Converts between FractalDecimal or FractalDouble and string for TextBox bindings.
+    /// Converts between decimal or double and string for TextBox bindings.
     /// </summary>
     public class FractalUnitConverter : IValueConverter
     {
@@ -15,15 +14,13 @@ namespace dotNetFractal.WPF
             if (value is null)
                 return string.Empty;
 
-            if (value is FractalDecimal fractalDecimal)
+            if (value is decimal decimalValue)
             {
-                decimal decimalValue = (decimal)fractalDecimal;
                 return decimalValue.ToString(culture);
             }
 
-            if (value is FractalDouble fractalDouble)
+            if (value is double doubleValue)
             {
-                double doubleValue = (double)fractalDouble;
                 return doubleValue.ToString(culture);
             }
 
@@ -35,19 +32,19 @@ namespace dotNetFractal.WPF
             if (value is not string stringValue || string.IsNullOrWhiteSpace(stringValue))
                 return Binding.DoNothing;
 
-            // Determine if we're converting to FractalDecimal or FractalDouble
-            if (targetType == typeof(FractalDecimal))
+            // Determine if we're converting to decimal or double
+            if (targetType == typeof(decimal))
             {
                 if (decimal.TryParse(stringValue, NumberStyles.Float, culture, out decimal decimalValue))
                 {
-                    return (FractalDecimal)decimalValue;
+                    return decimalValue;
                 }
             }
-            else if (targetType == typeof(FractalDouble))
+            else if (targetType == typeof(double))
             {
                 if (double.TryParse(stringValue, NumberStyles.Float, culture, out double doubleValue))
                 {
-                    return (FractalDouble)doubleValue;
+                    return doubleValue;
                 }
             }
 

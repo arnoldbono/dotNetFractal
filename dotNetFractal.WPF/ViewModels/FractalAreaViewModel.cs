@@ -3,6 +3,7 @@ using ReactiveUI;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Numerics;
 
 namespace dotNetFractal.WPF.ViewModels
 {
@@ -11,7 +12,7 @@ namespace dotNetFractal.WPF.ViewModels
     /// Here, we use decimals to have the best precision for the fractal area.
     /// This view model is used by the XAML view to bind the fractal area properties to the UI elements.
     /// </summary>
-    public sealed class FractalAreaViewModel : FractalAreaViewModelBase<FractalDecimal>
+    public sealed class FractalAreaViewModel : FractalAreaViewModelBase<decimal>
     {
         public FractalAreaViewModel() : base()
         {
@@ -41,7 +42,7 @@ namespace dotNetFractal.WPF.ViewModels
     /// </summary>
     /// <typeparam name="T"></typeparam>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public class FractalAreaViewModelBase<T> : BaseViewModel where T : IFractalUnit<T>, new()
+    public class FractalAreaViewModelBase<T> : BaseViewModel where T : INumber<T>, new()
     {
         private T m_cx = new();
         private T m_cy = new();
@@ -260,20 +261,20 @@ namespace dotNetFractal.WPF.ViewModels
             var plate = platesList[plateIndex];
             if (JuliaSet)
             {
-                Cx = (T)plate.Cx;
-                Cy = (T)plate.Cy;
-                CenterX = (T)0.0;
-                CenterY = (T)0.0;
+                Cx = T.CreateChecked(plate.Cx);
+                Cy = T.CreateChecked(plate.Cy);
+                CenterX = T.Zero;
+                CenterY = T.Zero;
             }
             else
             {
-                Cx = (T)0.0;
-                Cy = (T)0.0;
-                CenterX = (T)plate.CenterX;
-                CenterY = (T)plate.CenterY;
+                Cx = T.Zero;
+                Cy = T.Zero;
+                CenterX = T.CreateChecked(plate.CenterX);
+                CenterY = T.CreateChecked(plate.CenterY);
             }
-            Width = (T)plate.Width;
-            Height = (T)plate.Height;
+            Width = T.CreateChecked(plate.Width);
+            Height = T.CreateChecked(plate.Height);
         }
     }
 }

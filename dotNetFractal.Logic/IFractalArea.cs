@@ -1,6 +1,4 @@
 ﻿
-using System.IO;
-
 namespace dotNetFractal.Logic
 {
     public interface IFractalArea
@@ -12,9 +10,5 @@ namespace dotNetFractal.Logic
         IFractalPixel GetPixel(int i, int j);
 
         bool JuliaSet { get; set; }
-
-        void Read(BinaryReader br);
-
-        void Write(BinaryWriter bw);
     }
 }

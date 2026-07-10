@@ -1,12 +1,12 @@
 using System;
-using System.IO;
+using System.Numerics;
 
 namespace dotNetFractal.Logic
 {
-    public class DisplayArea<T> : IDisplayArea where T : IFractalUnit<T>, new()
+    public class DisplayArea<T> : IDisplayArea where T : INumber<T>
     {
-        private readonly T m_half = (T)0.5;
-        private readonly T m_one = (T)1.0;
+        private readonly T m_half = T.CreateChecked(0.5);
+        private readonly T m_one = T.CreateChecked(1.0);
 
         public T Cx { get; private set; }
 
@@ -53,7 +53,7 @@ namespace dotNetFractal.Logic
             CenterY = centerY;
             PixelsHorizontal = horizontal;
             PixelsVertical = vertical;
-            var ratio = (T)PixelsVertical / (T)PixelsHorizontal;
+            var ratio = T.CreateChecked(PixelsVertical) / T.CreateChecked(PixelsHorizontal);
             var length = T.Max(width, height);
             Width = length;
             Height = ratio * length;
@@ -63,7 +63,7 @@ namespace dotNetFractal.Logic
         {
             PixelsHorizontal = pixelsHorizontal;
             PixelsVertical = pixelsVertical;
-            var ratio = (T)PixelsVertical / (T)PixelsHorizontal;
+            var ratio = T.CreateChecked(PixelsVertical) / T.CreateChecked(PixelsHorizontal);
             var length = T.Max(Width, Height);
             Width = length;
             Height = ratio * length;
@@ -106,67 +106,43 @@ namespace dotNetFractal.Logic
 
         public T GetCenterX(int i1, int i2)
         {
-            return CenterX + ((T)(i1 + i2 - PixelsHorizontal) * Width / (T)PixelsHorizontal) * m_half;
+            return CenterX + ((T.CreateChecked(i1 + i2) - T.CreateChecked(PixelsHorizontal)) * Width / T.CreateChecked(PixelsHorizontal)) * m_half;
         }
 
         public T GetCenterY(int j1, int j2)
         {
-            return CenterY + ((T)(PixelsVertical - (j1 + j2)) * Height / (T)PixelsVertical) * m_half;
+            return CenterY + ((T.CreateChecked(PixelsVertical) - (T.CreateChecked(j1 + j2))) * Height / T.CreateChecked(PixelsVertical)) * m_half;
         }
 
         public T GetWidth(int i1, int i2)
         {
-            return T.Abs((T)(i2 - i1) * Width / (T)PixelsHorizontal);
+            return T.Abs((T.CreateChecked(i2 - i1) * Width / T.CreateChecked(PixelsHorizontal)));
         }
 
         public T GetHeight(int j1, int j2)
         {
-            return T.Abs((T)(j2 - j1) * Height / (T)PixelsVertical);
+            return T.Abs((T.CreateChecked(j2 - j1) * Height / T.CreateChecked(PixelsVertical)));
         }
 
         public T GetX(int i)
         {
-            return CenterX + ((T)i - (T)PixelsHorizontal * m_half) * Width / (T)PixelsHorizontal;
+            return CenterX + ((T.CreateChecked(i) - T.CreateChecked(PixelsHorizontal) * m_half) * Width / T.CreateChecked(PixelsHorizontal));
         }
 
         public T GetY(int j)
         {
-            return CenterY + ((T)PixelsVertical * m_half - (T)j) * Height / (T)PixelsVertical;
+            return CenterY + ((T.CreateChecked(PixelsVertical) * m_half - T.CreateChecked(j)) * Height / T.CreateChecked(PixelsVertical));
         }
 
         public int GetI(T x)
         {
-            return T.Floor((T)PixelsHorizontal * (m_one + (x - CenterX) / Width) * m_half);
+            return FractalNumberExtensions.Floor(T.CreateChecked(PixelsHorizontal) * (m_one + (x - CenterX) / Width) * m_half);
         }
 
         public int GetJ(T y)
         {
-            return T.Floor((T)PixelsVertical * (m_one + (CenterY - y) / Height) * m_half);
+            return FractalNumberExtensions.Floor(T.CreateChecked(PixelsVertical) * (m_one + (CenterY - y) / Height) * m_half);
         }
 
-        public static DisplayArea<T> Read(BinaryReader br)
-        {
-            var centerX = (T)(decimal)br.ReadDecimal();
-            var centerY = (T)(decimal)br.ReadDecimal();
-            var width = (T)(decimal)br.ReadDecimal();
-            var height = (T)(decimal)br.ReadDecimal();
-            var cx = (T)(decimal)br.ReadDecimal();
-            var cy = (T)(decimal)br.ReadDecimal();
-            var pixelsHorizontal = br.ReadInt32();
-            var pixelsVertical = br.ReadInt32();
-            return new DisplayArea<T>(centerX, centerY, width, height, cx, cy, pixelsHorizontal, pixelsVertical);
-        }
-
-        public void Write(BinaryWriter bw)
-        {
-            bw.Write((decimal)CenterX);
-            bw.Write((decimal)CenterY);
-            bw.Write((decimal)Width);
-            bw.Write((decimal)Height);
-            bw.Write((decimal)Cx);
-            bw.Write((decimal)Cy);
-            bw.Write(PixelsHorizontal);
-            bw.Write(PixelsVertical);
-        }
     }
 }
