@@ -24,6 +24,8 @@
         <vm:MainViewModel />
     </Window.DataContext>
     <Window.InputBindings>
+        <KeyBinding Command="{Binding OpenDnfCommand}" Key="O" Modifiers="Ctrl" />
+        <KeyBinding Command="{Binding SaveDnfCommand}" Key="S" Modifiers="Ctrl" />
         <KeyBinding Command="{Binding GoBackCommand}" Key="Z" Modifiers="Ctrl" />
         <KeyBinding Command="{Binding GoForwardCommand}" Key="Y" Modifiers="Ctrl" />
         <KeyBinding Command="{Binding ToggleStretchImageCommand}" Key="F10" />
@@ -35,7 +37,11 @@
         <Menu DockPanel.Dock="Top" Visibility="{Binding IsFullScreen, Converter={StaticResource InverseBoolToVisibilityConverter}}">
             <MenuItem Header="_File">
                 <MenuItem Header="_New" Command="{Binding NewFractalCommand}" />
-                <MenuItem Header="Save _As" Command="{Binding SaveAsCommand}" />
+                <Separator />
+                <MenuItem Header="_Open DNF File..." Command="{Binding OpenDnfCommand}" InputGestureText="Ctrl+O" />
+                <MenuItem Header="_Save DNF File..." Command="{Binding SaveDnfCommand}" InputGestureText="Ctrl+S" />
+                <Separator />
+                <MenuItem Header="Save _As Image..." Command="{Binding SaveAsCommand}" />
             </MenuItem>
             <MenuItem Header="_Edit">
                 <MenuItem Header="_Undo (Go Back)" Command="{Binding GoBackCommand}" InputGestureText="Ctrl+Z"/>

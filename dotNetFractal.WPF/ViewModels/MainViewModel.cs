@@ -18,6 +18,8 @@ namespace dotNetFractal.WPF.ViewModels
         private static readonly decimal m_half = 0.5m;
 
         private RelayCommand<EventArgs> m_newFractalCommand;
+        private RelayCommand<EventArgs> m_openDnfCommand;
+        private RelayCommand<EventArgs> m_saveDnfCommand;
         private RelayCommand<EventArgs> m_saveAsCommand;
         private RelayCommand<EventArgs> m_copyCommand;
         private RelayCommand<EventArgs> m_goBackCommand;
@@ -347,6 +349,10 @@ namespace dotNetFractal.WPF.ViewModels
 
         public ICommand NewFractalCommand => m_newFractalCommand ??= new RelayCommand<EventArgs>(param => OnNewFractal());
 
+        public ICommand OpenDnfCommand => m_openDnfCommand ??= new RelayCommand<EventArgs>(param => OnOpenDnf());
+
+        public ICommand SaveDnfCommand => m_saveDnfCommand ??= new RelayCommand<EventArgs>(param => OnSaveDnf());
+
         public ICommand SaveAsCommand => m_saveAsCommand ??= new RelayCommand<EventArgs>(param => OnSaveAs());
 
         public ICommand CopyCommand => m_copyCommand ??= new RelayCommand<EventArgs>(param => OnCopy());
@@ -590,6 +596,160 @@ namespace dotNetFractal.WPF.ViewModels
                     fs.Close();
                 }
                 m_stitcher.UnlockMutex();
+            }
+        }
+
+        public void OnOpenDnf()
+        {
+            var openFileDialog = new OpenFileDialog
+            {
+                Filter = "DotNet Fractal Files|*.dnf|All Files|*.*",
+                Title = "Open a DotNet Fractal File"
+            };
+
+            if (openFileDialog.ShowDialog() == true && !string.IsNullOrEmpty(openFileDialog.FileName))
+            {
+                try
+                {
+                    var jsonString = File.ReadAllText(openFileDialog.FileName);
+                    var data = System.Text.Json.JsonSerializer.Deserialize<DisplayAreaData>(jsonString);
+
+                    if (data == null)
+                    {
+                        MessageBox.Show("Failed to load fractal data from file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+
+                    // Parse string values to decimal
+                    if (!decimal.TryParse(data.CenterX, out var centerX) ||
+                        !decimal.TryParse(data.CenterY, out var centerY) ||
+                        !decimal.TryParse(data.Width, out var width) ||
+                        !decimal.TryParse(data.Height, out var height) ||
+                        !decimal.TryParse(data.Cx, out var cx) ||
+                        !decimal.TryParse(data.Cy, out var cy))
+                    {
+                        if (!double.TryParse(data.CenterX, out var dblCenterX) ||
+                            !double.TryParse(data.CenterY, out var dblCenterY) ||
+                            !double.TryParse(data.Width, out var dblWidth) ||
+                            !double.TryParse(data.Height, out var dblHeight) ||
+                            !double.TryParse(data.Cx, out var dblCx) ||
+                            !double.TryParse(data.Cy, out var dblCy))
+                        {
+                            MessageBox.Show("Invalid numeric values in fractal file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            return;
+                        }
+
+                        centerX = decimal.CreateChecked(dblCenterX);
+                        centerY = decimal.CreateChecked(dblCenterY);
+                        width = decimal.CreateChecked(dblWidth);
+                        height = decimal.CreateChecked(dblHeight);
+                        cx = decimal.CreateChecked(dblCx);
+                        cy = decimal.CreateChecked(dblCy);
+                    }
+
+                    // Update resolution
+                    m_imageResolution.Width = data.PixelsHorizontal;
+                    m_imageResolution.Height = data.PixelsVertical;
+
+                    // Update fractal settings
+                    m_fractalSettings.MaxIterations = data.MaxIterations;
+                    m_fractalSettings.MaxColorSteps = data.MaxColorSteps;
+                    m_fractalSettings.FirstColorStep = data.FirstColorStep;
+                    m_fractalSettings.SmoothColoring = data.SmoothColoring;
+                    m_fractalSettings.HighPrecision = data.HighPrecision;
+
+                    // Determine if it's a Julia set
+                    bool isJuliaSet = data.FractalType?.Equals("JuliaSet", StringComparison.OrdinalIgnoreCase) == true;
+
+                    // Update fractal area
+                    m_fractalArea.JuliaSet = isJuliaSet;
+                    m_fractalArea.CenterX = centerX;
+                    m_fractalArea.CenterY = centerY;
+                    m_fractalArea.Width = width;
+                    m_fractalArea.Height = height;
+                    m_fractalArea.Cx = cx;
+                    m_fractalArea.Cy = cy;
+
+                    // Start computation with the loaded data
+                    StartFractalComputation(isJuliaSet, m_fractalArea);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Failed to open fractal file: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        public void OnSaveDnf()
+        {
+            if (m_stitcher?.FractalSettings?.FractalArea == null)
+            {
+                MessageBox.Show("No fractal data to save.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var saveFileDialog = new SaveFileDialog
+            {
+                Filter = "DotNet Fractal Files|*.dnf",
+                Title = "Save DotNet Fractal File",
+                DefaultExt = ".dnf"
+            };
+
+            if (saveFileDialog.ShowDialog() == true && !string.IsNullOrEmpty(saveFileDialog.FileName))
+            {
+                try
+                {
+                    var displayArea = m_stitcher.FractalSettings.FractalArea.DisplayArea;
+                    var data = new DisplayAreaData();
+
+                    // Extract data from DisplayArea based on precision type
+                    if (m_fractalSettings.HighPrecision && displayArea is DisplayArea<decimal> displayAreaDecimal)
+                    {
+                        data.CenterX = displayAreaDecimal.CenterX.ToString();
+                        data.CenterY = displayAreaDecimal.CenterY.ToString();
+                        data.Width = displayAreaDecimal.Width.ToString();
+                        data.Height = displayAreaDecimal.Height.ToString();
+                        data.Cx = displayAreaDecimal.Cx.ToString();
+                        data.Cy = displayAreaDecimal.Cy.ToString();
+                    }
+                    else if (displayArea is DisplayArea<double> displayAreaDouble)
+                    {
+                        data.CenterX = displayAreaDouble.CenterX.ToString();
+                        data.CenterY = displayAreaDouble.CenterY.ToString();
+                        data.Width = displayAreaDouble.Width.ToString();
+                        data.Height = displayAreaDouble.Height.ToString();
+                        data.Cx = displayAreaDouble.Cx.ToString();
+                        data.Cy = displayAreaDouble.Cy.ToString();
+                    }
+                    else
+                    {
+                        MessageBox.Show("Unsupported display area type.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+
+                    data.PixelsHorizontal = displayArea.PixelsHorizontal;
+                    data.PixelsVertical = displayArea.PixelsVertical;
+                    data.MaxIterations = m_fractalSettings.MaxIterations;
+                    data.MaxColorSteps = m_fractalSettings.MaxColorSteps;
+                    data.FirstColorStep = m_fractalSettings.FirstColorStep;
+                    data.SmoothColoring = m_fractalSettings.SmoothColoring;
+                    data.HighPrecision = m_fractalSettings.HighPrecision;
+                    data.FractalType = m_fractalArea.JuliaSet ? "JuliaSet" : "Mandelbrot";
+
+                    var options = new System.Text.Json.JsonSerializerOptions
+                    {
+                        WriteIndented = true
+                    };
+
+                    var jsonString = System.Text.Json.JsonSerializer.Serialize(data, options);
+                    File.WriteAllText(saveFileDialog.FileName, jsonString);
+
+                    MessageBox.Show("Fractal data saved successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Failed to save fractal file: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
 
