@@ -648,6 +648,7 @@ namespace dotNetFractal.WPF.ViewModels
                     }
 
                     // Update resolution
+                    m_imageResolution.SelectedResolution = ResolutionEnum.Custom;
                     m_imageResolution.Width = data.PixelsHorizontal;
                     m_imageResolution.Height = data.PixelsVertical;
 
