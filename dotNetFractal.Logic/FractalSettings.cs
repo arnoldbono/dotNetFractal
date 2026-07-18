@@ -1,40 +1,39 @@
-﻿
+
 using System.Diagnostics;
 
-namespace dotNetFractal.Logic
+namespace dotNetFractal.Logic;
+
+public class FractalSettings
 {
-    public class FractalSettings
+    private readonly IFractalArea m_fractalArea;
+
+    public IFractalArea FractalArea => m_fractalArea;
+
+    public int MaxIterations { get; private set; }
+
+    public int MaxColorSteps { get; private set; }
+
+    public int FirstColorStep { get; private set; }
+
+    public bool SmoothColoring { get; private set; }
+
+    public bool HighPrecision { get; private set; }
+
+    public int[] DistributionGraph { get; private set; }
+
+    public FractalSettings(IDisplayArea displayArea, int maxIterations, int maxColorSteps, int firstColorStep, bool smoothColoring, bool highPrecision, int[]? distributionGraph = null)
     {
-        private readonly IFractalArea m_fractalArea;
+        Debug.Assert(displayArea != null);
 
-        public IFractalArea FractalArea => m_fractalArea;
+        // Here is where upgrade the from double to decimal, when 'highPrecision' is set.
+        var displayAreaConverted = DisplayAreaFactory.Convert(displayArea, highPrecision);
+        m_fractalArea = DisplayAreaFactory.CreateFractalArea(displayAreaConverted);
 
-        public int MaxIterations { get; private set; }
-
-        public int MaxColorSteps { get; private set; }
-
-        public int FirstColorStep { get; private set; }
-
-        public bool SmoothColoring { get; private set; }
-
-        public bool HighPrecision { get; private set; }
-
-        public int[] DistributionGraph { get; private set; }
-
-        public FractalSettings(IDisplayArea displayArea, int maxIterations, int maxColorSteps, int firstColorStep, bool smoothColoring, bool highPrecision, int[] distributionGraph = null)
-        {
-            Debug.Assert(displayArea != null);
-
-            // Here is where upgrade the from double to decimal, when 'highPrecision' is set.
-            var displayAreaConverted = DisplayAreaFactory.Convert(displayArea, highPrecision);
-            m_fractalArea = DisplayAreaFactory.CreateFractalArea(displayAreaConverted);
-
-            MaxIterations = maxIterations;
-            MaxColorSteps = maxColorSteps;
-            FirstColorStep = firstColorStep;
-            SmoothColoring = smoothColoring;
-            HighPrecision = highPrecision;
-            DistributionGraph = distributionGraph;
-        }
+        MaxIterations = maxIterations;
+        MaxColorSteps = maxColorSteps;
+        FirstColorStep = firstColorStep;
+        SmoothColoring = smoothColoring;
+        HighPrecision = highPrecision;
+        DistributionGraph = distributionGraph ?? [];
     }
 }

@@ -1,5 +1,5 @@
 using System;
-using System.Drawing;
+using SkiaSharp;
 
 namespace dotNetFractal.Logic
 {
@@ -22,22 +22,22 @@ namespace dotNetFractal.Logic
             FractalImage = new FractalCachedImage((UInt64)startIndexWidth, (UInt64)startIndexHeight, size, 0);
         }
 
-        public Rectangle GetTargetRectangle(int width, int height)
+        public SKRectI GetTargetRectangle(int width, int height)
         {
             var x = StartIndexWidth;
             var y = StartIndexHeight;
             var rectWidth = Math.Min(Size, width - x);
             var rectHeight = Math.Min(Size, height - y);
-            return new Rectangle(x, y, rectWidth, rectHeight);
+            return new SKRectI(x, y, x + rectWidth, y + rectHeight);
         }
 
-        public Rectangle GetSourceRectangle(int width, int height)
+        public SKRectI GetSourceRectangle(int width, int height)
         {
             var x = StartIndexWidth;
             var y = StartIndexHeight;
             var rectWidth = Math.Min(Size, width - x);
             var rectHeight = Math.Min(Size, height - y);
-            return new Rectangle(0, 0, rectWidth, rectHeight);
+            return new SKRectI(0, 0, rectWidth, rectHeight);
         }
 
         public void Dispose()

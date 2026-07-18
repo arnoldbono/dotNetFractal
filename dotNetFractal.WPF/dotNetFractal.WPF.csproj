@@ -23,7 +23,7 @@
         <BaseOutputPath>..\Output\</BaseOutputPath>
     </PropertyGroup>
     <ItemGroup>
-      <PackageReference Include="ReactiveUI" Version="19.2.1" />
+      <PackageReference Include="ReactiveUI"/>
     </ItemGroup>
     <ItemGroup>
       <Page Include="App.xaml" />

@@ -1,40 +1,39 @@
 using System;
-using System.Drawing;
+using SkiaSharp;
 
-namespace dotNetFractal.Logic
+namespace dotNetFractal.Logic;
+
+public enum ComputationState
 {
-    public enum ComputationState
-    {
-        NotStarted,
-        Running,
-        AllMaxIterationsReached,
-        SomeMaxIterationsReached,
-        NoneMaxIterationsReached
-    }
+    NotStarted,
+    Running,
+    AllMaxIterationsReached,
+    SomeMaxIterationsReached,
+    NoneMaxIterationsReached
+}
 
-    /// <summary>
-    /// Compute a Fractal from left to right.
-    /// </summary>
-    public interface IFractal
-    {
-        FractalSettings Settings { get; }
+/// <summary>
+/// Compute a Fractal from left to right.
+/// </summary>
+public interface IFractal
+{
+    FractalSettings Settings { get; }
 
-        ComputationState State { get; }
+    ComputationState State { get; }
 
-        IFractalArea Area { get; }
+    IFractalArea Area { get; }
 
-        FractalAreaPatch AreaPatch { get; set; }
+    FractalAreaPatch AreaPatch { get; set; }
 
-        bool Stopped { get; }
+    bool Stopped { get; }
 
-        double MaxRadius { get; }
+    double MaxRadius { get; }
 
-        Color ComputeColor(IFractalPixel pixel);
+    SKColor ComputeColor(IFractalPixel pixel);
 
-        void GetColor(int index, out int red, out int green, out int blue);
+    void GetColor(int index, out int red, out int green, out int blue);
 
-        void StartThread(Action<Action> threadPoolExecutor = null);
+    void StartThread(Action<Action> threadPoolExecutor);
 
-        IFractal[] Subdivide();
-    }
+    IFractal[] Subdivide();
 }

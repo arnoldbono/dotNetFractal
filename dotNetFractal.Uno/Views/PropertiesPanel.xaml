@@ -1,0 +1,108 @@
+﻿<UserControl x:Class="dotNetFractal.Uno.Views.PropertiesPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:local="using:dotNetFractal.Uno.Views"
+             xmlns:converters="using:dotNetFractal.Uno.Converters"
+             xmlns:vm="using:dotNetFractal.Uno.ViewModels"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:PropertiesPanelViewModel, IsDesignTimeCreatable=False}">
+    <UserControl.Resources>
+        <converters:BoolToCollapseSymbolConverter x:Key="BoolToCollapseSymbolConverter" />
+    </UserControl.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Properties Panel - Expanded View -->
+        <Border Grid.Column="0" BorderBrush="Gray" BorderThickness="1,0,0,0" 
+                Background="{ThemeResource SystemControlBackgroundChromeMediumLowBrush}">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Visibility" Value="Visible"/>
+                </Style>
+            </Border.Style>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header with buttons -->
+                <Grid Grid.Row="0" Margin="5,5,5,10">
+                    <TextBlock Text="Properties" FontWeight="Bold" FontSize="14" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <!-- Hide Button -->
+                        <Button Content="✕" Width="32" Height="32" 
+                                Command="{Binding HidePropertiesCommand}"
+                                ToolTipService.ToolTip="Hide Panel (F2 to show)"
+                                FontSize="12" Padding="0"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Scrollable content - fills remaining space -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="5,0,5,5">
+                        <!-- Fractal Area Expander -->
+                        <Expander Header="Fractal Area" IsExpanded="True" Margin="0,0,0,5">
+                            <StackPanel Margin="5">
+                                <!-- Fractal Area Editor Control -->
+                                <local:FractalAreaEditor DataContext="{Binding FractalAreaViewModel}" />
+                            </StackPanel>
+                        </Expander>
+
+                        <!-- Image Resolution Expander -->
+                        <Expander Header="Image Resolution" IsExpanded="False" Margin="0,0,0,5">
+                            <StackPanel Margin="5">
+                                <!-- Image Resolution Editor Control -->
+                                <local:ImageResolutionEditor DataContext="{Binding ImageResolutionViewModel}" />
+                            </StackPanel>
+                        </Expander>
+
+                        <!-- Color Map Expander -->
+                        <Expander Header="Color Map" IsExpanded="False" Margin="0,0,0,5">
+                            <StackPanel Margin="5">
+                                <!-- Color Map Editor Control -->
+                                <local:ColorMapEditor DataContext="{Binding ColorMapViewModel}" />
+                            </StackPanel>
+                        </Expander>
+
+                        <!-- Fractal Settings Expander -->
+                        <Expander Header="Fractal Settings" IsExpanded="False" Margin="0,0,0,5">
+                            <StackPanel Margin="5">
+                                <!-- Fractal Settings Editor Control -->
+                                <local:FractalSettingsEditor DataContext="{Binding FractalSettingsViewModel}" />
+                            </StackPanel>
+                        </Expander>
+
+                        <!-- Display Settings Expander -->
+                        <Expander Header="Display Settings" IsExpanded="False" Margin="0,0,0,5">
+                            <StackPanel Margin="5">
+                                <!-- Display Settings Editor Control -->
+                                <local:DisplaySettingsEditor DataContext="{Binding DisplaySettingsViewModel}" />
+                            </StackPanel>
+                        </Expander>
+
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Buttons at bottom -->
+                <Border Grid.Row="2" Padding="5" BorderBrush="Gray" BorderThickness="0,1,0,0">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="5,0,5,0">
+                        <Button Content="Apply" Padding="5,2" Margin="5,0,5,0"
+                            Command="{Binding ApplyFractalAreaCommand}" 
+                            HorizontalAlignment="Center"
+                            ToolTipService.ToolTip="Apply all property changes and recompute fractal"/>
+                        <Button Content="Distribution" Padding="5,2" Margin="0,0,5,0"
+                            Command="{Binding ShowDistributionGraphCommand}" 
+                            HorizontalAlignment="Center"
+                            ToolTipService.ToolTip="Show distribution graph"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,8 +1,7 @@
-﻿using System;
-using System.Drawing;
-using System.Drawing.Imaging;
+using System;
 using System.Diagnostics;
 using System.IO;
+using SkiaSharp;
 
 namespace dotNetFractal.Logic
 {
@@ -16,7 +15,7 @@ namespace dotNetFractal.Logic
         private uint m_zoomLevel = 0;
         private UInt64 m_indexI = 0;
         private UInt64 m_indexJ = 0;
-        private Image m_image = null;
+        private SKBitmap m_image = null;
 
         /// <summary>
         /// The horizontal index.
@@ -49,7 +48,7 @@ namespace dotNetFractal.Logic
 
         public int Size { get; }
 
-        public Image Image
+        public SKBitmap Image
         {
             get { return m_image; }
         }
@@ -69,7 +68,7 @@ namespace dotNetFractal.Logic
             m_indexJ = indexJ;
             Size = size;
             m_zoomLevel = zoomLevel;
-            m_image = new Bitmap(Size, Size, PixelFormat.Format32bppArgb);
+            m_image = new SKBitmap(Size, Size, SKColorType.Bgra8888, SKAlphaType.Premul);
         }
 
         public FractalCachedImage(string folder, uint zoomLevel, UInt64 indexI, UInt64 indexJ, int size)
@@ -84,12 +83,18 @@ namespace dotNetFractal.Logic
         public void Save(string folder)
         {
             Debug.Assert(m_image != null);
-            m_image.Save(Path.Combine(folder, FileName), ImageFormat.Png);
+            var path = Path.Combine(folder, FileName);
+            using var image = SKImage.FromBitmap(m_image);
+            using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+            using var stream = File.OpenWrite(path);
+            data.SaveTo(stream);
         }
 
-        public Image Load(string folder)
+        public SKBitmap Load(string folder)
         {
-            return Bitmap.FromFile(Path.Combine(folder, FileName));
+            var path = Path.Combine(folder, FileName);
+            using var stream = File.OpenRead(path);
+            return SKBitmap.Decode(stream);
         }
 
         public void Dispose()
