@@ -6,9 +6,14 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using dotNetFractal.Logic;
+using dotNetFractal.UI.Commands;
+using dotNetFractal.UI.Models;
+using dotNetFractal.UI.ViewModels;
+using dotNetFractal.WPF.Services;
 using Microsoft.Win32;
 using ReactiveUI;
 using SkiaSharp;
+using BaseViewModel = dotNetFractal.UI.ViewModels.BaseViewModel;
 
 namespace dotNetFractal.WPF.ViewModels;
 
@@ -33,7 +38,7 @@ public class MainViewModel : BaseViewModel
     private ImageResolutionViewModel m_imageResolution = new();
     private FractalAreaViewModel m_fractalArea = new();
     private FractalSettingsViewModel m_fractalSettings = new();
-    private readonly ColorMapViewModel m_colorMap = new();
+    private readonly ColorMapViewModel m_colorMap;
     private readonly DisplaySettingsViewModel m_displaySettings = new();
     private readonly PropertiesPanelViewModel m_propertiesPanel;
 
@@ -261,6 +266,9 @@ public class MainViewModel : BaseViewModel
     public MainViewModel()
     {
         m_dispatcher = Dispatcher.CurrentDispatcher;
+
+        // Create ColorMapViewModel with WPF-specific bitmap converter
+        m_colorMap = new ColorMapViewModel(new WpfBitmapConverter());
 
         // Initialize PropertiesPanelViewModel with child view models and callback
         m_propertiesPanel = new PropertiesPanelViewModel(

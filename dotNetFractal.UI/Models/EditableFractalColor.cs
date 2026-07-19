@@ -1,10 +1,8 @@
-using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-
 using dotNetFractal.Logic;
 
-namespace dotNetFractal.WPF;
+namespace dotNetFractal.UI.Models;
 
 /// <summary>
 /// Editable wrapper for FractalColor to support data binding and property change notifications
@@ -16,7 +14,7 @@ public class EditableFractalColor(FractalColor color) : INotifyPropertyChanged
     private int m_blue = color.Blue;
     private double m_fraction = color.Fraction;
 
-    public event PropertyChangedEventHandler? PropertyChanged = delegate { };
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     public int Red
     {

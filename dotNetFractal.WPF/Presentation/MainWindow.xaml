@@ -6,11 +6,13 @@
         xmlns:local="clr-namespace:dotNetFractal.WPF.Presentation"
         xmlns:presentation="clr-namespace:dotNetFractal.WPF.Presentation"
         xmlns:vm="clr-namespace:dotNetFractal.WPF.ViewModels"
-        xmlns:converters="clr-namespace:dotNetFractal.WPF"
+        xmlns:ui_vm="clr-namespace:dotNetFractal.UI.ViewModels;assembly=dotNetFractal.UI"
+        xmlns:converters="clr-namespace:dotNetFractal.WPF.Converters"
         mc:Ignorable="d"
         Title=".NET Fractal (WPF Version)" Height="450" Width="800"
         WindowStyle="{Binding WindowStyle}"
-        WindowState="{Binding WindowState}">
+        WindowState="{Binding WindowState}"
+        d:DataContext="{d:DesignInstance Type=vm:MainViewModel, IsDesignTimeCreatable=False}">
     <Window.Resources>
         <converters:BoolToStretchConverter x:Key="BoolToStretchConverter" />
         <converters:BoolToScrollBarVisibilityConverter x:Key="BoolToScrollBarVisibilityConverter" />

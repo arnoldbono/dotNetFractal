@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <ProjectGuid>{DB25CACD-9A6A-4DFB-942F-DFBBE3DF277E}</ProjectGuid>
@@ -30,5 +30,6 @@
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\dotNetFractal.Logic\dotNetFractal.Logic.csproj" />
+      <ProjectReference Include="..\dotNetFractal.UI\dotNetFractal.UI.csproj" />
     </ItemGroup>
 </Project>

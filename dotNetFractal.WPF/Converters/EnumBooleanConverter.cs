@@ -2,8 +2,9 @@ using System.Globalization;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Data;
+using dotNetFractal.UI.Models;
 
-namespace dotNetFractal.WPF;
+namespace dotNetFractal.WPF.Converters;
 
 public class EnumBooleanConverter : IValueConverter
 {

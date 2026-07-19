@@ -1,18 +1,11 @@
-using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Windows;
-using System.Windows.Input;
 
-namespace dotNetFractal.WPF.ViewModels;
+namespace dotNetFractal.UI.ViewModels;
 
 public class BaseViewModel : INotifyPropertyChanged
 {
-    private RelayCommand<Window?>? m_acceptCommand = null;
-
-    public ICommand AcceptCommand => m_acceptCommand ??= new RelayCommand<Window?>(w => OnAccept(w));
-
-    public event PropertyChangedEventHandler? PropertyChanged = delegate { };
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     public void RaiseIfChanged(ref string property, string value, [CallerMemberName] string name = @"")
     {
@@ -50,10 +43,5 @@ public class BaseViewModel : INotifyPropertyChanged
     protected void OnPropertyChanged([CallerMemberName] string name = @"")
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-    }
-
-    private static void OnAccept(Window? window)
-    {
-        window?.DialogResult = true;
     }
 }

@@ -1,10 +1,9 @@
 // (c) 2017 Roland Boon
 
-using System;
 using System.Diagnostics;
 using System.Windows.Input;
 
-namespace dotNetFractal.WPF;
+namespace dotNetFractal.UI.Commands;
 
 public class RelayCommand<T> : ICommand
 {
@@ -20,17 +19,18 @@ public class RelayCommand<T> : ICommand
     [DebuggerStepThrough]
     public bool CanExecute(object? parameter)
     {
-        return m_canExecute(parameter is T ? (T?)parameter : default);
+        return m_canExecute(parameter is T tParam ? tParam : default);
     }
 
-    public event EventHandler? CanExecuteChanged
+    public event EventHandler? CanExecuteChanged;
+
+    public void RaiseCanExecuteChanged()
     {
-        add => CommandManager.RequerySuggested += value;
-        remove => CommandManager.RequerySuggested -= value;
+        CanExecuteChanged?.Invoke(this, EventArgs.Empty);
     }
 
     public void Execute(object? parameter)
     {
-        m_execute(parameter is T ? (T?)parameter : default);
+        m_execute(parameter is T tParam ? tParam : default);
     }
 }

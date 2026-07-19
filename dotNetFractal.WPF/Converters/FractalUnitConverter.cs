@@ -2,7 +2,7 @@ using System;
 using System.Globalization;
 using System.Windows.Data;
 
-namespace dotNetFractal.WPF;
+namespace dotNetFractal.WPF.Converters;
 
 /// <summary>
 /// Converts between decimal or double and string for TextBox bindings.

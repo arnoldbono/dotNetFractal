@@ -1,5 +1,6 @@
 using System.Reflection;
 using Microsoft.UI.Xaml.Data;
+using dotNetFractal.UI.Models;
 
 namespace dotNetFractal.Uno.Converters;
 

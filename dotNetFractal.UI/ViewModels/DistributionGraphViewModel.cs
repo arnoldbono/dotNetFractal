@@ -1,4 +1,4 @@
-namespace dotNetFractal.WPF.ViewModels;
+namespace dotNetFractal.UI.ViewModels;
 
 public class DistributionGraphViewModel : BaseViewModel
 {

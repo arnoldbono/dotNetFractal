@@ -1,9 +1,14 @@
 using dotNetFractal.Logic;
+using dotNetFractal.UI.Commands;
+using dotNetFractal.UI.Models;
+using dotNetFractal.UI.ViewModels;
+using dotNetFractal.Uno.Services;
 using System.Diagnostics;
 using Windows.Foundation;
 using ReactiveUI;
 using SkiaSharp;
 using Microsoft.UI.Dispatching;
+using BaseViewModel = dotNetFractal.UI.ViewModels.BaseViewModel;
 
 namespace dotNetFractal.Uno.ViewModels;
 
@@ -28,7 +33,7 @@ public class MainViewModel : BaseViewModel, IDisposable
     private ImageResolutionViewModel m_imageResolution = new();
     private FractalAreaViewModel m_fractalArea = new();
     private FractalSettingsViewModel m_fractalSettings = new();
-    private readonly ColorMapViewModel m_colorMap = new();
+    private readonly ColorMapViewModel m_colorMap;
     private readonly DisplaySettingsViewModel m_displaySettings = new();
     private readonly PropertiesPanelViewModel m_propertiesPanel;
 
@@ -55,6 +60,9 @@ public class MainViewModel : BaseViewModel, IDisposable
     public MainViewModel()
     {
         m_dispatcher = DispatcherQueue.GetForCurrentThread();
+
+        // Create ColorMapViewModel with Uno-specific bitmap converter
+        m_colorMap = new ColorMapViewModel(new UnoBitmapConverter());
 
         // Initialize PropertiesPanelViewModel with child view models and callback
         m_propertiesPanel = new PropertiesPanelViewModel(

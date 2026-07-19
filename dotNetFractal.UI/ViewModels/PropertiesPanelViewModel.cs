@@ -1,11 +1,13 @@
-using System;
 using System.Windows.Input;
+using dotNetFractal.UI.Commands;
+using dotNetFractal.UI.Services;
+using SkiaSharp;
 
-namespace dotNetFractal.WPF.ViewModels;
+namespace dotNetFractal.UI.ViewModels;
 
 public class PropertiesPanelViewModel : BaseViewModel
 {
-    private readonly Action<bool> m_onApplyChanges;
+    private readonly Action<bool>? m_onApplyChanges;
     private readonly Action m_showDistributionGraph = null!;
     private RelayCommand<EventArgs>? m_applyFractalAreaCommand;
     private RelayCommand<EventArgs>? m_collapsePropertiesCommand;
@@ -15,11 +17,11 @@ public class PropertiesPanelViewModel : BaseViewModel
     private bool m_arePropertiesExpanded = true;
     private bool m_isFullScreen;
 
-    private FractalAreaViewModel m_fractalArea = null!;
-    private ImageResolutionViewModel m_imageResolution = null!;
-    private ColorMapViewModel m_colorMap = null!;
-    private DisplaySettingsViewModel m_displaySettings = null!;
-    private FractalSettingsViewModel m_fractalSettings = null!;
+    private FractalAreaViewModel m_fractalArea;
+    private ImageResolutionViewModel m_imageResolution;
+    private ColorMapViewModel m_colorMap;
+    private DisplaySettingsViewModel m_displaySettings;
+    private FractalSettingsViewModel m_fractalSettings;
 
     public bool IsPropertiesPanelVisible
     {
@@ -149,6 +151,14 @@ public class PropertiesPanelViewModel : BaseViewModel
 
     public ICommand HidePropertiesCommand => m_hidePropertiesCommand ??= new RelayCommand<EventArgs>(param => OnHideProperties());
 
+    class FakeBitmapConverter : IBitmapConverter
+    {
+        public object ConvertToImageSource(SKBitmap bitmap)
+        {
+            return null!;
+        }
+    }
+
     public PropertiesPanelViewModel(
         FractalAreaViewModel fractalAreaViewModel,
         ImageResolutionViewModel imageResolutionViewModel,
@@ -158,19 +168,19 @@ public class PropertiesPanelViewModel : BaseViewModel
         Action<bool> onApplyChanges,
         Action showDistributionGraph)
     {
-        m_fractalArea = fractalAreaViewModel;
-        m_imageResolution = imageResolutionViewModel;
-        m_colorMap = colorMapViewModel;
-        m_displaySettings = displaySettingsViewModel;
-        m_fractalSettings = fractalSettingsViewModel;
-        m_onApplyChanges = onApplyChanges;
-        m_showDistributionGraph = showDistributionGraph;
+        m_fractalArea = fractalAreaViewModel ?? throw new ArgumentNullException(nameof(fractalAreaViewModel));
+        m_imageResolution = imageResolutionViewModel ?? throw new ArgumentNullException(nameof(imageResolutionViewModel));
+        m_colorMap = colorMapViewModel ?? throw new ArgumentNullException(nameof(colorMapViewModel));
+        m_displaySettings = displaySettingsViewModel ?? throw new ArgumentNullException(nameof(displaySettingsViewModel));
+        m_fractalSettings = fractalSettingsViewModel ?? throw new ArgumentNullException(nameof(fractalSettingsViewModel));
+        m_onApplyChanges = onApplyChanges ?? throw new ArgumentNullException(nameof(onApplyChanges));
+        m_showDistributionGraph = showDistributionGraph ?? throw new ArgumentNullException(nameof(showDistributionGraph));
     }
 
     private void OnApplyFractalArea()
     {
         // Delegate to MainViewModel to start fractal computation
-        m_onApplyChanges.Invoke(m_fractalArea.JuliaSet);
+        m_onApplyChanges?.Invoke(m_fractalArea.JuliaSet);
     }
 
     private void OnShowDistributionGraph()

@@ -1,12 +1,13 @@
-using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows.Input;
-using System.Windows.Media;
-
 using dotNetFractal.Logic;
+using dotNetFractal.UI.Commands;
+using dotNetFractal.UI.Models;
+using dotNetFractal.UI.Services;
 using SkiaSharp;
 
-namespace dotNetFractal.WPF.ViewModels;
+namespace dotNetFractal.UI.ViewModels;
 
 /// <summary>
 /// ViewModel for the Color Map Window that generates a bitmap showing the FractalColorMap.
@@ -14,14 +15,15 @@ namespace dotNetFractal.WPF.ViewModels;
 public class ColorMapViewModel : BaseViewModel
 {
     private readonly FractalColorMap m_colorMap;
+    private readonly IBitmapConverter m_bitmapConverter = null!;
 
-    private ImageSource m_colorMapImage = null!;
-    private EditableFractalColor? m_selectedColor;
+    private object m_colorMapImage = null!;
+    private EditableFractalColor? m_selectedColor = null!;
     private RelayCommand<object>? m_addColorCommand;
     private RelayCommand<object>? m_deleteColorCommand;
     private RelayCommand<object>? m_resetColorCommand;
 
-    public ImageSource ColorMapImage
+    public object ColorMapImage
     {
         get => m_colorMapImage;
         set
@@ -59,8 +61,9 @@ public class ColorMapViewModel : BaseViewModel
 
     public ICommand ResetColorCommand => m_resetColorCommand ??= new RelayCommand<object>(_ => ResetColors());
 
-    public ColorMapViewModel()
+    public ColorMapViewModel(IBitmapConverter bitmapConverter)
     {
+        m_bitmapConverter = bitmapConverter ?? throw new ArgumentNullException(nameof(bitmapConverter));
         m_colorMap = FractalColorMap.GetInstance();
 
         // Create editable wrappers for the colors
@@ -93,14 +96,14 @@ public class ColorMapViewModel : BaseViewModel
     /// <summary>
     /// Generates a 256x1 bitmap showing the FractalColorMap from fraction 0.0 to 1.0
     /// </summary>
-    private ImageSource GenerateColorMapBitmap()
+    private object GenerateColorMapBitmap()
     {
         const int Width = 256;
         const int Height = 1;
         const double FractionStep = 1.0 / (Width - 1);
 
         // Create a 256x1 bitmap
-        using (var bitmap = new SKBitmap(Width, Height, SKColorType.Bgra8888, SKAlphaType.Premul))
+        using (var bitmap = new SKBitmap(Width, Height, SKColorType.Rgba8888, SKAlphaType.Premul))
         {
             // Fill each pixel with the corresponding color from the color map
             for (int x = 0; x < Width; x++)
@@ -112,12 +115,11 @@ public class ColorMapViewModel : BaseViewModel
                 var color = new SKColor(
                     (byte)fractalColor.Red,
                     (byte)fractalColor.Green,
-                    (byte)fractalColor.Blue,
-                    255); // Alpha channel
+                    (byte)fractalColor.Blue);
                 bitmap.SetPixel(x, 0, color);
             }
 
-            return ConvertBitmapToImageSource.ConvertFast(bitmap);
+            return m_bitmapConverter.ConvertToImageSource(bitmap);
         }
     }
 
@@ -185,8 +187,10 @@ public class ColorMapViewModel : BaseViewModel
 
     private void DeleteColor()
     {
-        if (!CanDeleteColor() || SelectedColor == null)
+        if (SelectedColor == null || !CanDeleteColor())
+        {
             return;
+        }
 
         // Remove the selected color
         SelectedColor.PropertyChanged -= OnColorChanged;
