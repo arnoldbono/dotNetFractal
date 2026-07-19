@@ -16,38 +16,38 @@ public class MainViewModel : BaseViewModel
 {
     private static readonly decimal m_half = 0.5m;
 
-    private RelayCommand<EventArgs> m_newFractalCommand;
-    private RelayCommand<EventArgs> m_openDnfCommand;
-    private RelayCommand<EventArgs> m_saveDnfCommand;
-    private RelayCommand<EventArgs> m_saveAsCommand;
-    private RelayCommand<EventArgs> m_copyCommand;
-    private RelayCommand<EventArgs> m_goBackCommand;
-    private RelayCommand<EventArgs> m_goForwardCommand;
-    private RelayCommand<EventArgs> m_toggleStretchImageCommand;
-    private RelayCommand<EventArgs> m_toggleFullScreenCommand;
-    private RelayCommand<EventArgs> m_togglePropertiesPanelCommand;
-    private RelayCommand<EventArgs> m_collapsePropertiesCommand;
-    private RelayCommand<EventArgs> m_hidePropertiesCommand;
-    private RelayCommand<EventArgs> m_stopSelectionCommand;
+    private RelayCommand<EventArgs>? m_newFractalCommand;
+    private RelayCommand<EventArgs>? m_openDnfCommand;
+    private RelayCommand<EventArgs>? m_saveDnfCommand;
+    private RelayCommand<EventArgs>? m_saveAsCommand;
+    private RelayCommand<EventArgs>? m_copyCommand;
+    private RelayCommand<EventArgs>? m_goBackCommand;
+    private RelayCommand<EventArgs>? m_goForwardCommand;
+    private RelayCommand<EventArgs>? m_toggleStretchImageCommand;
+    private RelayCommand<EventArgs>? m_toggleFullScreenCommand;
+    private RelayCommand<EventArgs>? m_togglePropertiesPanelCommand;
+    private RelayCommand<EventArgs>? m_collapsePropertiesCommand;
+    private RelayCommand<EventArgs>? m_hidePropertiesCommand;
+    private RelayCommand<EventArgs>? m_stopSelectionCommand;
 
     private ImageResolutionViewModel m_imageResolution = new();
     private FractalAreaViewModel m_fractalArea = new();
     private FractalSettingsViewModel m_fractalSettings = new();
-    private ColorMapViewModel m_colorMap = new();
-    private DisplaySettingsViewModel m_displaySettings = new();
-    private PropertiesPanelViewModel m_propertiesPanel = default;
+    private readonly ColorMapViewModel m_colorMap = new();
+    private readonly DisplaySettingsViewModel m_displaySettings = new();
+    private readonly PropertiesPanelViewModel m_propertiesPanel;
 
-    private FractalStitcher m_stitcher;
+    private FractalStitcher? m_stitcher;
     private readonly FractalReplay m_fractalReplay = new();
     private int m_currentHistoryIndex = -1;
     private bool m_isNavigating = false;
-    private Presentation.DistributionGraphWindow m_distributionGraphWindow;
+    private Presentation.DistributionGraphWindow? m_distributionGraphWindow;
 
-    private Thread m_updateWorkerThread;
+    private Thread? m_updateWorkerThread;
     private volatile bool m_stopWorkerThread;
     private readonly Dispatcher m_dispatcher;
-    private SKBitmap m_bitmap;
-    private ImageSource m_mainImageSource;
+    private SKBitmap? m_bitmap;
+    private ImageSource? m_mainImageSource;
     private int m_width;
     private int m_height;
     private bool m_isFullScreen;
@@ -61,7 +61,7 @@ public class MainViewModel : BaseViewModel
     private bool m_isComputing;
 
 
-    public ImageSource MainImage
+    public ImageSource? MainImage
     {
         get => m_mainImageSource;
         set
@@ -557,7 +557,10 @@ public class MainViewModel : BaseViewModel
 
     public void OnCopy()
     {
-        Clipboard.SetImage((System.Windows.Media.Imaging.BitmapSource)MainImage);
+        if (MainImage != null)
+        {
+            Clipboard.SetImage((System.Windows.Media.Imaging.BitmapSource)MainImage);
+        }
     }
 
     public void OnSaveAs()
@@ -567,6 +570,12 @@ public class MainViewModel : BaseViewModel
             Filter = "PNG Image|*.png|JPeg Image|*.jpg|Bitmap Image|*.bmp",
             Title = "Save an Image File"
         };
+
+        if (m_stitcher == null || m_bitmap == null)
+        {
+            MessageBox.Show("No fractal image available to save.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
 
         if (saveFileDialog.ShowDialog() == true && !string.IsNullOrEmpty(saveFileDialog.FileName))
         {
@@ -963,7 +972,7 @@ public class MainViewModel : BaseViewModel
                     // Perform the zoom operation using SkiaSharp canvas
                     using (var canvas = new SKCanvas(m_bitmap))
                     {
-                        canvas.DrawBitmap(oldBitmap, sourceRect, destRect);
+                        canvas.DrawBitmap(oldBitmap, sourceRect, destRect, SKSamplingOptions.Default);
                     }
                 }
             }
@@ -980,7 +989,7 @@ public class MainViewModel : BaseViewModel
         CommandManager.InvalidateRequerySuggested();
     }
 
-    private void OnComputationCompleted(object sender, EventArgs e)
+    private void OnComputationCompleted(object? sender, EventArgs e)
     {
         m_dispatcher.Invoke(() =>
         {

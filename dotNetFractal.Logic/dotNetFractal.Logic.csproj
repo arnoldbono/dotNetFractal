@@ -6,7 +6,7 @@
         <AppDesignerFolder>Properties</AppDesignerFolder>
         <RootNamespace>dotNetFractal.Logic</RootNamespace>
         <AssemblyName>dotNetFractal.Logic</AssemblyName>
-        <Platforms>x64</Platforms>
+        <Platforms>x64;AnyCPU</Platforms>
         <TargetFramework>net10.0</TargetFramework>
     </PropertyGroup>
     <PropertyGroup>

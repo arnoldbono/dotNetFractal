@@ -1,51 +1,49 @@
 using System;
 using SkiaSharp;
 
-namespace dotNetFractal.Logic
+namespace dotNetFractal.Logic;
+
+public class FractalAreaPatch : IDisposable
 {
-    public class FractalAreaPatch : IDisposable
+    public int StartIndexWidth => (int)FractalImage.IndexI;
+
+    public int StopIndexWidth => StartIndexWidth + Size;
+
+    public int Size => FractalImage.Size;
+
+    public int StartIndexHeight => (int)FractalImage.IndexJ;
+
+    public int StopIndexHeight => StartIndexHeight + Size;
+
+    public FractalCachedImage FractalImage { get; private set; }
+
+    public FractalAreaPatch(int startIndexWidth, int startIndexHeight, int size)
     {
-        public int StartIndexWidth => (int)FractalImage.IndexI;
+        FractalImage = new FractalCachedImage((UInt64)startIndexWidth, (UInt64)startIndexHeight, size, 0);
+    }
 
-        public int StopIndexWidth => StartIndexWidth + Size;
+    public SKRectI GetTargetRectangle(int width, int height)
+    {
+        var x = StartIndexWidth;
+        var y = StartIndexHeight;
+        var rectWidth = Math.Min(Size, width - x);
+        var rectHeight = Math.Min(Size, height - y);
+        return new SKRectI(x, y, x + rectWidth, y + rectHeight);
+    }
 
-        public int Size => FractalImage.Size;
+    public SKRectI GetSourceRectangle(int width, int height)
+    {
+        var x = StartIndexWidth;
+        var y = StartIndexHeight;
+        var rectWidth = Math.Min(Size, width - x);
+        var rectHeight = Math.Min(Size, height - y);
+        return new SKRectI(0, 0, rectWidth, rectHeight);
+    }
 
-        public int StartIndexHeight => (int)FractalImage.IndexJ;
+    public void Dispose()
+    {
+        FractalImage.Dispose();
 
-        public int StopIndexHeight => StartIndexHeight + Size;
-
-        public FractalCachedImage FractalImage { get; private set; }
-
-        public FractalAreaPatch(int startIndexWidth, int startIndexHeight, int size)
-        {
-            FractalImage = new FractalCachedImage((UInt64)startIndexWidth, (UInt64)startIndexHeight, size, 0);
-        }
-
-        public SKRectI GetTargetRectangle(int width, int height)
-        {
-            var x = StartIndexWidth;
-            var y = StartIndexHeight;
-            var rectWidth = Math.Min(Size, width - x);
-            var rectHeight = Math.Min(Size, height - y);
-            return new SKRectI(x, y, x + rectWidth, y + rectHeight);
-        }
-
-        public SKRectI GetSourceRectangle(int width, int height)
-        {
-            var x = StartIndexWidth;
-            var y = StartIndexHeight;
-            var rectWidth = Math.Min(Size, width - x);
-            var rectHeight = Math.Min(Size, height - y);
-            return new SKRectI(0, 0, rectWidth, rectHeight);
-        }
-
-        public void Dispose()
-        {
-            FractalImage?.Dispose();
-            FractalImage = null;
-
-            GC.SuppressFinalize(this);
-        }
+        GC.SuppressFinalize(this);
     }
 }

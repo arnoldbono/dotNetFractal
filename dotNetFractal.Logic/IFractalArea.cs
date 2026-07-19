@@ -1,14 +1,13 @@
-﻿
-namespace dotNetFractal.Logic
+
+namespace dotNetFractal.Logic;
+
+public interface IFractalArea
 {
-    public interface IFractalArea
-    {
-        IDisplayArea DisplayArea { get; }
+    IDisplayArea DisplayArea { get; }
 
-        FractalPixels Pixels { get; }
+    FractalPixels Pixels { get; }
 
-        IFractalPixel GetPixel(int i, int j);
+    IFractalPixel? GetPixel(int i, int j);
 
-        bool JuliaSet { get; set; }
-    }
+    bool JuliaSet { get; set; }
 }

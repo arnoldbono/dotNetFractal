@@ -1,192 +1,191 @@
 using System;
 using System.Windows.Input;
 
-namespace dotNetFractal.WPF.ViewModels
+namespace dotNetFractal.WPF.ViewModels;
+
+public class PropertiesPanelViewModel : BaseViewModel
 {
-    public class PropertiesPanelViewModel : BaseViewModel
+    private readonly Action<bool> m_onApplyChanges;
+    private readonly Action m_showDistributionGraph = null!;
+    private RelayCommand<EventArgs>? m_applyFractalAreaCommand;
+    private RelayCommand<EventArgs>? m_collapsePropertiesCommand;
+    private RelayCommand<EventArgs>? m_hidePropertiesCommand;
+
+    private bool m_isPropertiesPanelVisible = true;
+    private bool m_arePropertiesExpanded = true;
+    private bool m_isFullScreen;
+
+    private FractalAreaViewModel m_fractalArea = null!;
+    private ImageResolutionViewModel m_imageResolution = null!;
+    private ColorMapViewModel m_colorMap = null!;
+    private DisplaySettingsViewModel m_displaySettings = null!;
+    private FractalSettingsViewModel m_fractalSettings = null!;
+
+    public bool IsPropertiesPanelVisible
     {
-        private readonly Action<bool> m_onApplyChanges;
-        private readonly Action m_showDistributionGraph;
-        private RelayCommand<EventArgs> m_applyFractalAreaCommand;
-        private RelayCommand<EventArgs> m_collapsePropertiesCommand;
-        private RelayCommand<EventArgs> m_hidePropertiesCommand;
-
-        private bool m_isPropertiesPanelVisible = true;
-        private bool m_arePropertiesExpanded = true;
-        private bool m_isFullScreen;
-
-        private FractalAreaViewModel m_fractalArea;
-        private ImageResolutionViewModel m_imageResolution;
-        private ColorMapViewModel m_colorMap;
-        private DisplaySettingsViewModel m_displaySettings;
-        private FractalSettingsViewModel m_fractalSettings;
-
-        public bool IsPropertiesPanelVisible
+        get => m_isPropertiesPanelVisible;
+        set
         {
-            get => m_isPropertiesPanelVisible;
-            set
+            if (m_isPropertiesPanelVisible == value)
             {
-                if (m_isPropertiesPanelVisible == value)
-                {
-                    return;
-                }
-
-                m_isPropertiesPanelVisible = value;
-                OnPropertyChanged();
+                return;
             }
-        }
 
-        public bool ArePropertiesExpanded
+            m_isPropertiesPanelVisible = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool ArePropertiesExpanded
+    {
+        get => m_arePropertiesExpanded;
+        set
         {
-            get => m_arePropertiesExpanded;
-            set
+            if (m_arePropertiesExpanded == value)
             {
-                if (m_arePropertiesExpanded == value)
-                {
-                    return;
-                }
-
-                m_arePropertiesExpanded = value;
-                OnPropertyChanged();
+                return;
             }
-        }
 
-        public bool IsFullScreen
+            m_arePropertiesExpanded = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool IsFullScreen
+    {
+        get => m_isFullScreen;
+        set
         {
-            get => m_isFullScreen;
-            set
+            if (m_isFullScreen == value)
             {
-                if (m_isFullScreen == value)
-                {
-                    return;
-                }
-
-                m_isFullScreen = value;
-                OnPropertyChanged();
+                return;
             }
-        }
 
-        public FractalAreaViewModel FractalAreaViewModel
+            m_isFullScreen = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public FractalAreaViewModel FractalAreaViewModel
+    {
+        get => m_fractalArea;
+        set
         {
-            get => m_fractalArea;
-            set
+            if (m_fractalArea == value)
             {
-                if (m_fractalArea == value)
-                {
-                    return;
-                }
-
-                m_fractalArea = value;
-                OnPropertyChanged();
+                return;
             }
-        }
 
-        public ImageResolutionViewModel ImageResolutionViewModel
+            m_fractalArea = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public ImageResolutionViewModel ImageResolutionViewModel
+    {
+        get => m_imageResolution;
+        set
         {
-            get => m_imageResolution;
-            set
+            if (m_imageResolution == value)
             {
-                if (m_imageResolution == value)
-                {
-                    return;
-                }
-
-                m_imageResolution = value;
-                OnPropertyChanged();
+                return;
             }
-        }
 
-        public ColorMapViewModel ColorMapViewModel
+            m_imageResolution = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public ColorMapViewModel ColorMapViewModel
+    {
+        get => m_colorMap;
+        set
         {
-            get => m_colorMap;
-            set
+            if (m_colorMap == value)
             {
-                if (m_colorMap == value)
-                {
-                    return;
-                }
-
-                m_colorMap = value;
-                OnPropertyChanged();
+                return;
             }
-        }
 
-        public DisplaySettingsViewModel DisplaySettingsViewModel
+            m_colorMap = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public DisplaySettingsViewModel DisplaySettingsViewModel
+    {
+        get => m_displaySettings;
+        set
         {
-            get => m_displaySettings;
-            set
+            if (m_displaySettings == value)
             {
-                if (m_displaySettings == value)
-                {
-                    return;
-                }
-
-                m_displaySettings = value;
-                OnPropertyChanged();
+                return;
             }
-        }
 
-        public FractalSettingsViewModel FractalSettingsViewModel
+            m_displaySettings = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public FractalSettingsViewModel FractalSettingsViewModel
+    {
+        get => m_fractalSettings;
+        set
         {
-            get => m_fractalSettings;
-            set
+            if (m_fractalSettings == value)
             {
-                if (m_fractalSettings == value)
-                {
-                    return;
-                }
-
-                m_fractalSettings = value;
-                OnPropertyChanged();
+                return;
             }
+
+            m_fractalSettings = value;
+            OnPropertyChanged();
         }
+    }
 
-        public ICommand ApplyFractalAreaCommand => m_applyFractalAreaCommand ??= new RelayCommand<EventArgs>(param => OnApplyFractalArea());
+    public ICommand ApplyFractalAreaCommand => m_applyFractalAreaCommand ??= new RelayCommand<EventArgs>(param => OnApplyFractalArea());
 
-        public ICommand ShowDistributionGraphCommand => new RelayCommand<EventArgs>(param => OnShowDistributionGraph());
+    public ICommand ShowDistributionGraphCommand => new RelayCommand<EventArgs>(param => OnShowDistributionGraph());
 
-        public ICommand CollapsePropertiesCommand => m_collapsePropertiesCommand ??= new RelayCommand<EventArgs>(param => OnCollapseProperties());
+    public ICommand CollapsePropertiesCommand => m_collapsePropertiesCommand ??= new RelayCommand<EventArgs>(param => OnCollapseProperties());
 
-        public ICommand HidePropertiesCommand => m_hidePropertiesCommand ??= new RelayCommand<EventArgs>(param => OnHideProperties());
+    public ICommand HidePropertiesCommand => m_hidePropertiesCommand ??= new RelayCommand<EventArgs>(param => OnHideProperties());
 
-        public PropertiesPanelViewModel(
-            FractalAreaViewModel fractalAreaViewModel,
-            ImageResolutionViewModel imageResolutionViewModel,
-            ColorMapViewModel colorMapViewModel,
-            DisplaySettingsViewModel displaySettingsViewModel,
-            FractalSettingsViewModel fractalSettingsViewModel,
-            Action<bool> onApplyChanges,
-            Action showDistributionGraph)
-        {
-            m_fractalArea = fractalAreaViewModel ?? throw new ArgumentNullException(nameof(fractalAreaViewModel));
-            m_imageResolution = imageResolutionViewModel ?? throw new ArgumentNullException(nameof(imageResolutionViewModel));
-            m_colorMap = colorMapViewModel ?? throw new ArgumentNullException(nameof(colorMapViewModel));
-            m_displaySettings = displaySettingsViewModel ?? throw new ArgumentNullException(nameof(displaySettingsViewModel));
-            m_fractalSettings = fractalSettingsViewModel ?? throw new ArgumentNullException(nameof(fractalSettingsViewModel));
-            m_onApplyChanges = onApplyChanges ?? throw new ArgumentNullException(nameof(onApplyChanges));
-            m_showDistributionGraph = showDistributionGraph ?? throw new ArgumentNullException(nameof(showDistributionGraph));
-        }
+    public PropertiesPanelViewModel(
+        FractalAreaViewModel fractalAreaViewModel,
+        ImageResolutionViewModel imageResolutionViewModel,
+        ColorMapViewModel colorMapViewModel,
+        DisplaySettingsViewModel displaySettingsViewModel,
+        FractalSettingsViewModel fractalSettingsViewModel,
+        Action<bool> onApplyChanges,
+        Action showDistributionGraph)
+    {
+        m_fractalArea = fractalAreaViewModel;
+        m_imageResolution = imageResolutionViewModel;
+        m_colorMap = colorMapViewModel;
+        m_displaySettings = displaySettingsViewModel;
+        m_fractalSettings = fractalSettingsViewModel;
+        m_onApplyChanges = onApplyChanges;
+        m_showDistributionGraph = showDistributionGraph;
+    }
 
-        private void OnApplyFractalArea()
-        {
-            // Delegate to MainViewModel to start fractal computation
-            m_onApplyChanges?.Invoke(m_fractalArea.JuliaSet);
-        }
+    private void OnApplyFractalArea()
+    {
+        // Delegate to MainViewModel to start fractal computation
+        m_onApplyChanges.Invoke(m_fractalArea.JuliaSet);
+    }
 
-        private void OnShowDistributionGraph()
-        {
-            // Delegate to MainViewModel to show distribution graph
-            m_showDistributionGraph?.Invoke();
-        }
+    private void OnShowDistributionGraph()
+    {
+        // Delegate to MainViewModel to show distribution graph
+        m_showDistributionGraph.Invoke();
+    }
 
-        private void OnCollapseProperties()
-        {
-            ArePropertiesExpanded = !ArePropertiesExpanded;
-        }
+    private void OnCollapseProperties()
+    {
+        ArePropertiesExpanded = !ArePropertiesExpanded;
+    }
 
-        private void OnHideProperties()
-        {
-            IsPropertiesPanelVisible = false;
-        }
+    private void OnHideProperties()
+    {
+        IsPropertiesPanelVisible = false;
     }
 }

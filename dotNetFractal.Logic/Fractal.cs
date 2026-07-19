@@ -87,7 +87,7 @@ abstract public class Fractal<T> : Worker, IFractal where T : INumber<T>, new()
         blue = color.Blue;
     }
 
-    public override void StartThread(Action<Action> threadPoolExecutor = null)
+    public override void StartThread(Action<Action>? threadPoolExecutor)
     {
         base.StartThread(threadPoolExecutor);
     }
@@ -202,7 +202,7 @@ abstract public class Fractal<T> : Worker, IFractal where T : INumber<T>, new()
         var areaPatch = AreaPatch ?? throw new InvalidOperationException("AreaPatch is not set.");
 
         var fractalImage = areaPatch.FractalImage;
-        var image = fractalImage.Image;
+        var image = fractalImage.Image ?? throw new InvalidOperationException("FractalImage is not set.");
         var size = fractalImage.Size;
 
         for (var i = 0; i < size && !Stop; ++i)

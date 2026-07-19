@@ -26,8 +26,8 @@ public class FractalSettings
         Debug.Assert(displayArea != null);
 
         // Here is where upgrade the from double to decimal, when 'highPrecision' is set.
-        var displayAreaConverted = DisplayAreaFactory.Convert(displayArea, highPrecision);
-        m_fractalArea = DisplayAreaFactory.CreateFractalArea(displayAreaConverted);
+        var displayAreaConverted = DisplayAreaFactory.Convert(displayArea, highPrecision) ?? throw new InvalidOperationException("Failed to convert display area.");
+        m_fractalArea = DisplayAreaFactory.CreateFractalArea(displayAreaConverted) ?? throw new InvalidOperationException("Failed to create fractal area.");
 
         MaxIterations = maxIterations;
         MaxColorSteps = maxColorSteps;

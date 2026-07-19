@@ -1,70 +1,73 @@
 using System;
+using System.Runtime.CompilerServices;
 
-namespace dotNetFractal.Logic
+namespace dotNetFractal.Logic;
+
+/// <summary>
+/// Summary description for FractalColorMap.
+/// </summary>
+public class FractalColorMap
 {
-    /// <summary>
-    /// Summary description for FractalColorMap.
-    /// </summary>
-    public class FractalColorMap
+    private static FractalColorMap? m_instance;
+
+    public static FractalColorMap GetInstance()
     {
-        private static FractalColorMap m_instance;
-
-        public static FractalColorMap GetInstance()
-        {
-            return m_instance ??= new FractalColorMap();
-        }
-
-        private FractalColorMap()
-        {
-        }
-
-        /// <summary>
-        /// Get color from the FractalColorMap for the given fraction.
-        /// The fraction is a value between 0 and 1, where 0 is the first color in the map and 1 is the last color in the map.
-        /// </summary>
-        /// <param name="fraction">The fraction for which to get the color.</param>
-        /// <returns>The color corresponding to the given fraction.</returns>
-        public FractalColor GetColor(double fraction)
-        {
-            System.Diagnostics.Debug.Assert(fraction >= 0.0 && fraction <= 1.0, "Fraction must be between 0 and 1.");
-
-            var color1 = Colors[0];
-            var size = Colors.Length;
-            var color2 = color1;
-
-            for (int i = 1; i < size; i++)
-            {
-                color1 = color2;
-                color2 = Colors[i];
-                if (color2.Fraction >= fraction)
-                {
-                    break;
-                }
-            }
-
-            var color = new FractalColor();
-            double factor = (double)(color2.Fraction - fraction) / (double)(color2.Fraction - color1.Fraction);
-            color.Red = (int)((double)color2.Red + (double)(color1.Red - color2.Red) * factor);
-            color.Green = (int)((double)color2.Green + (double)(color1.Green - color2.Green) * factor);
-            color.Blue = (int)((double)color2.Blue + (double)(color1.Blue - color2.Blue) * factor);
-            color.Fraction = fraction;
-            return color;
-        }
-
-        public FractalColor[] Colors = DefaultColors.Clone() as FractalColor[];
-
-        public static readonly FractalColor[] DefaultColors =
-        {
-            new(  3,  0,  0, 0.0),
-            new( 30,  0,  0, 1.0 / 255.0),
-            new(255,  0,  0, 10.0 / 255.0),
-            new(255,255,  0, 63.0 / 255.0),
-            new(  0,255,  0, 95.0 / 255.0),
-            new(  0,255,255, 127.0 / 255.0),
-            new(  0,  0,255, 159.0 / 255.0),
-            new(255,  0,255, 191.0 / 255.0),
-            new(255,255,255, 223.0 / 255.0),
-            new(  3,  3,  3, 1.0)
-        };
+        return m_instance ??= new();
     }
+
+    private FractalColorMap()
+    {
+        DefaultColors =
+        [
+            new(3, 0, 0, 0.0),
+            new(30, 0, 0, 1.0 / 255.0),
+            new(255, 0, 0, 10.0 / 255.0),
+            new(255, 255, 0, 63.0 / 255.0),
+            new(0, 255, 0, 95.0 / 255.0),
+            new(0, 255, 255, 127.0 / 255.0),
+            new(0, 0, 255, 159.0 / 255.0),
+            new(255, 0, 255, 191.0 / 255.0),
+            new(255, 255, 255, 223.0 / 255.0),
+            new(3, 3, 3, 1.0)
+        ];
+
+        Colors = (FractalColor[])DefaultColors.Clone();
+    }
+
+    /// <summary>
+    /// Get color from the FractalColorMap for the given fraction.
+    /// The fraction is a value between 0 and 1, where 0 is the first color in the map and 1 is the last color in the map.
+    /// </summary>
+    /// <param name="fraction">The fraction for which to get the color.</param>
+    /// <returns>The color corresponding to the given fraction.</returns>
+    public FractalColor GetColor(double fraction)
+    {
+        System.Diagnostics.Debug.Assert(fraction >= 0.0 && fraction <= 1.0, "Fraction must be between 0 and 1.");
+
+        var color1 = Colors[0];
+        var size = Colors.Length;
+        var color2 = color1;
+
+        for (int i = 1; i < size; i++)
+        {
+            color1 = color2;
+            color2 = Colors[i];
+            if (color2.Fraction >= fraction)
+            {
+                break;
+            }
+        }
+
+        var color = new FractalColor();
+        double factor = (double)(color2.Fraction - fraction) / (double)(color2.Fraction - color1.Fraction);
+        color.Red = (int)((double)color2.Red + (double)(color1.Red - color2.Red) * factor);
+        color.Green = (int)((double)color2.Green + (double)(color1.Green - color2.Green) * factor);
+        color.Blue = (int)((double)color2.Blue + (double)(color1.Blue - color2.Blue) * factor);
+        color.Fraction = fraction;
+        return color;
+    }
+
+    public FractalColor[] Colors { get; set; }
+
+    public FractalColor[] DefaultColors { get; }
 }

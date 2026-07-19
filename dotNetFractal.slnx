@@ -3,19 +3,19 @@
     <Platform Name="Any CPU" />
     <Platform Name="x64" />
   </Configurations>
-  <Folder Name="/dotNetFractal.Uno/">
-    <Project Path="dotNetFractal.Uno/dotNetFractal.csproj" />
-  </Folder>
   <Folder Name="/Solution Items/">
     <File Path="Directory.Build.props" />
     <File Path="Directory.Build.targets" />
     <File Path="Directory.Packages.props" />
   </Folder>
+  <Project Path="dotNetFractal.Uno/dotNetFractal.UNO.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
   <Project Path="dotNetFractal.Logic/dotNetFractal.Logic.csproj">
-    <Platform Project="x64" />
+    <Platform Solution="*|x64" Project="x64" />
   </Project>
   <!-- Project Path="dotNetFractal.WinForms/dotNetFractal.WinForms.csproj" / -->
   <Project Path="dotNetFractal.WPF/dotNetFractal.WPF.csproj">
-    <Platform Project="x64" />
+    <Platform Solution="*|x64" Project="x64" />
   </Project>
 </Solution>

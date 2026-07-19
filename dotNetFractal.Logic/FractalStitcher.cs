@@ -224,7 +224,6 @@ public class FractalStitcher : Worker
             UnlockMutex();
 
             fractal.AreaPatch.Dispose();
-            fractal.AreaPatch = null;
 
             updated = true;
         }
@@ -245,12 +244,14 @@ public class FractalStitcher : Worker
         canvas.Clear(SKColors.Azure);
     }
 
-    public void UpdateBitmap(SKBitmap bitmap, IFractal fractal)
+    public static void UpdateBitmap(SKBitmap bitmap, IFractal fractal)
     {
         var areaPatch = fractal.AreaPatch;
 
         var fractalImage = areaPatch.FractalImage;
-        var image = (SKBitmap)fractalImage.Image;
+        var image = fractalImage.Image;
+        if (image == null)
+            return;
 
         using var canvas = new SKCanvas(bitmap);
         var targetRect = areaPatch.GetTargetRectangle(bitmap.Width, bitmap.Height);
@@ -260,6 +261,6 @@ public class FractalStitcher : Worker
         var skTargetRect = new SKRect(targetRect.Left, targetRect.Top, targetRect.Right, targetRect.Bottom);
         var skSourceRect = new SKRect(sourceRect.Left, sourceRect.Top, sourceRect.Right, sourceRect.Bottom);
 
-        canvas.DrawBitmap(image, skSourceRect, skTargetRect);
+        canvas.DrawBitmap(image, skSourceRect, skTargetRect, SKSamplingOptions.Default);
     }
 }

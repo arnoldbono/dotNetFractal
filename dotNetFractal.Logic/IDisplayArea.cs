@@ -1,15 +1,14 @@
-﻿
 
-namespace dotNetFractal.Logic
+
+namespace dotNetFractal.Logic;
+
+public interface IDisplayArea
 {
-    public interface IDisplayArea
-    {
-        int PixelsHorizontal { get; }
+    int PixelsHorizontal { get; }
 
-        int PixelsVertical { get; }
+    int PixelsVertical { get; }
 
-        void Resize(int pixelsHorizontal, int pixelsVertical);
+    void Resize(int pixelsHorizontal, int pixelsVertical);
 
-        IDisplayArea ZoomIn(int i1, int j1, int i2, int j2, int horizontal, int vertical);
-    }
+    IDisplayArea? ZoomIn(int i1, int j1, int i2, int j2, int horizontal, int vertical);
 }

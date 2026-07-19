@@ -15,11 +15,11 @@ public class ColorMapViewModel : BaseViewModel
 {
     private readonly FractalColorMap m_colorMap;
 
-    private ImageSource m_colorMapImage;
-    private EditableFractalColor m_selectedColor;
-    private RelayCommand<object> m_addColorCommand;
-    private RelayCommand<object> m_deleteColorCommand;
-    private RelayCommand<object> m_resetColorCommand;
+    private ImageSource m_colorMapImage = null!;
+    private EditableFractalColor? m_selectedColor;
+    private RelayCommand<object>? m_addColorCommand;
+    private RelayCommand<object>? m_deleteColorCommand;
+    private RelayCommand<object>? m_resetColorCommand;
 
     public ImageSource ColorMapImage
     {
@@ -38,7 +38,7 @@ public class ColorMapViewModel : BaseViewModel
 
     public ObservableCollection<EditableFractalColor> Colors { get; private set; }
 
-    public EditableFractalColor SelectedColor
+    public EditableFractalColor? SelectedColor
     {
         get => m_selectedColor;
         set
@@ -75,7 +75,7 @@ public class ColorMapViewModel : BaseViewModel
         ColorMapImage = GenerateColorMapBitmap();
     }
 
-    private void OnColorChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+    private void OnColorChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         // Update the underlying FractalColorMap
         var count = Math.Min(Colors.Count, m_colorMap.Colors.Length);
@@ -142,7 +142,7 @@ public class ColorMapViewModel : BaseViewModel
         }
 
         // Get the neighboring colors for interpolation
-        EditableFractalColor colorAbove = selectedIndex > 0 ? Colors[selectedIndex - 1] : null;
+        EditableFractalColor? colorAbove = selectedIndex > 0 ? Colors[selectedIndex - 1] : null;
         EditableFractalColor colorBelow = Colors[selectedIndex];
 
         // Calculate interpolated values
@@ -185,10 +185,8 @@ public class ColorMapViewModel : BaseViewModel
 
     private void DeleteColor()
     {
-        if (!CanDeleteColor())
-        {
+        if (!CanDeleteColor() || SelectedColor == null)
             return;
-        }
 
         // Remove the selected color
         SelectedColor.PropertyChanged -= OnColorChanged;
@@ -218,7 +216,7 @@ public class ColorMapViewModel : BaseViewModel
         Colors.Clear();
 
         // Reset the underlying color map to default colors
-        m_colorMap.Colors = FractalColorMap.DefaultColors.Clone() as FractalColor[];
+        m_colorMap.Colors = (FractalColor[])FractalColorMap.GetInstance().DefaultColors.Clone();
 
         // Create editable wrappers for the default colors
         foreach (var color in m_colorMap.Colors)
