@@ -41,7 +41,7 @@
     <RootNamespace>dotNetFractal.Uno</RootNamespace>
     <AssemblyName>dotNetFractal.Uno</AssemblyName>
     <Company>Roland Boon</Company>
-    <Copyright>Copyright © 2022</Copyright>
+    <Copyright>Copyright © 2026</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
@@ -52,22 +52,6 @@
 
   <ItemGroup>
     <PackageReference Include="ReactiveUI" />
-  </ItemGroup>
-
-  <!-- Files moved to dotNetFractal.UI -->
-  <ItemGroup>
-    <Compile Remove="ViewModels\BaseViewModel.cs" />
-    <Compile Remove="ViewModels\ColorMapViewModel.cs" />
-    <Compile Remove="ViewModels\DistributionGraphViewModel.cs" />
-    <Compile Remove="ViewModels\FractalAreaViewModel.cs" />
-    <Compile Remove="ViewModels\FractalSettingsViewModel.cs" />
-    <Compile Remove="ViewModels\PropertiesPanelViewModel.cs" />
-    <Compile Remove="DisplaySettingsViewModel.cs" />
-    <Compile Remove="ImageResolutionViewModel.cs" />
-    <Compile Remove="EditableFractalColor.cs" />
-    <Compile Remove="FractalPlate.cs" />
-    <Compile Remove="ResolutionEnum.cs" />
-    <Compile Remove="RelayCommand.cs" />
   </ItemGroup>
 
   <ItemGroup>

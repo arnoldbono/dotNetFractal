@@ -1,9 +1,5 @@
 using SkiaSharp;
-#if __IOS__ || __MACCATALYST__ || __ANDROID__ || __WASM__
 using Microsoft.UI.Xaml.Media.Imaging;
-#else // Windows/Desktop
-using SkiaSharp.Views.Windows;
-#endif
 
 namespace dotNetFractal.Uno;
 
@@ -27,7 +23,6 @@ public static class ConvertBitmapToImageSource
     /// <returns>The image as a WriteableBitmap for UNO</returns>
     public static ImageSource ConvertFast(SKBitmap src)
     {
-#if __IOS__ || __MACCATALYST__ || __ANDROID__ || __WASM__
         var width = src.Width;
         var height = src.Height;
         
@@ -41,9 +36,6 @@ public static class ConvertBitmapToImageSource
         writeableBitmap.SetSource(ms.AsRandomAccessStream());
 
         return writeableBitmap;
-#else // Windows/Desktop
-        return src.ToWriteableBitmap(); // Ensure the bitmap is in a format that can be used with WriteableBitmap
-#endif
     }
 }
 

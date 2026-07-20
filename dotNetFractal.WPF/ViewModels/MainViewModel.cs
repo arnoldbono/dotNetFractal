@@ -445,6 +445,9 @@ public class MainViewModel : BaseViewModel
 
     private void UpdateWorkerThreadProc()
     {
+        bool updating = false;
+        bool updatePending = true;
+
         while (!m_stopWorkerThread)
         {
             try
@@ -460,20 +463,32 @@ public class MainViewModel : BaseViewModel
                     break;
 
                 if (m_stitcher.BitmapUpdateEvent.WaitOne(100) ||
-                    m_stitcher.HasFractalsToUpdate)
+                    m_stitcher.HasFractalsToUpdate ||
+                    updatePending)
                 {
                     if (m_stopWorkerThread)
                         break;
 
-                    // Call UpdateBitmap on the UI thread
-                    m_dispatcher.Invoke(UpdateBitmap);
-
-                    // Update progress on the UI thread
-                    var progress = m_stitcher.Progress;
-                    m_dispatcher.Invoke(() =>
+                    if (updating)
                     {
+                        updatePending = true;
+                        continue;
+                    }
+
+                    updatePending = false;
+                    updating = true;
+
+                    // Call UpdateBitmap on the UI thread
+                    m_dispatcher.InvokeAsync(() =>
+                    {
+                        UpdateBitmap();
+
+                        // Update progress on the UI thread
+                        var progress = m_stitcher.Progress;
                         ComputationProgress = progress;
                         IsComputing = progress < 100.0;
+
+                        updating = false;
                     });
                 }
             }
