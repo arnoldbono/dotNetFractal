@@ -16,8 +16,6 @@ namespace dotNetFractal.UI.ViewModels;
 /// </summary>
 public class SharedMainViewModel : BaseViewModel, IDisposable
 {
-    private static readonly decimal m_half = 0.5m;
-
     private RelayCommand<EventArgs>? m_newFractalCommand;
     private RelayCommand<EventArgs>? m_openDnfCommand;
     private RelayCommand<EventArgs>? m_saveDnfCommand;
