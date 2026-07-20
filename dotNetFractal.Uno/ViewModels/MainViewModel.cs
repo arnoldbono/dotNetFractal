@@ -1,6 +1,7 @@
 using dotNetFractal.Logic;
 using dotNetFractal.UI.Commands;
 using dotNetFractal.UI.Models;
+using dotNetFractal.UI.Services;
 using dotNetFractal.UI.ViewModels;
 using dotNetFractal.Uno.Services;
 using System.Diagnostics;
@@ -45,6 +46,8 @@ public class MainViewModel : BaseViewModel, IDisposable
     private Thread? m_updateWorkerThread;
     private volatile bool m_stopWorkerThread;
     private readonly DispatcherQueue m_dispatcher;
+    private readonly IFileDialogService m_fileDialogService;
+    private readonly IClipboardService m_clipboardService;
     private SKBitmap? m_bitmap;
     private ImageSource m_mainImageSource = null!;
     private int m_width;
@@ -60,6 +63,8 @@ public class MainViewModel : BaseViewModel, IDisposable
     public MainViewModel()
     {
         m_dispatcher = DispatcherQueue.GetForCurrentThread();
+        m_fileDialogService = new UnoFileDialogService((Application.Current as App)?.MainWindow ?? throw new InvalidOperationException("MainWindow not available"));
+        m_clipboardService = new UnoClipboardService();
 
         // Create ColorMapViewModel with Uno-specific bitmap converter
         m_colorMap = new ColorMapViewModel(new UnoBitmapConverter());

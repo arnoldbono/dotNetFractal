@@ -1,23 +1,20 @@
 using System;
 using System.Diagnostics;
-using System.IO;
-using System.Windows;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Threading;
 using dotNetFractal.Logic;
 using dotNetFractal.UI.Commands;
 using dotNetFractal.UI.Models;
 using dotNetFractal.UI.Services;
-using dotNetFractal.UI.ViewModels;
-using dotNetFractal.WPF.Services;
 using ReactiveUI;
 using SkiaSharp;
-using BaseViewModel = dotNetFractal.UI.ViewModels.BaseViewModel;
 
-namespace dotNetFractal.WPF.ViewModels;
+namespace dotNetFractal.UI.ViewModels;
 
-public class MainViewModel : BaseViewModel
+/// <summary>
+/// Shared MainViewModel implementation for all platforms (WPF, Uno, etc.).
+/// Platform-specific concerns are injected via constructor dependencies.
+/// </summary>
+public class SharedMainViewModel : BaseViewModel, IDisposable
 {
     private static readonly decimal m_half = 0.5m;
 
@@ -46,29 +43,135 @@ public class MainViewModel : BaseViewModel
     private readonly FractalReplay m_fractalReplay = new();
     private int m_currentHistoryIndex = -1;
     private bool m_isNavigating = false;
-    private Presentation.DistributionGraphWindow? m_distributionGraphWindow;
+
+    // Platform-specific injected services
+    private readonly IDispatcherAdapter m_dispatcherAdapter;
+    private readonly IBitmapConverter m_bitmapConverter;
+    private readonly IFileDialogService m_fileDialogService;
+    private readonly IClipboardService m_clipboardService;
+    private readonly IWindowManager m_windowManager;
+    private readonly IDistributionGraphService m_graphService;
 
     private Thread? m_updateWorkerThread;
     private volatile bool m_stopWorkerThread;
-    private readonly IDispatcherAdapter m_dispatcher;
-    private readonly IFileDialogService m_fileDialogService;
-    private readonly IClipboardService m_clipboardService;
     private SKBitmap? m_bitmap;
-    private ImageSource? m_mainImageSource;
+    private object? m_mainImageSource; // Platform-agnostic object representation
     private int m_width;
     private int m_height;
     private bool m_isFullScreen;
-    private WindowStyle m_windowStyle = WindowStyle.SingleBorderWindow;
-    private WindowState m_windowState = WindowState.Normal;
     private bool m_isPropertiesPanelVisible = true;
     private bool m_arePropertiesExpanded = true;
-    private Point? m_selectionStart;
+    private (double x, double y)? m_selectionStart;
     private bool m_isSelecting;
     private double m_computationProgress;
     private bool m_isComputing;
+    private bool m_stretchImage;
 
+    /// <summary>
+    /// Initializes a new instance of SharedMainViewModel with all platform-specific dependencies.
+    /// </summary>
+    public SharedMainViewModel(
+        IDispatcherAdapter dispatcherAdapter,
+        IBitmapConverter bitmapConverter,
+        IFileDialogService fileDialogService,
+        IClipboardService clipboardService,
+        IWindowManager windowManager,
+        IDistributionGraphService graphService)
+    {
+        m_dispatcherAdapter = dispatcherAdapter ?? throw new ArgumentNullException(nameof(dispatcherAdapter));
+        m_bitmapConverter = bitmapConverter ?? throw new ArgumentNullException(nameof(bitmapConverter));
+        m_fileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
+        m_clipboardService = clipboardService ?? throw new ArgumentNullException(nameof(clipboardService));
+        m_windowManager = windowManager ?? throw new ArgumentNullException(nameof(windowManager));
+        m_graphService = graphService ?? throw new ArgumentNullException(nameof(graphService));
 
-    public ImageSource? MainImage
+        // Create ColorMapViewModel with injected bitmap converter
+        m_colorMap = new ColorMapViewModel(m_bitmapConverter);
+
+        // Initialize PropertiesPanelViewModel with child view models and callback
+        m_propertiesPanel = new PropertiesPanelViewModel(
+            m_fractalArea,
+            m_imageResolution,
+            m_colorMap,
+            m_displaySettings,
+            m_fractalSettings,
+            juliaSet =>
+            {
+                var centerX = m_fractalArea.CenterX;
+                var centerY = m_fractalArea.CenterY;
+                var width = m_fractalArea.Width;
+                var height = m_fractalArea.Height;
+                StartFractalComputation(juliaSet, centerX, centerY, width, height);
+            },
+            () => OnShowDistributionGraph());
+
+        // Subscribe to property changes from PropertiesPanelViewModel to keep SharedMainViewModel in sync
+        m_propertiesPanel.WhenAnyValue(x => x.IsPropertiesPanelVisible)
+            .Subscribe(value =>
+            {
+                if (m_isPropertiesPanelVisible != value)
+                {
+                    m_isPropertiesPanelVisible = value;
+                    OnPropertyChanged(nameof(IsPropertiesPanelVisible));
+                }
+            });
+
+        m_propertiesPanel.WhenAnyValue(x => x.ArePropertiesExpanded)
+            .Subscribe(value =>
+            {
+                if (m_arePropertiesExpanded != value)
+                {
+                    m_arePropertiesExpanded = value;
+                    OnPropertyChanged(nameof(ArePropertiesExpanded));
+                }
+            });
+
+        // Subscribe to StretchImage changes from the DisplaySettingsViewModel
+        m_displaySettings.WhenAnyValue(x => x.StretchImage).Subscribe(value =>
+        {
+            if (m_stretchImage != value)
+            {
+                m_stretchImage = value;
+                OnPropertyChanged(nameof(StretchImage));
+            }
+        });
+
+        // Sync with PropertiesPanelViewModel
+        this.WhenAnyValue(x => x.IsFullScreen).Subscribe(value =>
+        {
+            if (m_propertiesPanel != null && m_propertiesPanel.IsFullScreen != value)
+            {
+                m_propertiesPanel.IsFullScreen = value;
+            }
+        });
+        this.WhenAnyValue(x => x.IsPropertiesPanelVisible).Subscribe(value =>
+        {
+            if (m_propertiesPanel != null && m_propertiesPanel.IsPropertiesPanelVisible != value)
+            {
+                m_propertiesPanel.IsPropertiesPanelVisible = value;
+            }
+        });
+        this.WhenAnyValue(x => x.ArePropertiesExpanded).Subscribe(value =>
+        {
+            if (m_propertiesPanel != null && m_propertiesPanel.ArePropertiesExpanded != value)
+            {
+                m_propertiesPanel.ArePropertiesExpanded = value;
+            }
+        });
+
+        StartUpdateWorkerThread();
+
+        var centerX = m_fractalArea.CenterX;
+        var centerY = m_fractalArea.CenterY;
+        var width = m_fractalArea.Width;
+        var height = m_fractalArea.Height;
+        StartFractalComputation(false, centerX, centerY, width, height);
+    }
+
+    /// <summary>
+    /// Gets the main image source for binding to the UI.
+    /// </summary>
+    public object? MainImage
     {
         get => m_mainImageSource;
         set
@@ -113,51 +216,6 @@ public class MainViewModel : BaseViewModel
         }
     }
 
-    public bool StretchImage
-    {
-        get => m_displaySettings.StretchImage;
-        set
-        {
-            if (m_displaySettings.StretchImage == value)
-            {
-                return;
-            }
-
-            m_displaySettings.StretchImage = value;
-            OnPropertyChanged();
-        }
-    }
-
-    public WindowStyle WindowStyle
-    {
-        get => m_windowStyle;
-        set
-        {
-            if (m_windowStyle == value)
-            {
-                return;
-            }
-
-            m_windowStyle = value;
-            OnPropertyChanged();
-        }
-    }
-
-    public WindowState WindowState
-    {
-        get => m_windowState;
-        set
-        {
-            if (m_windowState == value)
-            {
-                return;
-            }
-
-            m_windowState = value;
-            OnPropertyChanged();
-        }
-    }
-
     public bool IsFullScreen
     {
         get => m_isFullScreen;
@@ -169,6 +227,7 @@ public class MainViewModel : BaseViewModel
             }
 
             m_isFullScreen = value;
+            m_windowManager.IsFullScreen = value;
             OnPropertyChanged();
         }
     }
@@ -203,9 +262,11 @@ public class MainViewModel : BaseViewModel
         }
     }
 
-    public PropertiesPanelViewModel PropertiesPanelViewModel => m_propertiesPanel;
-
-    public System.Windows.Point? SelectionStart
+    /// <summary>
+    /// Gets or sets the selection start point as a platform-agnostic tuple.
+    /// Platform-specific views can convert to/from their Point types as needed.
+    /// </summary>
+    public (double x, double y)? SelectionStart
     {
         get => m_selectionStart;
         set
@@ -265,129 +326,61 @@ public class MainViewModel : BaseViewModel
         }
     }
 
-    public MainViewModel()
+    public bool StretchImage
     {
-        m_dispatcher = new WpfDispatcherAdapter(Dispatcher.CurrentDispatcher);
-        m_fileDialogService = new WpfFileDialogService();
-        m_clipboardService = new WpfClipboardService();
-
-        // Create ColorMapViewModel with WPF-specific bitmap converter
-        m_colorMap = new ColorMapViewModel(new WpfBitmapConverter());
-
-        // Initialize PropertiesPanelViewModel with child view models and callback
-        m_propertiesPanel = new PropertiesPanelViewModel(
-            m_fractalArea,
-            m_imageResolution,
-            m_colorMap,
-            m_displaySettings,
-            m_fractalSettings,
-            juliaSet =>
-            {
-                var centerX = m_fractalArea.CenterX;
-                var centerY = m_fractalArea.CenterY;
-                var width = m_fractalArea.Width;
-                var height = m_fractalArea.Height;
-                StartFractalComputation(juliaSet, centerX, centerY, width, height);
-            },
-            () => OnShowDistributionGraph());
-
-        // Subscribe to property changes from PropertiesPanelViewModel to keep MainViewModel in sync
-        m_propertiesPanel.WhenAnyValue(x => x.IsPropertiesPanelVisible)
-            .Subscribe(value =>
-            {
-                if (m_isPropertiesPanelVisible != value)
-                {
-                    m_isPropertiesPanelVisible = value;
-                    OnPropertyChanged(nameof(IsPropertiesPanelVisible));
-                }
-            });
-
-        m_propertiesPanel.WhenAnyValue(x => x.ArePropertiesExpanded)
-            .Subscribe(value =>
-            {
-                if (m_arePropertiesExpanded != value)
-                {
-                    m_arePropertiesExpanded = value;
-                    OnPropertyChanged(nameof(ArePropertiesExpanded));
-                }
-            });
-
-        // Subscribe to StretchImage changes from the DisplaySettingsViewModel
-        m_displaySettings.WhenAnyValue(x => x.StretchImage).Subscribe(_ => OnPropertyChanged(nameof(StretchImage)));
-
-        // Sync with PropertiesPanelViewModel
-        this.WhenAnyValue(x => x.IsFullScreen).Subscribe(value =>
+        get => m_stretchImage;
+        set
         {
-            if (m_propertiesPanel != null && m_propertiesPanel.IsFullScreen != value)
+            if (m_stretchImage == value)
             {
-                m_propertiesPanel.IsFullScreen = value;
+                return;
             }
-        });
-        this.WhenAnyValue(x => x.IsPropertiesPanelVisible).Subscribe(value =>
-        {
-            if (m_propertiesPanel != null && m_propertiesPanel.IsPropertiesPanelVisible != value)
-            {
-                m_propertiesPanel.IsPropertiesPanelVisible = value;
-            }
-        });
-        this.WhenAnyValue(x => x.ArePropertiesExpanded).Subscribe(value =>
-        {
-            if (m_propertiesPanel != null && m_propertiesPanel.ArePropertiesExpanded != value)
-            {
-                m_propertiesPanel.ArePropertiesExpanded = value;
-            }
-        });
 
-        StartUpdateWorkerThread();
-
-        var centerX = m_fractalArea.CenterX;
-        var centerY = m_fractalArea.CenterY;
-        var width = m_fractalArea.Width;
-        var height = m_fractalArea.Height;
-        StartFractalComputation(false, centerX, centerY, width, height);
+            m_stretchImage = value;
+            m_displaySettings.StretchImage = value;
+            OnPropertyChanged();
+        }
     }
+
+    public ImageResolutionViewModel ImageResolution => m_imageResolution;
+    public FractalAreaViewModel FractalArea => m_fractalArea;
+    public FractalSettingsViewModel FractalSettings => m_fractalSettings;
+    public ColorMapViewModel ColorMap => m_colorMap;
+    public DisplaySettingsViewModel DisplaySettings => m_displaySettings;
+    public PropertiesPanelViewModel PropertiesPanel => m_propertiesPanel;
 
     public void Dispose()
     {
         StopUpdateWorkerThread();
         m_stitcher?.StopThread();
         m_bitmap?.Dispose();
-
-        // Close the distribution graph window if it's open
-        m_distributionGraphWindow?.Close();
-        m_distributionGraphWindow = null;
+        m_graphService?.CloseGraph();
     }
 
+    #region Commands
+
     public ICommand NewFractalCommand => m_newFractalCommand ??= new RelayCommand<EventArgs>(param => OnNewFractal());
-
     public ICommand OpenDnfCommand => m_openDnfCommand ??= new RelayCommand<EventArgs>(param => OnOpenDnf());
-
     public ICommand SaveDnfCommand => m_saveDnfCommand ??= new RelayCommand<EventArgs>(param => OnSaveDnf());
-
     public ICommand SaveAsCommand => m_saveAsCommand ??= new RelayCommand<EventArgs>(param => OnSaveAs());
-
     public ICommand CopyCommand => m_copyCommand ??= new RelayCommand<EventArgs>(param => OnCopy());
-
     public ICommand GoBackCommand => m_goBackCommand ??= new RelayCommand<EventArgs>(param => OnGoBack(), param => CanGoBack());
-
     public ICommand GoForwardCommand => m_goForwardCommand ??= new RelayCommand<EventArgs>(param => OnGoForward(), param => CanGoForward());
-
     public ICommand ToggleStretchImageCommand => m_toggleStretchImageCommand ??= new RelayCommand<EventArgs>(param => OnToggleStretchImage());
-
     public ICommand ToggleFullScreenCommand => m_toggleFullScreenCommand ??= new RelayCommand<EventArgs>(param => OnToggleFullScreen());
-
     public ICommand TogglePropertiesPanelCommand => m_togglePropertiesPanelCommand ??= new RelayCommand<EventArgs>(param => OnTogglePropertiesPanel());
-
     public ICommand CollapsePropertiesCommand => m_collapsePropertiesCommand ??= new RelayCommand<EventArgs>(param => OnCollapseProperties());
-
     public ICommand HidePropertiesCommand => m_hidePropertiesCommand ??= new RelayCommand<EventArgs>(param => OnHideProperties());
-
     public ICommand StopSelectionCommand => m_stopSelectionCommand ??= new RelayCommand<EventArgs>(param => OnStopSelection());
+
+    #endregion
+
+    #region Core UI Methods
 
     private void UpdateBitmap()
     {
         // Assert that this method is called on the main UI thread
-        Debug.Assert(m_dispatcher?.IsOnUIThread ?? true,
+        Debug.Assert(m_dispatcherAdapter?.IsOnUIThread ?? true,
             "UpdateBitmap must be called on the main UI thread");
 
         if (m_stitcher == null)
@@ -400,110 +393,28 @@ public class MainViewModel : BaseViewModel
             (m_bitmap.Height != height))
         {
             m_bitmap = FractalStitcher.GetBitmap(width, height);
-            MainImage = ConvertBitmapToImageSource.ConvertFast(m_bitmap);
+            MainImage = m_bitmapConverter.ConvertToImageSource(m_bitmap);
         }
 
         // POST: m_bitmap != null
 
         if ((MainImage == null) ||
-            (MainImage.Width != m_bitmap.Width) ||
-            (MainImage.Height != m_bitmap.Height))
+            (MainImage != null && (MainImage as dynamic)?.Width != m_bitmap.Width) ||
+            (MainImage != null && (MainImage as dynamic)?.Height != m_bitmap.Height))
         {
-            MainImage = ConvertBitmapToImageSource.ConvertFast(m_bitmap);
+            MainImage = m_bitmapConverter.ConvertToImageSource(m_bitmap);
         }
 
         if (m_stitcher.Update(m_bitmap))
         {
-            MainImage = ConvertBitmapToImageSource.ConvertFast(m_bitmap);
+            MainImage = m_bitmapConverter.ConvertToImageSource(m_bitmap);
         }
+
+        Width = width;
+        Height = height;
     }
 
-    private void StartUpdateWorkerThread()
-    {
-        m_stopWorkerThread = false;
-        m_updateWorkerThread = new Thread(UpdateWorkerThreadProc)
-        {
-            IsBackground = true,
-            Name = "BitmapUpdateWorker"
-        };
-        m_updateWorkerThread.Start();
-    }
-
-    private void StopUpdateWorkerThread()
-    {
-        if (m_updateWorkerThread != null)
-        {
-            m_stopWorkerThread = true;
-
-            // Signal the event to wake up the worker thread so it can exit
-            (m_stitcher?.BitmapUpdateEvent as AutoResetEvent)?.Set();
-
-            if (m_updateWorkerThread.IsAlive)
-            {
-                m_updateWorkerThread.Join(1000); // Wait up to 1 second
-            }
-
-            m_updateWorkerThread = null;
-        }
-    }
-
-    private void UpdateWorkerThreadProc()
-    {
-        bool updating = false;
-        bool updatePending = true;
-
-        while (!m_stopWorkerThread)
-        {
-            try
-            {
-                // Wait for the FractalStitcher to signal that a fractal needs updating
-                if (m_stitcher?.BitmapUpdateEvent == null)
-                {
-                    Thread.Sleep(100);
-                    continue;
-                }
-
-                if (m_stopWorkerThread)
-                    break;
-
-                if (m_stitcher.BitmapUpdateEvent.WaitOne(100) ||
-                    m_stitcher.HasFractalsToUpdate ||
-                    updatePending)
-                {
-                    if (m_stopWorkerThread)
-                        break;
-
-                    if (updating)
-                    {
-                        updatePending = true;
-                        continue;
-                    }
-
-                    updatePending = false;
-                    updating = true;
-
-                    // Call UpdateBitmap on the UI thread
-                    m_dispatcher.RunOnUIThreadAsync(() =>
-                    {
-                        UpdateBitmap();
-
-                        // Update progress on the UI thread
-                        var progress = m_stitcher.Progress;
-                        ComputationProgress = progress;
-                        IsComputing = progress < 100.0;
-
-                        updating = false;
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error in UpdateWorkerThread: {ex.Message}");
-            }
-        }
-    }
-
-    public void OnNewFractal()
+    private void OnNewFractal()
     {
         m_imageResolution = new();
         m_fractalArea = new();
@@ -514,11 +425,7 @@ public class MainViewModel : BaseViewModel
         m_stitcher = null;
 
         // Close the distribution graph window when creating a new fractal
-        if (m_distributionGraphWindow != null)
-        {
-            m_distributionGraphWindow.Close();
-            m_distributionGraphWindow = null;
-        }
+        m_graphService?.CloseGraph();
 
         var centerX = m_fractalArea.CenterX;
         var centerY = m_fractalArea.CenterY;
@@ -528,65 +435,15 @@ public class MainViewModel : BaseViewModel
         StartFractalComputation(false, centerX, centerY, width, height);
     }
 
-    public void OnToggleStretchImage()
-    {
-        StretchImage = !StretchImage;
-    }
-
-    public void OnToggleFullScreen()
-    {
-        IsFullScreen = !IsFullScreen;
-
-        if (IsFullScreen)
-        {
-            // Enter full screen
-            WindowStyle = WindowStyle.None;
-            WindowState = WindowState.Maximized;
-        }
-        else
-        {
-            // Exit full screen
-            WindowStyle = WindowStyle.SingleBorderWindow;
-            WindowState = WindowState.Normal;
-        }
-    }
-
-    private void OnTogglePropertiesPanel()
-    {
-        if (!IsPropertiesPanelVisible)
-        {
-            // When showing the panel, always show it expanded
-            IsPropertiesPanelVisible = true;
-            ArePropertiesExpanded = true;
-        }
-        else
-        {
-            // When hiding, just toggle visibility
-            IsPropertiesPanelVisible = false;
-        }
-    }
-
-    private void OnCollapseProperties()
-    {
-        ArePropertiesExpanded = !ArePropertiesExpanded;
-    }
-
-    private void OnHideProperties()
-    {
-        IsPropertiesPanelVisible = false;
-    }
-
-    private void OnStopSelection()
-    {
-        IsSelecting = false;
-        SelectionStart = null;
-    }
-
     public void OnCopy()
     {
-        if (MainImage != null)
+        if (MainImage != null && m_bitmap != null)
         {
-            Clipboard.SetImage((System.Windows.Media.Imaging.BitmapSource)MainImage);
+            using (var image = SKImage.FromBitmap(m_bitmap))
+            using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
+            {
+                m_clipboardService.SetImage(data.ToArray(), "png");
+            }
         }
     }
 
@@ -835,7 +692,7 @@ public class MainViewModel : BaseViewModel
         var height = displayAreaTyped.GetHeight((int)pixelY1, (int)pixelY2);
 
         // Regenerate the fractal with the new area
-        StartFractalComputation(m_fractalArea.JuliaSet, centerX, centerY, width, height);
+        StartFractalComputation(false, centerX, centerY, width, height);
     }
 
     public void ZoomOutFromRectangle(double pixelX1, double pixelY1, double pixelX2, double pixelY2, double imageWidth, double imageHeight)
@@ -844,45 +701,35 @@ public class MainViewModel : BaseViewModel
             return;
 
         var displayArea = m_fractalArea.GetDisplayArea((int)imageWidth, (int)imageHeight);
+
         var displayAreaTyped = displayArea as DisplayArea<decimal> ?? throw new InvalidOperationException("Unsupported display area type.");
 
-        // Get the center of the selected rectangle in fractal coordinates
-        var centerPixelX = (decimal)(pixelX1 + pixelX2) * m_half;
-        var centerPixelY = (decimal)(pixelY1 + pixelY2) * m_half;
-        var centerFractalX = displayAreaTyped.GetX((int)Math.Floor(centerPixelX));
-        var centerFractalY = displayAreaTyped.GetY((int)Math.Floor(centerPixelY));
+        // Instead of zooming to a specific region, zoom out from the center by 2x
+        var newWidth = displayAreaTyped.Width * 2;
+        var newHeight = displayAreaTyped.Height * 2;
 
-        // Calculate the zoom-out ratio based on the rectangle size
-        var rectWidth = (decimal)Math.Abs(pixelX2 - pixelX1);
-        var rectHeight = (decimal)Math.Abs(pixelY2 - pixelY1);
-        var widthRatio = (decimal)imageWidth / rectWidth;
-        var heightRatio = (decimal)imageHeight / rectHeight;
-        var zoomOutRatio = Math.Min(widthRatio, heightRatio);
-
-        // Calculate the new fractal area dimensions (zoomed out)
-        var newWidth = m_fractalArea.Width * zoomOutRatio;
-        var newHeight = m_fractalArea.Height * zoomOutRatio;
-
-        // Set the new fractal area centered on the selection rectangle center
-        StartFractalComputation(m_fractalArea.JuliaSet, centerFractalX, centerFractalY, newWidth, newHeight);
+        // Regenerate the fractal with the new area
+        StartFractalComputation(m_fractalArea.JuliaSet, displayAreaTyped.CenterX, displayAreaTyped.CenterY, newWidth, newHeight);
     }
 
-    private bool CanGoBack()
-    {
-        return m_currentHistoryIndex > 0;
-    }
+    private bool CanGoBack() => m_currentHistoryIndex > 0;
 
-    private bool CanGoForward()
-    {
-        return m_currentHistoryIndex >= 0 && m_currentHistoryIndex < m_fractalReplay.HistoryCount - 1;
-    }
+    private bool CanGoForward() => m_currentHistoryIndex < m_fractalReplay.HistoryCount - 1;
 
     public void OnGoBack()
     {
         if (!CanGoBack())
             return;
 
-        NavigateToHistoryIndex(--m_currentHistoryIndex);
+        m_isNavigating = true;
+        m_currentHistoryIndex--;
+        var displayArea = m_fractalReplay[m_currentHistoryIndex];
+
+        if (displayArea == null)
+            return;
+
+        LoadFractalState(displayArea);
+        m_isNavigating = false;
     }
 
     public void OnGoForward()
@@ -890,203 +737,241 @@ public class MainViewModel : BaseViewModel
         if (!CanGoForward())
             return;
 
-        NavigateToHistoryIndex(++m_currentHistoryIndex);
-    }
+        m_isNavigating = true;
+        m_currentHistoryIndex++;
+        var displayArea = m_fractalReplay[m_currentHistoryIndex];
 
-    private void NavigateToHistoryIndex(int index)
-    {
-        if (index < 0 || index >= m_fractalReplay.HistoryCount)
-            return;
-
-        var displayArea = m_fractalReplay[index];
         if (displayArea == null)
             return;
 
-        // Set flag to prevent adding to history during navigation
-        m_isNavigating = true;
+        LoadFractalState(displayArea);
+        m_isNavigating = false;
+    }
 
-        try
+    private void LoadFractalState(IDisplayArea displayArea)
+    {
+        // Create a fractal area from the display area
+        if (displayArea is DisplayArea<decimal> displayAreaDecimal)
         {
-            // Regenerate the fractal with the historical area
-            var displayAreaTyped = displayArea as DisplayArea<decimal> ?? throw new InvalidOperationException("Unsupported display area type.");
-            StartFractalComputation(m_fractalArea.JuliaSet, displayAreaTyped.CenterX, displayAreaTyped.CenterY, displayAreaTyped.Width, displayAreaTyped.Height);
+            m_fractalArea.CenterX = displayAreaDecimal.CenterX;
+            m_fractalArea.CenterY = displayAreaDecimal.CenterY;
+            m_fractalArea.Width = displayAreaDecimal.Width;
+            m_fractalArea.Height = displayAreaDecimal.Height;
+            m_fractalArea.Cx = displayAreaDecimal.Cx;
+            m_fractalArea.Cy = displayAreaDecimal.Cy;
         }
-        finally
+        else if (displayArea is DisplayArea<double> displayAreaDouble)
         {
-            m_isNavigating = false;
+            m_fractalArea.CenterX = decimal.CreateChecked(displayAreaDouble.CenterX);
+            m_fractalArea.CenterY = decimal.CreateChecked(displayAreaDouble.CenterY);
+            m_fractalArea.Width = decimal.CreateChecked(displayAreaDouble.Width);
+            m_fractalArea.Height = decimal.CreateChecked(displayAreaDouble.Height);
+            m_fractalArea.Cx = decimal.CreateChecked(displayAreaDouble.Cx);
+            m_fractalArea.Cy = decimal.CreateChecked(displayAreaDouble.Cy);
         }
+
+        StartFractalComputation(m_fractalArea.JuliaSet, m_fractalArea);
     }
 
     private void StartFractalComputation(bool juliaSet, decimal centerX, decimal centerY, decimal width, decimal height)
     {
-        var previousFractalArea = m_fractalArea.Clone();
+        var fractalArea = new FractalAreaViewModel
+        {
+            JuliaSet = juliaSet,
+            CenterX = centerX,
+            CenterY = centerY,
+            Width = width,
+            Height = height,
+            Cx = m_fractalArea.Cx,
+            Cy = m_fractalArea.Cy
+        };
 
-        m_fractalArea.JuliaSet = juliaSet;
-        m_fractalArea.CenterX = centerX;
-        m_fractalArea.CenterY = centerY;
-        m_fractalArea.Width = width;
-        m_fractalArea.Height = height;
-
-        StartFractalComputation(m_fractalArea.JuliaSet, previousFractalArea);
+        StartFractalComputation(juliaSet, fractalArea);
     }
 
     private void StartFractalComputation(bool juliaSet, FractalAreaViewModel oldFractalArea)
     {
-        m_stitcher?.StopThread();
-
-        Width = m_imageResolution.Width;
-        Height = m_imageResolution.Height;
-
-        IDisplayArea displayArea;
-        displayArea = m_fractalArea.GetDisplayArea(Width, Height);
-
-        // Only add to history if not navigating
         if (!m_isNavigating)
         {
-            // Remove any forward history if we're creating a new fractal
-            if (m_currentHistoryIndex >= 0 && m_currentHistoryIndex < m_fractalReplay.HistoryCount - 1)
-            {
-                m_fractalReplay.RemoveAllFromIndex(m_currentHistoryIndex);
-            }
-
+            // Add to history when not navigating
+            var displayArea = oldFractalArea.GetDisplayArea((int)m_imageResolution.Width, (int)m_imageResolution.Height);
             m_currentHistoryIndex = m_fractalReplay.Add(displayArea);
         }
 
-        var fractalSettings = new FractalSettings(displayArea,
+        IsComputing = true;
+        ComputationProgress = 0.0;
+
+        // Create new fractal computation
+        var fractalArea = oldFractalArea.GetDisplayArea((int)m_imageResolution.Width, (int)m_imageResolution.Height);
+
+        var fractalSettings = new FractalSettings(
+            fractalArea,
             m_fractalSettings.MaxIterations,
             m_fractalSettings.MaxColorSteps,
             m_fractalSettings.FirstColorStep,
             m_fractalSettings.SmoothColoring,
             m_fractalSettings.HighPrecision,
-            m_fractalSettings.DistributionGraph
-        );
+            m_fractalSettings.DistributionGraph);
 
-        m_stitcher = new FractalStitcher(fractalSettings);
-        m_stitcher.ComputationCompleted += OnComputationCompleted;
+        var stitcher = new FractalStitcher(fractalSettings);
+        stitcher.ComputationCompleted += OnComputationCompleted;
         fractalSettings.FractalArea.JuliaSet = juliaSet;
 
         if (MainImage != null)
         {
             var oldBitmap = m_bitmap;
-            m_bitmap = FractalStitcher.GetBitmap(Width, Height);
-            if (oldBitmap != null)
-            {
-                if (oldFractalArea.JuliaSet == m_fractalArea.JuliaSet &&
-                    oldFractalArea.Width >= m_fractalArea.Width &&
-                    oldFractalArea.Height >= m_fractalArea.Height)
-                {
-                    // Map the section from the m_oldBitmap described with the dimension from oldFractalArea
-                    // to m_bitmap that has the dimensions of m_fractalArea. This is a zoom operation.
-
-                    var newLeft = m_fractalArea.CenterX - m_fractalArea.Width * m_half;
-                    var newTop = m_fractalArea.CenterY + m_fractalArea.Height * m_half;
-
-                    var oldLeft = oldFractalArea.CenterX - oldFractalArea.Width * m_half;
-                    var oldTop = oldFractalArea.CenterY + oldFractalArea.Height * m_half;
-
-                    // Convert new area bounds to pixel coordinates in the old bitmap
-                    var sourceX = (double)((newLeft - oldLeft) / oldFractalArea.Width) * m_bitmap.Width;
-                    double sourceY = (double)((oldTop - newTop) / oldFractalArea.Height) * m_bitmap.Height;
-                    double sourceWidth = (double)(m_fractalArea.Width / oldFractalArea.Width) * m_bitmap.Width;
-                    double sourceHeight = (double)(m_fractalArea.Height / oldFractalArea.Height) * m_bitmap.Height;
-
-                    // Create source and destination rectangles
-                    var sourceRect = new SKRect((float)sourceX, (float)sourceY, 
-                        (float)(sourceX + sourceWidth), (float)(sourceY + sourceHeight));
-                    var destRect = new SKRect(0, 0, m_bitmap.Width, m_bitmap.Height);
-
-                    // Perform the zoom operation using SkiaSharp canvas
-                    using (var canvas = new SKCanvas(m_bitmap))
-                    {
-                        canvas.DrawBitmap(oldBitmap, sourceRect, destRect, SKSamplingOptions.Default);
-                    }
-                }
-            }
-            MainImage = ConvertBitmapToImageSource.ConvertFast(m_bitmap);
+            m_bitmap = null;
+            oldBitmap?.Dispose();
         }
 
-        // Initialize progress tracking
-        ComputationProgress = 0.0;
-        IsComputing = true;
-
+        m_stitcher?.StopThread();
+        m_stitcher = stitcher;
         m_stitcher.StartThread();
-
-        // Update command states
-        CommandManager.InvalidateRequerySuggested();
     }
 
     private void OnComputationCompleted(object? sender, EventArgs e)
     {
-        m_dispatcher.RunOnUIThread(() =>
+        m_dispatcherAdapter.RunOnUIThread(() =>
         {
-            if (m_distributionGraphWindow?.IsLoaded == true && m_fractalSettings?.DistributionGraph != null)
-            {
-                m_distributionGraphWindow.UpdateGraph(m_fractalSettings.DistributionGraph);
-            }
+            IsComputing = false;
         });
     }
 
     private void OnShowDistributionGraph()
     {
         // Show the distribution graph on the UI thread
-        m_dispatcher.RunOnUIThread(() =>
+        m_dispatcherAdapter.RunOnUIThread(() =>
         {
-            if (m_distributionGraphWindow?.IsLoaded == true && m_fractalSettings?.DistributionGraph != null)
+            if (m_graphService.IsGraphOpen && m_fractalSettings?.DistributionGraph != null)
             {
-                m_distributionGraphWindow.UpdateGraph(m_fractalSettings.DistributionGraph);
+                m_graphService.ShowGraph(m_fractalSettings.DistributionGraph);
                 return; // Already open and now updated
             }
 
             // Check if distribution graph is enabled and has data
-            if (m_fractalSettings?.DistributionGraph != null)
+            if (m_fractalSettings?.DistributionGraph == null)
             {
-                // Reuse existing window if it exists and is open
-                if (m_distributionGraphWindow != null)
-                {
-                    try
-                    {
-                        // Check if window is still open (not closed by user)
-                        if (m_distributionGraphWindow.IsLoaded)
-                        {
-                            m_distributionGraphWindow.UpdateGraph(m_fractalSettings.DistributionGraph);
-
-                            // Bring the window to front if it's minimized or behind other windows
-                            if (m_distributionGraphWindow.WindowState == WindowState.Minimized)
-                            {
-                                m_distributionGraphWindow.WindowState = WindowState.Normal;
-                            }
-                            m_distributionGraphWindow.Activate();
-                            return; // Successfully updated existing window
-                        }
-                    }
-                    catch (InvalidOperationException)
-                    {
-                        // Window was closed, clear the reference and create a new one
-                        m_distributionGraphWindow = null;
-                    }
-                }
-
-                // Create a new window
-                m_distributionGraphWindow = new Presentation.DistributionGraphWindow(m_fractalSettings.DistributionGraph);
-
-                // Only set the owner if MainWindow exists and has been shown
-                var mainWindow = Application.Current.MainWindow;
-                if (mainWindow != null && mainWindow.IsLoaded)
-                {
-                    m_distributionGraphWindow.Owner = mainWindow;
-                }
-
-                // Handle the Closed event to clear the reference
-                m_distributionGraphWindow.Closed += (s, args) => m_distributionGraphWindow = null;
-
-                m_distributionGraphWindow.Show();
+                return;
             }
-            else
-            {
-                // Distribution graph is disabled, close the window if it's open
-                m_distributionGraphWindow?.Close();
-                m_distributionGraphWindow = null;
-            }
+
+            m_graphService.ShowGraph(m_fractalSettings.DistributionGraph);
         });
     }
+
+    private void OnToggleStretchImage()
+    {
+        StretchImage = !StretchImage;
+    }
+
+    private void OnToggleFullScreen()
+    {
+        IsFullScreen = !IsFullScreen;
+    }
+
+    private void OnTogglePropertiesPanel()
+    {
+        IsPropertiesPanelVisible = !IsPropertiesPanelVisible;
+    }
+
+    private void OnCollapseProperties()
+    {
+        ArePropertiesExpanded = false;
+    }
+
+    private void OnHideProperties()
+    {
+        IsPropertiesPanelVisible = false;
+    }
+
+    private void OnStopSelection()
+    {
+        IsSelecting = false;
+        SelectionStart = null;
+    }
+
+    #endregion
+
+    #region Worker Thread
+
+    private void StartUpdateWorkerThread()
+    {
+        if (m_updateWorkerThread != null)
+            return;
+
+        m_stopWorkerThread = false;
+        m_updateWorkerThread = new Thread(UpdateWorkerThreadProc)
+        {
+            Name = "UpdateWorkerThread",
+            IsBackground = true
+        };
+        m_updateWorkerThread.Start();
+    }
+
+    private void StopUpdateWorkerThread()
+    {
+        m_stopWorkerThread = true;
+        if (m_updateWorkerThread != null)
+        {
+            m_updateWorkerThread.Join(1000);
+            m_updateWorkerThread = null;
+        }
+    }
+
+    private void UpdateWorkerThreadProc()
+    {
+        bool updating = false;
+        bool updatePending = true;
+
+        while (!m_stopWorkerThread)
+        {
+            try
+            {
+                // Wait for the FractalStitcher to signal that a fractal needs updating
+                if (m_stitcher?.BitmapUpdateEvent == null)
+                {
+                    Thread.Sleep(100);
+                    continue;
+                }
+
+                if (m_stopWorkerThread)
+                    break;
+
+                if (m_stitcher.BitmapUpdateEvent.WaitOne(100) ||
+                    m_stitcher.HasFractalsToUpdate ||
+                    updatePending)
+                {
+                    if (m_stopWorkerThread)
+                        break;
+
+                    if (updating)
+                    {
+                        updatePending = true;
+                        continue;
+                    }
+
+                    updatePending = false;
+                    updating = true;
+
+                    // Call UpdateBitmap on the UI thread
+                    m_dispatcherAdapter.RunOnUIThreadAsync(() =>
+                    {
+                        UpdateBitmap();
+
+                        // Update progress on the UI thread
+                        var progress = m_stitcher?.Progress ?? 0.0;
+                        ComputationProgress = progress;
+                        IsComputing = progress < 100.0;
+
+                        updating = false;
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in UpdateWorkerThread: {ex.Message}");
+            }
+        }
+    }
+
+    #endregion
 }
