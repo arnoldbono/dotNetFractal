@@ -396,7 +396,7 @@ public class SharedMainViewModel : BaseViewModel, IDisposable
 
         // POST: m_bitmap != null
 
-        if (m_windowManager.HasSameDimensions(MainImage, m_bitmap.Width, m_bitmap.Height))
+        if (!m_windowManager.HasSameDimensions(MainImage, m_bitmap.Width, m_bitmap.Height))
         {
             MainImage = m_bitmapConverter.ConvertToImageSource(m_bitmap);
         }
