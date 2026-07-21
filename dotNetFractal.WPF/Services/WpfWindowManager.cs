@@ -46,4 +46,11 @@ public class WpfWindowManager : IWindowManager
             }
         }
     }
+
+
+    public bool HasSameDimensions(object? window, int width, int height)
+    {
+        return window is Window w && w.Width == width && w.Height == height;
+    }
+
 }

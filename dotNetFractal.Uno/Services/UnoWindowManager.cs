@@ -15,4 +15,9 @@ public class UnoWindowManager : IWindowManager
         get => m_isFullScreen;
         set => m_isFullScreen = value;
     }
+
+    public bool HasSameDimensions(object? window, int width, int height)
+    {
+        return window is Window w && w.Bounds.Width == width && w.Bounds.Height == height;
+    }
 }

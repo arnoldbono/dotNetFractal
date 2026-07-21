@@ -13,6 +13,8 @@ public sealed partial class MainWindow : Page
     {
         this.InitializeComponent();
 
+        DataContext = new MainViewModel();
+
         // Update canvas size when image changes
         FractalImage.SizeChanged += (s, e) =>
         {
@@ -29,7 +31,7 @@ public sealed partial class MainWindow : Page
         if (position.X >= 0 && position.X < FractalImage.ActualWidth &&
             position.Y >= 0 && position.Y < FractalImage.ActualHeight)
         {
-            ViewModel.SelectionStart = new Windows.Foundation.Point(position.X, position.Y);
+            ViewModel.SelectionStart = (position.X, position.Y);
             ViewModel.IsSelecting = true;
             Canvas.SetLeft(SelectionRectangle, position.X);
             Canvas.SetTop(SelectionRectangle, position.Y);
@@ -58,8 +60,8 @@ public sealed partial class MainWindow : Page
         currentPosition.Y = Math.Max(0, Math.Min(currentPosition.Y, FractalImage.ActualHeight));
 
         // Calculate the desired width and height
-        var deltaX = currentPosition.X - ViewModel.SelectionStart.Value.X;
-        var deltaY = currentPosition.Y - ViewModel.SelectionStart.Value.Y;
+        var deltaX = currentPosition.X - ViewModel.SelectionStart.Value.x;
+        var deltaY = currentPosition.Y - ViewModel.SelectionStart.Value.y;
 
         // Calculate the aspect ratio of the image
         double aspectRatio = FractalImage.ActualWidth / FractalImage.ActualHeight;
@@ -86,10 +88,10 @@ public sealed partial class MainWindow : Page
         }
 
         // Calculate the end point based on constrained dimensions
-        var startX = ViewModel.SelectionStart.Value.X - width;
-        var startY = ViewModel.SelectionStart.Value.Y - height;
-        var endX = ViewModel.SelectionStart.Value.X + width;
-        var endY = ViewModel.SelectionStart.Value.Y + height;
+        var startX = ViewModel.SelectionStart.Value.x - width;
+        var startY = ViewModel.SelectionStart.Value.y - height;
+        var endX = ViewModel.SelectionStart.Value.x + width;
+        var endY = ViewModel.SelectionStart.Value.y + height;
 
         // Calculate final rectangle position and size
         var x = Math.Min(startX, endX);
@@ -111,7 +113,7 @@ public sealed partial class MainWindow : Page
             {
                 var imageBrush = new ImageBrush
                 {
-                    ImageSource = ViewModel.MainImage,
+                    ImageSource = (ImageSource)ViewModel.MainImage,
                     Stretch = Stretch.Uniform
                 };
                 SelectionRectangle.Fill = imageBrush;

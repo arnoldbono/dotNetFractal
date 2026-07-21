@@ -9,4 +9,6 @@ public interface IWindowManager
     /// Gets or sets whether the window is in full-screen mode.
     /// </summary>
     bool IsFullScreen { get; set; }
+
+    bool HasSameDimensions(object? window, int width, int height);
 }

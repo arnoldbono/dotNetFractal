@@ -113,23 +113,35 @@ Converters remain in their respective projects due to different base interfaces:
 ## Next Steps (Manual Testing)
 
 1. **Test WPF Project:**
-   - Run dotNetFractal.WPF
-   - Test fractal computation
-   - Test property panel (resolution, fractal area, color map)
-   - Test distribution graph
-   - Test file operations (open, save, copy)
+   ✅ Run dotNetFractal.WPF
+   ✅ Test fractal computation
+   ✅ Test property panel (resolution, fractal area, color map)
+   ✅ Test distribution graph
+   ✅ Test file operations (open, save, copy)
 
 2. **Test Uno Project:**
-   - Run dotNetFractal.Uno
-   - Test fractal computation
+   ✅ Run dotNetFractal.Uno
+   ✅ Test fractal computation
    - Test property panel (resolution, fractal area, color map)
-   - Test file operations
+   ✅ Test file operations
    - Test on different platforms (if multi-targeted)
 
 3. **Optional Cleanup:**
-   - Delete duplicate ViewModel files from disk (they're already excluded from compilation)
-   - Delete duplicate model files from disk (they're already excluded from compilation)
+   ✅ Delete duplicate ViewModel files from disk (they're already excluded from compilation)
+   ✅ Delete duplicate model files from disk (they're already excluded from compilation)
    - Consider if any remaining converters could be consolidated
+
+## Defects
+
+- WPF: Color Map: Delete button does not work
+- WPF&UNO: When zooming in, the selected area is the basis of the blown-up bitmap shown at the start of the new fractal computation. It is incorrect at deeper zoom levels.
+- UNO: Slider between panel area and fractal image is missing
+- UNO: Color Map: table only show Red and Green values
+- UNO: Individual panes in Properties do not grow to the available width
+- UNO: Hotkeys F2, F10, F11 do not work
+- UNO: Collapse button on Properties is missing
+- UNO: Esc button does not work when zooming in or out.
+- UNO: Color Map Values cannot be modified.
 
 ## Benefits Achieved
 

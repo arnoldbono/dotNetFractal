@@ -22,9 +22,6 @@
         <converters:BoolToColumnSpanConverter x:Key="BoolToColumnSpanConverter" />
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
     </Window.Resources>
-    <Window.DataContext>
-        <vm:MainViewModel />
-    </Window.DataContext>
     <Window.InputBindings>
         <KeyBinding Command="{Binding OpenDnfCommand}" Key="O" Modifiers="Ctrl" />
         <KeyBinding Command="{Binding SaveDnfCommand}" Key="S" Modifiers="Ctrl" />
@@ -112,7 +109,7 @@
             </GridSplitter>
 
             <!-- Properties Panel UserControl -->
-            <presentation:PropertiesPanel Grid.Column="2" DataContext="{Binding PropertiesPanelViewModel}" />
+            <presentation:PropertiesPanel Grid.Column="2" DataContext="{Binding PropertiesPanel}" />
 
             <!-- Progress Bar Overlay -->
             <ProgressBar Minimum="0" 
