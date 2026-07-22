@@ -8,16 +8,15 @@
     <File Path="Directory.Build.targets" />
     <File Path="Directory.Packages.props" />
   </Folder>
-  <Project Path="dotNetFractal.UI/dotNetFractal.UI.csproj">
-    <Platform Solution="*|x64" Project="x64" />
-  </Project>
-  <Project Path="dotNetFractal.Uno/dotNetFractal.UNO.csproj">
-    <Platform Solution="*|x64" Project="x64" />
-  </Project>
   <Project Path="dotNetFractal.Logic/dotNetFractal.Logic.csproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <!-- Project Path="dotNetFractal.WinForms/dotNetFractal.WinForms.csproj" / -->
+  <Project Path="dotNetFractal.UI/dotNetFractal.UI.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="dotNetFractal.Uno/dotNetFractal.UNO.csproj" DisplayName="dotNetFractal.Uno">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
   <Project Path="dotNetFractal.WPF/dotNetFractal.WPF.csproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>

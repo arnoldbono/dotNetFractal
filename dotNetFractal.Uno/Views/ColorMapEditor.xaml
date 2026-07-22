@@ -28,7 +28,7 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Note: UNO doesn't have DataGrid, using ListView with custom template -->
+                <!-- Note: Uno doesn't have DataGrid, using ListView with custom template -->
                 <ListView Grid.Column="0"
                           ItemsSource="{Binding Colors}" 
                           SelectedItem="{Binding SelectedColor, Mode=TwoWay}"

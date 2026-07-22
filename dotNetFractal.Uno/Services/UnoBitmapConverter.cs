@@ -16,10 +16,10 @@ public class UnoBitmapConverter : IBitmapConverter
 
     /// <summary>
     /// Converts a SKBitmap to an image that can be used as an ImageSource.
-    /// Uses WriteableBitmap for UNO Platform.
+    /// Uses WriteableBitmap for Uno Platform.
     /// </summary>
     /// <param name="src">A SKBitmap image</param>
-    /// <returns>The image as a WriteableBitmap for UNO</returns>
+    /// <returns>The image as a WriteableBitmap for Uno</returns>
     private static WriteableBitmap ConvertFast(SKBitmap src)
     {
         var width = src.Width;

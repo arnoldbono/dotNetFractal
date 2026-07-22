@@ -134,14 +134,14 @@ Converters remain in their respective projects due to different base interfaces:
 ## Defects
 
 - WPF: Color Map: Delete button does not work
-- WPF&UNO: When zooming in, the selected area is the basis of the blown-up bitmap shown at the start of the new fractal computation. It is incorrect at deeper zoom levels.
-- UNO: Slider between panel area and fractal image is missing
-- UNO: Color Map: table only show Red and Green values
-- UNO: Individual panes in Properties do not grow to the available width
-- UNO: Hotkeys F2, F10, F11 do not work
-- UNO: Collapse button on Properties is missing
-- UNO: Esc button does not work when zooming in or out.
-- UNO: Color Map Values cannot be modified.
+- WPF&Uno: When zooming in, the selected area is the basis of the blown-up bitmap shown at the start of the new fractal computation. It is incorrect at deeper zoom levels.
+- Uno: Slider between panel area and fractal image is missing
+- Uno: Color Map: table only show Red and Green values
+- Uno: Individual panes in Properties do not grow to the available width
+- Uno: Hotkeys F2, F10, F11 do not work
+- Uno: Collapse button on Properties is missing
+- Uno: Esc button does not work when zooming in or out.
+- Uno: Color Map Values cannot be modified.
 
 ## Benefits Achieved
 
