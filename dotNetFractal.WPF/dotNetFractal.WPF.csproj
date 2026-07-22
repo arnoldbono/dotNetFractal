@@ -9,6 +9,7 @@
         <Platforms>x64;AnyCPU</Platforms>
         <TargetFramework>net10.0-windows</TargetFramework>
         <UseWPF>true</UseWPF>
+        <EnableWindowsTargeting>true</EnableWindowsTargeting>
     </PropertyGroup>
     <PropertyGroup>
         <Company>Roland Boon</Company>
