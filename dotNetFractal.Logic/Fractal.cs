@@ -1,90 +1,29 @@
 using System;
 using System.Numerics;
-using SkiaSharp;
 
 namespace dotNetFractal.Logic;
 
 /// <summary>
-/// Compute a Fractal from left to right.
+/// Compute a fractal from left to right, top to bottom, pixel by pixel, for the given area and settings, and store the result in a pixel array.
 /// </summary>
 abstract public class Fractal<T> : Worker, IFractal where T : INumber<T>, new()
 {
-    private readonly FractalColorMap m_colorMap = FractalColorMap.GetInstance();
-
     private readonly FractalSettings m_settings;
-    private FractalAreaPatch? m_areaPatch = null;
-    private double m_maxRadius = 4.0;
+    private readonly FractalColorist m_colorist;
+    private readonly FractalAreaPatch m_areaPatch;
     protected ComputationState m_state = ComputationState.NotStarted;
 
-    public IFractalArea Area => m_settings.FractalArea;
-
-    public FractalAreaPatch AreaPatch
-    {
-        get { return m_areaPatch ?? throw new InvalidOperationException("AreaPatch is not set."); }
-        set
-        {
-            if (m_areaPatch != null)
-                base.StopThread();
-
-            m_areaPatch = value;
-        }
-    }
-
-    public double MaxRadius
-    {
-        get { return m_maxRadius; }
-        set { m_maxRadius = value; }
-    }
-
-    public FractalSettings Settings => m_settings;
+    public FractalAreaPatch AreaPatch => m_areaPatch;
 
     public ComputationState State => m_state;
-
-    public Fractal(FractalSettings settings)
+    
+    public IFractalColorist Colorist => m_colorist;
+    
+    public Fractal(FractalSettings settings, FractalAreaPatch areaPatch)
     {
         m_settings = settings;
-    }
-
-    public SKColor ComputeColor(IFractalPixel pixel)
-    {
-        var iteration = pixel.Iteration;
-        if (iteration >= Settings.MaxIterations)
-            return SKColors.Black;
-
-        GetColor(iteration, out var red, out var green, out var blue);
-
-        if (iteration != 0 && Settings.SmoothColoring)
-        {
-            var fraction = pixel.GetEscapeFraction((double)MaxRadius);
-            System.Diagnostics.Debug.Assert(fraction < 1.0);
-
-            GetColor(iteration - 1, out var red1, out var green1, out var blue1);
-
-            red = (int)((double)red1 + fraction * (red - red1));
-            green = (int)((double)green1 + fraction * (green - green1));
-            blue = (int)((double)blue1 + fraction * (blue - blue1));
-        }
-
-        return new SKColor((byte)red, (byte)green, (byte)blue);
-    }
-
-    public void GetColor(int index, out int red, out int green, out int blue)
-    {
-        if (index < Settings.FirstColorStep)
-        {
-            red = 255;
-            green = 255;
-            blue = 255;
-            return;
-        }
-
-        index -= Settings.FirstColorStep;
-
-        var fraction = (index % Settings.MaxColorSteps) / (double)Settings.MaxColorSteps;
-        var color = m_colorMap.GetColor(fraction);
-        red = color.Red;
-        green = color.Green;
-        blue = color.Blue;
+        m_colorist = new FractalColorist(m_settings);
+        m_areaPatch = areaPatch;
     }
 
     public override void StartThread(Action<Action>? threadPoolExecutor)
@@ -97,17 +36,17 @@ abstract public class Fractal<T> : Worker, IFractal where T : INumber<T>, new()
     private void IncrementDistributionGraph(int iteration)
     {
         --iteration; // 1...maxIterations, but DistributionGraph is 0...maxIterations-1, so decrement by 1
-        if (Settings.DistributionGraph != null)
+        if (m_settings.DistributionGraph != null)
         {
-            if (iteration < 0 || iteration >= Settings.DistributionGraph.Length)
+            if (iteration < 0 || iteration >= m_settings.DistributionGraph.Length)
                 throw new ArgumentOutOfRangeException(nameof(iteration));
-            System.Threading.Interlocked.Increment(ref Settings.DistributionGraph[iteration]);
+            System.Threading.Interlocked.Increment(ref m_settings.DistributionGraph[iteration]);
         }
     }
 
     private void UpdatePixel(int i, int j, IFractalPixel pixel)
     {
-        Area.Pixels.SetPixel(i, j, pixel);
+        m_settings.FractalArea.Pixels.SetPixel(i, j, pixel);
         IncrementDistributionGraph(pixel.Iteration);
     }
 
@@ -119,16 +58,16 @@ abstract public class Fractal<T> : Worker, IFractal where T : INumber<T>, new()
         Stop = false;
         Stopped = false;
 
-        var pixels = Area.Pixels;
+        var pixels = m_settings.FractalArea.Pixels;
 
         var startIndexWidth = AreaPatch.StartIndexWidth;
         var stopIndexWidth = Math.Min(AreaPatch.StopIndexWidth, pixels.Width);
         var startIndexHeight = AreaPatch.StartIndexHeight;
         var stopIndexHeight = Math.Min(AreaPatch.StopIndexHeight, pixels.Height);
 
-        var displayArea = (DisplayArea<T>)Area.DisplayArea;
-        var maxRadius = T.CreateChecked(MaxRadius);
-        var maxIterations = Settings.MaxIterations;
+        var displayArea = (DisplayArea<T>)m_settings.FractalArea.DisplayArea;
+        var maxRadius = T.CreateChecked(FractalSettings.MaxRadius);
+        var maxIterations = m_settings.MaxIterations;
 
         bool allMaxIteractionReached = true;
         bool someMaxIteractionReached = false;
@@ -191,31 +130,9 @@ abstract public class Fractal<T> : Worker, IFractal where T : INumber<T>, new()
             m_state = state;
         }
 
-        UpdateAreaPatchFractalImage();
+        m_colorist.UpdateAreaPatch(m_settings.FractalArea, AreaPatch);
 
         Stopped = true;
-    }
-
-    protected void UpdateAreaPatchFractalImage()
-    {
-        var fractalArea = Area;
-        var areaPatch = AreaPatch ?? throw new InvalidOperationException("AreaPatch is not set.");
-
-        var fractalImage = areaPatch.FractalImage;
-        var image = fractalImage.Image ?? throw new InvalidOperationException("FractalImage is not set.");
-        var size = fractalImage.Size;
-
-        for (var i = 0; i < size && !Stop; ++i)
-        {
-            for (var j = 0; j < size && !Stop; ++j)
-            {
-                var pixel = fractalArea.GetPixel(areaPatch.StartIndexWidth + i, areaPatch.StartIndexHeight + j);
-                if (pixel != null)
-                {
-                    image.SetPixel(i, j, ComputeColor(pixel));
-                }
-            }
-        }
     }
 
     public IFractal[] Subdivide()
@@ -236,8 +153,8 @@ abstract public class Fractal<T> : Worker, IFractal where T : INumber<T>, new()
         int i = 0;
         foreach (var (startLocationX, startLocationY) in sizes)
         {
-            var fractal = FractalFactory.CreateFractal(m_settings);
-            fractal.AreaPatch = new FractalAreaPatch(startLocationX, startLocationY, patchSize);
+            var subAreaPatch = new FractalAreaPatch(startLocationX, startLocationY, patchSize);
+            var fractal = FractalFactory.CreateFractal(m_settings, subAreaPatch);
             fractals[i++] = fractal;
         }
         return fractals;

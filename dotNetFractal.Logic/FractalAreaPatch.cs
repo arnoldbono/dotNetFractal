@@ -5,13 +5,13 @@ namespace dotNetFractal.Logic;
 
 public class FractalAreaPatch : IDisposable
 {
-    public int StartIndexWidth => (int)FractalImage.IndexI;
+    public int StartIndexWidth => FractalImage.IndexI;
 
     public int StopIndexWidth => StartIndexWidth + Size;
 
     public int Size => FractalImage.Size;
 
-    public int StartIndexHeight => (int)FractalImage.IndexJ;
+    public int StartIndexHeight => FractalImage.IndexJ;
 
     public int StopIndexHeight => StartIndexHeight + Size;
 
@@ -19,7 +19,7 @@ public class FractalAreaPatch : IDisposable
 
     public FractalAreaPatch(int startIndexWidth, int startIndexHeight, int size)
     {
-        FractalImage = new FractalCachedImage((UInt64)startIndexWidth, (UInt64)startIndexHeight, size, 0);
+        FractalImage = new FractalCachedImage(startIndexWidth, startIndexHeight, size, 0);
     }
 
     public SKRectI GetTargetRectangle(int width, int height)

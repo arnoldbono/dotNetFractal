@@ -1,50 +1,50 @@
 using System;
 using System.Numerics;
 
-namespace dotNetFractal.Logic
+namespace dotNetFractal.Logic;
+
+/// <summary>
+/// Compute a Julia Set fractal.
+/// </summary>
+public class FractalJuliaSet<T>(FractalSettings settings, FractalAreaPatch areaPatch) :
+    Fractal<T>(settings, areaPatch) where T : INumber<T>, new()
 {
     /// <summary>
-    /// Compute a Julia Set fractal.
+    /// Compute the Julia Set fractal for the given area patch.
+    /// z_{n+1} = z_n² + c
+    /// In component form:
+    /// Real:      x_{n+1} = x_n² - y_n² + Cx
+    /// Imaginary: y_{n+1} = 2x_n y_n + Cy
     /// </summary>
-    public class FractalJuliaSet<T>(FractalSettings settings) : Fractal<T>(settings) where T : INumber<T>, new()
+    protected override FractalPixel<T> Compute(T maxRadius, int maxIterations, DisplayArea<T> displayArea, int i, int j)
     {
-        /// <summary>
-        /// Compute the Julia Set fractal for the given area patch.
-        /// z_{n+1} = z_n² + c
-        /// In component form:
-        /// Real:      x_{n+1} = x_n² - y_n² + Cx
-        /// Imaginary: y_{n+1} = 2x_n y_n + Cy
-        /// </summary>
-        protected override FractalPixel<T> Compute(T maxRadius, int maxIterations, DisplayArea<T> displayArea, int i, int j)
+        var Cx = displayArea.Cx;
+        var Cy = displayArea.Cy;
+        var x = displayArea.GetX(i);
+        var y = displayArea.GetY(j);
+
+        int iteration = 0;
+        var radius2 = new T();
+        var prevRadius2 = new T();
+        do
         {
-            var Cx = displayArea.Cx;
-            var Cy = displayArea.Cy;
-            var x = displayArea.GetX(i);
-            var y = displayArea.GetY(j);
+            ++iteration;
+            prevRadius2 = radius2;
 
-            int iteration = 0;
-            var radius2 = new T();
-            var prevRadius2 = new T();
-            do
+            var xx = x * x;      // x²
+            var yy = y * y;      // y²
+
+            if ((radius2 = xx + yy) > maxRadius)
             {
-                ++iteration;
-                prevRadius2 = radius2;
-
-                var xx = x * x;      // x²
-                var yy = y * y;      // y²
-
-                if ((radius2 = xx + yy) > maxRadius)
-                {
-                    break;
-                }
-
-                y *= x;              // y = x*y (temporary)
-                y += y + Cy;         // y = (x*y) + (x*y) + Cy = 2*x*y + Cy
-                x = xx - yy + Cx;    // x = x² - y² + Cx
+                break;
             }
-            while (iteration < maxIterations);
 
-            return new FractalPixel<T>(iteration, radius2, prevRadius2);
+            y *= x;              // y = x*y (temporary)
+            y += y + Cy;         // y = (x*y) + (x*y) + Cy = 2*x*y + Cy
+            x = xx - yy + Cx;    // x = x² - y² + Cx
         }
+        while (iteration < maxIterations);
+
+        return new FractalPixel<T>(iteration, radius2, prevRadius2);
     }
 }

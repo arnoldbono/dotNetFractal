@@ -5,6 +5,7 @@ using dotNetFractal.Logic;
 using dotNetFractal.UI.Commands;
 using dotNetFractal.UI.Models;
 using dotNetFractal.UI.Services;
+using ReactiveUI;
 using SkiaSharp;
 
 namespace dotNetFractal.UI.ViewModels;
@@ -76,6 +77,12 @@ public class ColorMapViewModel : BaseViewModel
         }
 
         ColorMapImage = GenerateColorMapBitmap();
+
+        this.WhenAnyValue(x => x.SelectedColor).Subscribe(_ =>
+        {
+            m_addColorCommand?.RaiseCanExecuteChanged();
+            m_deleteColorCommand?.RaiseCanExecuteChanged();
+        });
     }
 
     private void OnColorChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)

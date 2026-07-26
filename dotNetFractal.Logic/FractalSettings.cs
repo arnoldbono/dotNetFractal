@@ -7,6 +7,8 @@ public class FractalSettings
 {
     private readonly IFractalArea m_fractalArea;
 
+    public static double MaxRadius => 4.0;
+
     public IFractalArea FractalArea => m_fractalArea;
 
     public int MaxIterations { get; private set; }
@@ -35,5 +37,12 @@ public class FractalSettings
         SmoothColoring = smoothColoring;
         HighPrecision = highPrecision;
         DistributionGraph = distributionGraph ?? [];
+    }
+
+    public void UpdateColorSettings(int maxColorSteps, int firstColorStep, bool smoothColoring)
+    {
+        MaxColorSteps = maxColorSteps;
+        FirstColorStep = firstColorStep;
+        SmoothColoring = smoothColoring;
     }
 }

@@ -7,9 +7,11 @@ namespace dotNetFractal.UI.ViewModels;
 
 public class PropertiesPanelViewModel : BaseViewModel
 {
-    private readonly Action<bool>? m_onApplyChanges;
+    private readonly Action? m_onRunColorist;
+    private readonly Action? m_onApplyChanges;
     private readonly Action m_showDistributionGraph = null!;
-    private RelayCommand<EventArgs>? m_applyFractalAreaCommand;
+    private RelayCommand<EventArgs>? m_runColoristCommand;
+    private RelayCommand<EventArgs>? m_applyCommand;
     private RelayCommand<EventArgs>? m_collapsePropertiesCommand;
     private RelayCommand<EventArgs>? m_hidePropertiesCommand;
 
@@ -143,7 +145,9 @@ public class PropertiesPanelViewModel : BaseViewModel
         }
     }
 
-    public ICommand ApplyFractalAreaCommand => m_applyFractalAreaCommand ??= new RelayCommand<EventArgs>(param => OnApplyFractalArea());
+    public ICommand ApplyChangesCommand => m_applyCommand ??= new RelayCommand<EventArgs>(param => OnApplyChanges());
+
+    public ICommand RunColoristCommand => m_runColoristCommand ??= new RelayCommand<EventArgs>(param => OnRunColorist());
 
     public ICommand ShowDistributionGraphCommand => new RelayCommand<EventArgs>(param => OnShowDistributionGraph());
 
@@ -157,6 +161,11 @@ public class PropertiesPanelViewModel : BaseViewModel
         {
             return null!;
         }
+
+        public bool TryUpdateImageSource(object? imageSource, SKBitmap bitmap)
+        {
+            return false;
+        }
     }
 
     public PropertiesPanelViewModel(
@@ -165,7 +174,8 @@ public class PropertiesPanelViewModel : BaseViewModel
         ColorMapViewModel colorMapViewModel,
         DisplaySettingsViewModel displaySettingsViewModel,
         FractalSettingsViewModel fractalSettingsViewModel,
-        Action<bool> onApplyChanges,
+        Action onApplyChanges,
+        Action onRunColorist,
         Action showDistributionGraph)
     {
         m_fractalArea = fractalAreaViewModel ?? throw new ArgumentNullException(nameof(fractalAreaViewModel));
@@ -174,13 +184,20 @@ public class PropertiesPanelViewModel : BaseViewModel
         m_displaySettings = displaySettingsViewModel ?? throw new ArgumentNullException(nameof(displaySettingsViewModel));
         m_fractalSettings = fractalSettingsViewModel ?? throw new ArgumentNullException(nameof(fractalSettingsViewModel));
         m_onApplyChanges = onApplyChanges ?? throw new ArgumentNullException(nameof(onApplyChanges));
+        m_onRunColorist = onRunColorist ?? throw new ArgumentNullException(nameof(onRunColorist));
         m_showDistributionGraph = showDistributionGraph ?? throw new ArgumentNullException(nameof(showDistributionGraph));
     }
 
-    private void OnApplyFractalArea()
+    private void OnRunColorist()
     {
         // Delegate to MainViewModel to start fractal computation
-        m_onApplyChanges?.Invoke(m_fractalArea.JuliaSet);
+        m_onRunColorist?.Invoke();
+    }
+
+    private void OnApplyChanges()
+    {
+        // Delegate to MainViewModel to start fractal computation
+        m_onApplyChanges?.Invoke();
     }
 
     private void OnShowDistributionGraph()

@@ -12,15 +12,15 @@ namespace dotNetFractal.Logic;
 public class FractalCachedImage : IDisposable
 {
     private uint m_zoomLevel = 0;
-    private UInt64 m_indexI = 0;
-    private UInt64 m_indexJ = 0;
+    private int m_indexI = 0;
+    private int m_indexJ = 0;
     private SKBitmap? m_image = null;
 
     /// <summary>
     /// The horizontal index.
-    /// PRE: (value < ((UInt64)2 << (iZoomLevel - 1)))
+    /// PRE: (value < ((int)2 << (iZoomLevel - 1)))
     /// </summary>
-    public UInt64 IndexI
+    public int IndexI
     {
         get { return m_indexI; }
         set { m_indexI = value; }
@@ -28,9 +28,9 @@ public class FractalCachedImage : IDisposable
 
     /// <summary>
     /// The vertical index.
-    /// PRE: (value < ((UInt64)2 << (iZoomLevel - 1)))
+    /// PRE: (value < ((int)2 << (iZoomLevel - 1)))
     /// </summary>
-    public UInt64 IndexJ
+    public int IndexJ
     {
         get { return m_indexJ; }
         set { m_indexJ = value; }
@@ -61,7 +61,7 @@ public class FractalCachedImage : IDisposable
     {
     }
 
-    public FractalCachedImage(UInt64 indexI, UInt64 indexJ, int size, uint zoomLevel)
+    public FractalCachedImage(int indexI, int indexJ, int size, uint zoomLevel)
     {
         m_indexI = indexI;
         m_indexJ = indexJ;
@@ -70,7 +70,7 @@ public class FractalCachedImage : IDisposable
         m_image = new SKBitmap(Size, Size, SKColorType.Bgra8888, SKAlphaType.Premul);
     }
 
-    public FractalCachedImage(string folder, uint zoomLevel, UInt64 indexI, UInt64 indexJ, int size)
+    public FractalCachedImage(string folder, uint zoomLevel, int indexI, int indexJ, int size)
     {
         m_zoomLevel = zoomLevel;
         m_indexI = indexI;

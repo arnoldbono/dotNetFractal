@@ -6,10 +6,11 @@ namespace dotNetFractal.Logic;
 /// <summary>
 /// Subdivides the display area into patches and computes these using worker threads.
 /// </summary>
-public class FractalStitcher : Worker
+public class FractalStitcher : Worker, IDisposable
 {
     private readonly FractalSettings m_fractalSettings;
     private readonly List<IFractal> m_fractalsToUpdate = [];
+    private readonly List<IFractal> m_fractalsCompleted = [];
     private readonly AutoResetEvent m_bitmapUpdateEvent = new (false);
     private double m_progress = 0.0;
 
@@ -18,6 +19,8 @@ public class FractalStitcher : Worker
     public event EventHandler ComputationCompleted = delegate { };
 
     public FractalSettings FractalSettings => m_fractalSettings;
+
+    public bool UpdateColors { get; set; }
 
     public WaitHandle BitmapUpdateEvent => m_bitmapUpdateEvent;
 
@@ -68,8 +71,8 @@ public class FractalStitcher : Worker
                 var startIndexHeight = j * PatchSize;
                 var stopIndexHeight = Math.Min(startIndexHeight + PatchSize, height);
 
-                var fractal = FractalFactory.CreateFractal(m_fractalSettings);
-                fractal.AreaPatch = new FractalAreaPatch(startIndexWidth, startIndexHeight, PatchSize);
+                var areaPatch = new FractalAreaPatch(startIndexWidth, startIndexHeight, PatchSize);
+                var fractal = FractalFactory.CreateFractal(m_fractalSettings, areaPatch);
                 patches.Add(fractal);
             }
         }
@@ -80,8 +83,51 @@ public class FractalStitcher : Worker
     protected override void ThreadProc()
     {
         Stop = false;
+        LockMutex();
         m_progress = 0.0;
+        UnlockMutex();
 
+        if (UpdateColors)
+        {
+            UpdateColors = false;
+            RunColorist();
+        }
+        else
+        {
+            ComputeFractals();
+        }
+
+        LockMutex();
+        m_progress = 100.0; // Ensure progress is set to 100% when complete
+        Stopped = true;
+        UnlockMutex();
+
+        // Raise the completion event
+        ComputationCompleted?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void RunColorist()
+    {
+        LockMutex();
+        var fractals = m_fractalsCompleted.ToArray();
+        m_fractalsCompleted.Clear();
+        var count = fractals.Length;
+        UnlockMutex();
+
+        int index = 0;
+        foreach (var fractal in fractals)
+        {
+            fractal.Colorist.Update(fractal);
+
+            LockMutex();
+            m_fractalsToUpdate.Add(fractal);
+            m_progress = ++index * 100.0 / count;
+            UnlockMutex();
+        }
+    }
+
+    private void ComputeFractals()
+    {
         // Initialize DistributionGraph to zero
         if (m_fractalSettings.DistributionGraph != null)
         {
@@ -187,19 +233,12 @@ public class FractalStitcher : Worker
             }
         }
 
-        LockMutex();
         startedFractals.Clear();
         waitingFractals.Clear();
         completionEvent.Dispose();
         completionEvent = null;
         semaphore.Dispose();
         semaphore = null;
-        m_progress = 100.0; // Ensure progress is set to 100% when complete
-        Stopped = true;
-        UnlockMutex();
-
-        // Raise the completion event
-        ComputationCompleted?.Invoke(this, EventArgs.Empty);
     }
 
     public bool Update(SKBitmap bitmap)
@@ -221,14 +260,26 @@ public class FractalStitcher : Worker
 
             LockMutex();
             m_fractalsToUpdate.Remove(fractal);
+            m_fractalsCompleted.Add(fractal);
             UnlockMutex();
-
-            fractal.AreaPatch.Dispose();
 
             updated = true;
         }
 
         return updated;
+    }
+
+    public void Dispose()
+    {
+        LockMutex();
+        foreach (var fractal in m_fractalsCompleted)
+        {
+            fractal.AreaPatch.Dispose();
+        }
+        m_fractalsCompleted.Clear();
+        UnlockMutex();
+
+        GC.SuppressFinalize(this);
     }
 
     public static SKBitmap GetBitmap(int width, int height)

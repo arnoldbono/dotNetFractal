@@ -93,13 +93,28 @@ public class SharedMainViewModel : BaseViewModel, IDisposable
             m_colorMap,
             m_displaySettings,
             m_fractalSettings,
-            juliaSet =>
+            () =>
             {
+                var juliaSet = m_fractalArea.JuliaSet;
                 var centerX = m_fractalArea.CenterX;
                 var centerY = m_fractalArea.CenterY;
                 var width = m_fractalArea.Width;
                 var height = m_fractalArea.Height;
                 StartFractalComputation(juliaSet, centerX, centerY, width, height);
+            },
+            () =>
+            {
+                m_dispatcherAdapter.RunOnUIThread(() =>
+                {
+                    if (m_bitmap == null || m_stitcher == null)
+                        return;
+
+                    var settings = m_stitcher.FractalSettings;
+                    settings.UpdateColorSettings(m_fractalSettings.MaxColorSteps, m_fractalSettings.FirstColorStep, m_fractalSettings.SmoothColoring);
+
+                    m_stitcher.UpdateColors = true;
+                    m_stitcher.StartThread();
+                });
             },
             () => OnShowDistributionGraph());
 
@@ -384,14 +399,21 @@ public class SharedMainViewModel : BaseViewModel, IDisposable
         if (m_stitcher == null)
             return;
 
-        int width = m_stitcher.FractalSettings.FractalArea.DisplayArea.PixelsHorizontal;
-        int height = m_stitcher.FractalSettings.FractalArea.DisplayArea.PixelsVertical;
+        var displayArea = m_stitcher.FractalSettings.FractalArea.DisplayArea;
+
+        int width = displayArea.PixelsHorizontal;
+        int height = displayArea.PixelsVertical;
+
         if ((m_bitmap == null) ||
             (m_bitmap.Width != width) ||
             (m_bitmap.Height != height))
         {
-            m_bitmap = FractalStitcher.GetBitmap(width, height);
-            MainImage = m_bitmapConverter.ConvertToImageSource(m_bitmap);
+            var bitmap = FractalStitcher.GetBitmap(width, height);
+            var imageSource = m_bitmapConverter.ConvertToImageSource(bitmap);
+            MainImage = imageSource;
+
+            m_bitmap?.Dispose();
+            m_bitmap = bitmap;
         }
 
         // POST: m_bitmap != null
@@ -403,7 +425,12 @@ public class SharedMainViewModel : BaseViewModel, IDisposable
 
         if (m_stitcher.Update(m_bitmap))
         {
-            MainImage = m_bitmapConverter.ConvertToImageSource(m_bitmap);
+            // Try to update the existing ImageSource in-place to avoid flickering
+            if (!m_bitmapConverter.TryUpdateImageSource(MainImage, m_bitmap))
+            {
+                // If in-place update fails, create a new ImageSource
+                MainImage = m_bitmapConverter.ConvertToImageSource(m_bitmap);
+            }
         }
 
         Width = width;
@@ -565,7 +592,7 @@ public class SharedMainViewModel : BaseViewModel, IDisposable
             m_fractalArea.Cy = cy;
 
             // Start computation with the loaded data
-            StartFractalComputation(isJuliaSet, m_fractalArea);
+            StartFractalComputation(m_fractalArea);
         }
         catch (Exception ex)
         {
@@ -766,31 +793,26 @@ public class SharedMainViewModel : BaseViewModel, IDisposable
             m_fractalArea.Cy = decimal.CreateChecked(displayAreaDouble.Cy);
         }
 
-        StartFractalComputation(m_fractalArea.JuliaSet, m_fractalArea);
+        StartFractalComputation(m_fractalArea);
     }
 
     private void StartFractalComputation(bool juliaSet, decimal centerX, decimal centerY, decimal width, decimal height)
     {
-        var fractalArea = new FractalAreaViewModel
-        {
-            JuliaSet = juliaSet,
-            CenterX = centerX,
-            CenterY = centerY,
-            Width = width,
-            Height = height,
-            Cx = m_fractalArea.Cx,
-            Cy = m_fractalArea.Cy
-        };
+        m_fractalArea.JuliaSet = juliaSet;
+        m_fractalArea.CenterX = centerX;
+        m_fractalArea.CenterY = centerY;
+        m_fractalArea.Width = width;
+        m_fractalArea.Height = height;
 
-        StartFractalComputation(juliaSet, fractalArea);
+        StartFractalComputation(m_fractalArea);
     }
 
-    private void StartFractalComputation(bool juliaSet, FractalAreaViewModel oldFractalArea)
+    private void StartFractalComputation(FractalAreaViewModel fractalArea)
     {
+        var displayArea = fractalArea.GetDisplayArea((int)m_imageResolution.Width, (int)m_imageResolution.Height);
         if (!m_isNavigating)
         {
             // Add to history when not navigating
-            var displayArea = oldFractalArea.GetDisplayArea((int)m_imageResolution.Width, (int)m_imageResolution.Height);
             m_currentHistoryIndex = m_fractalReplay.Add(displayArea);
         }
 
@@ -798,10 +820,8 @@ public class SharedMainViewModel : BaseViewModel, IDisposable
         ComputationProgress = 0.0;
 
         // Create new fractal computation
-        var fractalArea = oldFractalArea.GetDisplayArea((int)m_imageResolution.Width, (int)m_imageResolution.Height);
-
         var fractalSettings = new FractalSettings(
-            fractalArea,
+            displayArea,
             m_fractalSettings.MaxIterations,
             m_fractalSettings.MaxColorSteps,
             m_fractalSettings.FirstColorStep,
@@ -811,16 +831,10 @@ public class SharedMainViewModel : BaseViewModel, IDisposable
 
         var stitcher = new FractalStitcher(fractalSettings);
         stitcher.ComputationCompleted += OnComputationCompleted;
-        fractalSettings.FractalArea.JuliaSet = juliaSet;
-
-        if (MainImage != null)
-        {
-            var oldBitmap = m_bitmap;
-            m_bitmap = null;
-            oldBitmap?.Dispose();
-        }
+        fractalSettings.FractalArea.JuliaSet = fractalArea.JuliaSet;
 
         m_stitcher?.StopThread();
+        m_stitcher?.Dispose();
         m_stitcher = stitcher;
         m_stitcher.StartThread();
     }

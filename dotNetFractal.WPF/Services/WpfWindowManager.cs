@@ -1,5 +1,6 @@
 using System;
 using System.Windows;
+using System.Windows.Media.Imaging;
 using dotNetFractal.UI.Services;
 
 namespace dotNetFractal.WPF.Services;
@@ -48,9 +49,10 @@ public class WpfWindowManager : IWindowManager
     }
 
 
-    public bool HasSameDimensions(object? window, int width, int height)
+    public bool HasSameDimensions(object? obj, int width, int height)
     {
-        return window is Window w && w.Width == width && w.Height == height;
+        return obj is Window w && w.Width == width && w.Height == height ||
+            obj is WriteableBitmap wb && wb.PixelWidth == width && wb.PixelHeight == height;
     }
 
 }

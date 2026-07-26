@@ -1,4 +1,3 @@
-using System;
 using SkiaSharp;
 
 namespace dotNetFractal.Logic;
@@ -13,25 +12,17 @@ public enum ComputationState
 }
 
 /// <summary>
-/// Compute a Fractal from left to right.
+/// Compute a fractal from left to right, top to bottom, pixel by pixel, for the given area and settings, and store the result in a pixel array.
 /// </summary>
 public interface IFractal
 {
-    FractalSettings Settings { get; }
-
     ComputationState State { get; }
 
-    IFractalArea Area { get; }
+    FractalAreaPatch AreaPatch { get; }
 
-    FractalAreaPatch AreaPatch { get; set; }
+    IFractalColorist Colorist { get; }
 
     bool Stopped { get; }
-
-    double MaxRadius { get; }
-
-    SKColor ComputeColor(IFractalPixel pixel);
-
-    void GetColor(int index, out int red, out int green, out int blue);
 
     void StartThread(Action<Action> threadPoolExecutor);
 

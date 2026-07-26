@@ -17,15 +17,32 @@ public class WpfBitmapConverter : IBitmapConverter
     }
 
     /// <summary>
+    /// Updates an existing WriteableBitmap in-place without creating a new object.
+    /// This prevents flickering by reusing the same ImageSource object.
+    /// </summary>
+    public bool TryUpdateImageSource(object? imageSource, SKBitmap bitmap)
+    {
+        if (imageSource is not WriteableBitmap writeableBitmap)
+            return false;
+
+        if (writeableBitmap.PixelWidth != bitmap.Width || 
+            writeableBitmap.PixelHeight != bitmap.Height)
+            return false;
+
+        Copy(writeableBitmap, bitmap);
+        return true;
+    }
+
+    /// <summary>
     /// Converts a bitmap to an image that can be used as an ImageSource.
     /// Uses direct pixel copying for maximum performance.
     /// </summary>
-    /// <param name="src">A bitmap image</param>
+    /// <param name="bitmap">A bitmap image</param>
     /// <returns>The image as a WriteableBitmap for WPF</returns>
-    private static WriteableBitmap ConvertFast(SKBitmap src)
+    private static WriteableBitmap ConvertFast(SKBitmap bitmap)
     {
-        var width = src.Width;
-        var height = src.Height;
+        var width = bitmap.Width;
+        var height = bitmap.Height;
 
         var writeableBitmap = new WriteableBitmap(
             width,
@@ -35,22 +52,39 @@ public class WpfBitmapConverter : IBitmapConverter
             PixelFormats.Pbgra32,
             null); // Palette
 
+        Copy(writeableBitmap, bitmap);
+        return writeableBitmap;
+    }
+
+    private static void Copy(WriteableBitmap writeableBitmap, SKBitmap bitmap)
+    {
+        var width = bitmap.Width;
+        var height = bitmap.Height;
+
         writeableBitmap.Lock();
         try
         {
-            var pixels = src.GetPixels();
+            var pixels = bitmap.GetPixels();
             var stride = width * 4;
-            writeableBitmap.WritePixels(
-                new Int32Rect(0, 0, width, height),
-                pixels,
-                stride * height,
-                stride);
+            var bufferSize = stride * height;
+
+            // Copy directly to BackBuffer using unsafe code for maximum performance
+            unsafe
+            {
+                Buffer.MemoryCopy(
+                    (void*)pixels,
+                    (void*)writeableBitmap.BackBuffer,
+                    bufferSize,
+                    bufferSize);
+            }
+
+            // Mark the entire bitmap as dirty to ensure WPF updates the display
+            writeableBitmap.AddDirtyRect(new Int32Rect(0, 0, width, height));
         }
         finally
         {
             writeableBitmap.Unlock();
         }
-
-        return writeableBitmap;
     }
+
 }

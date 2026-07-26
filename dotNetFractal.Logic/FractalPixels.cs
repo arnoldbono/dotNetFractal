@@ -30,14 +30,13 @@ public class FractalPixels
 
     public void SetPixel(int i, int j, IFractalPixel pixel)
     {
-        if (i >= 0 && i < Width && j >= 0 && j < Height)
-        {
-            m_pixels[i, j] = pixel;
-        }
-        else
-        {
-            Debug.Assert(false);
-        }
+        if (i < 0 || i >= Width)
+            throw new ArgumentOutOfRangeException(nameof(i), "is out of range");
+        if (j < 0 || j >= Height)
+            throw new ArgumentOutOfRangeException(nameof(j), "is out of range");
+        ArgumentNullException.ThrowIfNull(pixel, nameof(pixel));
+
+        m_pixels[i, j] = pixel;
     }
 
 }

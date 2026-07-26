@@ -22,14 +22,14 @@ public sealed class FractalAreaViewModel : FractalAreaViewModelBase<decimal>
     {
         var clone = new FractalAreaViewModel
         {
-            Cx = this.Cx,
-            Cy = this.Cy,
-            CenterX = this.CenterX,
-            CenterY = this.CenterY,
-            Width = this.Width,
-            Height = this.Height,
-            SelectedPlate = this.SelectedPlate,
-            JuliaSet = this.JuliaSet
+            Cx = Cx,
+            Cy = Cy,
+            CenterX = CenterX,
+            CenterY = CenterY,
+            Width = Width,
+            Height = Height,
+            SelectedPlate = SelectedPlate,
+            JuliaSet = JuliaSet
         };
         return clone;
     }
@@ -195,7 +195,7 @@ public class FractalAreaViewModelBase<T> : BaseViewModel where T : INumber<T>, n
         }
     }
 
-    public int SelectedPlate
+    public int  SelectedPlate
     {
         get => m_selectedPlate;
         set
