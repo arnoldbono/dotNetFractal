@@ -84,7 +84,7 @@ public class SharedMainViewModel : BaseViewModel, IDisposable
         m_graphService = graphService ?? throw new ArgumentNullException(nameof(graphService));
 
         // Create ColorMapViewModel with injected bitmap converter
-        m_colorMap = new ColorMapViewModel(m_bitmapConverter);
+        m_colorMap = new ColorMapViewModel(m_bitmapConverter, m_fileDialogService);
 
         // Initialize PropertiesPanelViewModel with child view models and callback
         m_propertiesPanel = new PropertiesPanelViewModel(

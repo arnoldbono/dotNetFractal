@@ -1,5 +1,4 @@
-using System;
-using System.Runtime.CompilerServices;
+using System.Text.Json;
 
 namespace dotNetFractal.Logic;
 
@@ -70,4 +69,23 @@ public class FractalColorMap
     public FractalColor[] Colors { get; set; }
 
     public FractalColor[] DefaultColors { get; }
+
+    public void SaveToFile(string filePath)
+    {
+        var json = JsonSerializer.Serialize(Colors, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+        System.IO.File.WriteAllText(filePath, json);
+    }
+
+    public void LoadFromFile(string filePath)
+    {
+        var json = System.IO.File.ReadAllText(filePath);
+        var colors = JsonSerializer.Deserialize<FractalColor[]>(json);
+        if (colors != null)
+        {
+            Colors = colors;
+        }
+    }
 }

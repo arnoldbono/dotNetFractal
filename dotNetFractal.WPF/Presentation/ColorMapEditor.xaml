@@ -56,7 +56,7 @@
                 <StackPanel Grid.Column="1" Margin="5,0,0,0" VerticalAlignment="Center">
                     <Button Content="Add" 
                             Width="50" 
-                            Margin="0,0,0,5"
+                            Margin="0,5,0,5"
                             Command="{Binding AddColorCommand}"/>
                     <Button Content="Delete" 
                             Width="50"
@@ -64,7 +64,16 @@
                             Command="{Binding DeleteColorCommand}"/>
                     <Button Content="Reset" 
                             Width="50"
-                            Command="{Binding ResetColorCommand}"/>
+                            Margin="0,0,0,5"
+                            Command="{Binding ResetColorMapCommand}"/>
+                    <Button Content="Save" 
+                            Width="50"
+                            Margin="0,0,0,5"
+                            Command="{Binding SaveColorMapCommand}"/>
+                    <Button Content="Load" 
+                            Width="50"
+                            Margin="0,0,0,5"
+                            Command="{Binding LoadColorMapCommand}"/>
                 </StackPanel>
             </Grid>
         </GroupBox>

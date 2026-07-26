@@ -76,7 +76,7 @@
                             Command="{Binding DeleteColorCommand}"/>
                     <Button Content="Reset" 
                             Width="60"
-                            Command="{Binding ResetColorCommand}"/>
+                            Command="{Binding ResetColorMapCommand}"/>
                 </StackPanel>
             </Grid>
         </StackPanel>

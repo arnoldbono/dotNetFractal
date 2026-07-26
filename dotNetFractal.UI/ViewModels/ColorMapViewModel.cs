@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Windows.Input;
 using dotNetFractal.Logic;
 using dotNetFractal.UI.Commands;
@@ -16,13 +15,16 @@ namespace dotNetFractal.UI.ViewModels;
 public class ColorMapViewModel : BaseViewModel
 {
     private readonly FractalColorMap m_colorMap;
-    private readonly IBitmapConverter m_bitmapConverter = null!;
+    private readonly IBitmapConverter m_bitmapConverter;
+    private readonly IFileDialogService m_fileDialogService;
 
     private object m_colorMapImage = null!;
     private EditableFractalColor? m_selectedColor = null!;
     private RelayCommand<object>? m_addColorCommand;
     private RelayCommand<object>? m_deleteColorCommand;
-    private RelayCommand<object>? m_resetColorCommand;
+    private RelayCommand<object>? m_resetColorMapCommand;
+    private RelayCommand<object>? m_saveColorMapCommand;
+    private RelayCommand<object>? m_loadColorMapCommand;
 
     public object ColorMapImage
     {
@@ -60,11 +62,16 @@ public class ColorMapViewModel : BaseViewModel
 
     public ICommand DeleteColorCommand => m_deleteColorCommand ??= new RelayCommand<object>(_ => DeleteColor(), _ => CanDeleteColor());
 
-    public ICommand ResetColorCommand => m_resetColorCommand ??= new RelayCommand<object>(_ => ResetColors());
+    public ICommand ResetColorMapCommand => m_resetColorMapCommand ??= new RelayCommand<object>(_ => ResetColorMap());
 
-    public ColorMapViewModel(IBitmapConverter bitmapConverter)
+    public ICommand SaveColorMapCommand => m_saveColorMapCommand ??= new RelayCommand<object>(_ => SaveColorMap());
+
+    public ICommand LoadColorMapCommand => m_loadColorMapCommand ??= new RelayCommand<object>(_ => LoadColorMap());
+
+    public ColorMapViewModel(IBitmapConverter bitmapConverter, IFileDialogService fileDialogService)
     {
         m_bitmapConverter = bitmapConverter ?? throw new ArgumentNullException(nameof(bitmapConverter));
+        m_fileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
         m_colorMap = FractalColorMap.GetInstance();
 
         // Create editable wrappers for the colors
@@ -110,7 +117,7 @@ public class ColorMapViewModel : BaseViewModel
         const double FractionStep = 1.0 / (Width - 1);
 
         // Create a 256x1 bitmap
-        using (var bitmap = new SKBitmap(Width, Height, SKColorType.Rgba8888, SKAlphaType.Premul))
+        using (var bitmap = new SKBitmap(Width, Height, SKColorType.Bgra8888, SKAlphaType.Premul))
         {
             // Fill each pixel with the corresponding color from the color map
             for (int x = 0; x < Width; x++)
@@ -199,10 +206,18 @@ public class ColorMapViewModel : BaseViewModel
             return;
         }
 
+        var first = Colors[0] == SelectedColor;
+        var last = Colors[^1] == SelectedColor;
+
         // Remove the selected color
         SelectedColor.PropertyChanged -= OnColorChanged;
         Colors.Remove(SelectedColor);
         SelectedColor = null;
+
+        if (first)
+            Colors[0].Fraction = 0.0;
+        else if (last)
+            Colors[^1].Fraction = 1.0;
 
         // Update the underlying color map and regenerate bitmap
         UpdateColorMap();
@@ -217,7 +232,38 @@ public class ColorMapViewModel : BaseViewModel
         ColorMapImage = GenerateColorMapBitmap();
     }
 
-    private void ResetColors()
+    private void ResetColorMap()
+    {
+        // Reset the underlying color map to default colors
+        m_colorMap.Colors = (FractalColor[])FractalColorMap.GetInstance().DefaultColors.Clone();
+        OnColorMapChanged();
+    }
+
+    private void SaveColorMap()
+    {
+        const string filter = "Color Map File|*.json";
+        const string title = "Save a color map file";
+        var filePath = m_fileDialogService.ShowSaveFileDialog(filter, title);
+        if (!string.IsNullOrEmpty(filePath))
+        {
+            m_colorMap.SaveToFile(filePath);
+            OnColorMapChanged();
+        }
+    }
+
+    private void LoadColorMap()
+    {
+        const string filter = "Color Map File|*.json";
+        const string title = "Load a color map file";
+        var filePath = m_fileDialogService.ShowOpenFileDialog(filter, title);
+        if (!string.IsNullOrEmpty(filePath))
+        {
+            m_colorMap.LoadFromFile(filePath);
+            OnColorMapChanged();
+        }
+    }
+
+    private void OnColorMapChanged()
     {
         // Clear existing colors
         foreach (var color in Colors)
@@ -225,21 +271,15 @@ public class ColorMapViewModel : BaseViewModel
             color.PropertyChanged -= OnColorChanged;
         }
         Colors.Clear();
-
-        // Reset the underlying color map to default colors
-        m_colorMap.Colors = (FractalColor[])FractalColorMap.GetInstance().DefaultColors.Clone();
-
-        // Create editable wrappers for the default colors
+        // Create editable wrappers for the new colors
         foreach (var color in m_colorMap.Colors)
         {
             var editableColor = new EditableFractalColor(color);
             editableColor.PropertyChanged += OnColorChanged;
             Colors.Add(editableColor);
         }
-
         // Clear selection
         SelectedColor = null;
-
         // Regenerate the bitmap
         ColorMapImage = GenerateColorMapBitmap();
     }

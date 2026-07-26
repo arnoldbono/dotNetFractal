@@ -67,6 +67,7 @@ public class WpfBitmapConverter : IBitmapConverter
             var pixels = bitmap.GetPixels();
             var stride = width * 4;
             var bufferSize = stride * height;
+            var dirtyRect = new Int32Rect(0, 0, width, height);
 
             // Copy directly to BackBuffer using unsafe code for maximum performance
             unsafe
@@ -79,7 +80,7 @@ public class WpfBitmapConverter : IBitmapConverter
             }
 
             // Mark the entire bitmap as dirty to ensure WPF updates the display
-            writeableBitmap.AddDirtyRect(new Int32Rect(0, 0, width, height));
+            writeableBitmap.AddDirtyRect(dirtyRect);
         }
         finally
         {
