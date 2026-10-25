@@ -55,6 +55,10 @@ public class FractalStitcher : Worker, IDisposable
         var width = area.PixelsHorizontal;
         var height = area.PixelsVertical;
         var patchSize = m_fractalSettings.PatchSize;
+        if (m_fractalSettings.UseCuda)
+        {
+            patchSize = Math.Max(width, height);
+        }
 
         var horizontalPatches = width / patchSize + (width % patchSize != 0 ? 1 : 0);
         var vertitalPatches = height / patchSize + (height % patchSize != 0 ? 1 : 0);

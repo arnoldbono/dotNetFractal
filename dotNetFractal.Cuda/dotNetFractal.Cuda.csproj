@@ -10,6 +10,7 @@
     <CudaNvccPath Condition="'$(CudaNvccPath)' == ''">nvcc</CudaNvccPath>
     <CudaNativeOutputPath>$(OutputPath)dotNetFractal.Cuda.dll</CudaNativeOutputPath>
     <CudaWpfOutputPath>$(BaseOutputPath)$(Platform)\$(Configuration)\net10.0-windows\dotNetFractal.Cuda.dll</CudaWpfOutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>

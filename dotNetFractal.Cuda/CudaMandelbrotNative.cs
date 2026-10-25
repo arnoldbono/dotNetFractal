@@ -2,13 +2,14 @@ using System.Runtime.InteropServices;
 
 namespace dotNetFractal.Cuda;
 
-public static class CudaMandelbrotNative
+public static partial class CudaMandelbrotNative
 {
-    [DllImport("dotNetFractal.Cuda", EntryPoint = "InitializeCudaDevice", CallingConvention = CallingConvention.Cdecl)]
-    private static extern int InitializeCudaDeviceNative();
+    [LibraryImport("dotNetFractal.Cuda", EntryPoint = "InitializeCudaDevice")]
+    private static partial int InitializeCudaDeviceNative();
 
-    [DllImport("dotNetFractal.Cuda", EntryPoint = "ComputeMandelbrotTile", CallingConvention = CallingConvention.Cdecl)]
-    private static extern int ComputeMandelbrotTileNative(
+    [LibraryImport("dotNetFractal.Cuda", EntryPoint = "ComputeMandelbrotTile")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    private static partial int ComputeMandelbrotTileNative(
         int startI,
         int startJ,
         int width,

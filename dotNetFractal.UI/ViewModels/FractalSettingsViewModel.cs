@@ -112,7 +112,7 @@ public class FractalSettingsViewModel : BaseViewModel
 
     public bool IsUseCudaEnabled => !m_highPrecision;
 
-    public int[] PatchSizeOptions { get; } = [128, 256, 512, 1024, 2048];
+    public int[] PatchSizeOptions { get; } = [128, 256, 512, 1024, 2048, 4096, 8192];
 
     public int PatchSize
     {
