@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>dotNetFractal.Cuda.Managed</AssemblyName>
+    <RootNamespace>dotNetFractal.Cuda</RootNamespace>
+    <Platforms>x64;AnyCPU</Platforms>
+    <BaseOutputPath>..\Output\</BaseOutputPath>
+    <CudaNvccPath Condition="'$(CudaNvccPath)' == '' and '$(CUDA_PATH)' != '' and Exists('$(CUDA_PATH)\bin\nvcc.exe')">$(CUDA_PATH)\bin\nvcc.exe</CudaNvccPath>
+    <CudaNvccPath Condition="'$(CudaNvccPath)' == ''">nvcc</CudaNvccPath>
+    <CudaNativeOutputPath>$(OutputPath)dotNetFractal.Cuda.dll</CudaNativeOutputPath>
+    <CudaWpfOutputPath>$(BaseOutputPath)$(Platform)\$(Configuration)\net10.0-windows\dotNetFractal.Cuda.dll</CudaWpfOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Include="CudaMath.cu" />
+  </ItemGroup>
+
+  <Target Name="RemoveStaleCudaNativeNameArtifacts" BeforeTargets="Build">
+    <Delete Files="$(CudaWpfOutputPath)" />
+  </Target>
+
+  <Target Name="BuildCudaNative" AfterTargets="Build" Condition="'$(CudaNvccPath)' != ''">
+    <Exec Command="&quot;$(CudaNvccPath)&quot; --shared -gencode=arch=compute_89,code=sm_89 -o &quot;$(CudaNativeOutputPath)&quot; &quot;$(MSBuildProjectDirectory)\CudaMath.cu&quot;" ContinueOnError="WarnAndContinue" />
+    <Copy SourceFiles="$(CudaNativeOutputPath)" DestinationFiles="$(CudaWpfOutputPath)" Condition="Exists('$(CudaNativeOutputPath)')" />
+    <Delete Files=".\dotNetFractal.Cuda.dll" />
+    <Delete Files=".\dotNetFractal.Cuda.lib" />
+    <Delete Files=".\dotNetFractal.Cuda.exp" />
+  </Target>
+</Project>

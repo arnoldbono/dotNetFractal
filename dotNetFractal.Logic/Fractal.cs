@@ -13,6 +13,8 @@ abstract public class Fractal<T> : Worker, IFractal where T : INumber<T>, new()
     private readonly FractalAreaPatch m_areaPatch;
     protected ComputationState m_state = ComputationState.NotStarted;
 
+    protected FractalSettings Settings => m_settings;
+
     public FractalAreaPatch AreaPatch => m_areaPatch;
 
     public ComputationState State => m_state;
@@ -33,7 +35,7 @@ abstract public class Fractal<T> : Worker, IFractal where T : INumber<T>, new()
 
     protected abstract FractalPixel<T> Compute(T maxRadius, int maxIterations, DisplayArea<T> displayArea, int i, int j);
 
-    private void IncrementDistributionGraph(int iteration)
+    protected void IncrementDistributionGraph(int iteration)
     {
         --iteration; // 1...maxIterations, but DistributionGraph is 0...maxIterations-1, so decrement by 1
         if (m_settings.DistributionGraph != null)
@@ -44,10 +46,15 @@ abstract public class Fractal<T> : Worker, IFractal where T : INumber<T>, new()
         }
     }
 
-    private void UpdatePixel(int i, int j, IFractalPixel pixel)
+    protected void UpdatePixel(int i, int j, IFractalPixel pixel)
     {
         m_settings.FractalArea.Pixels.SetPixel(i, j, pixel);
         IncrementDistributionGraph(pixel.Iteration);
+    }
+
+    protected virtual void UpdateColorsForAreaPatch()
+    {
+        m_colorist.UpdateAreaPatch(m_settings.FractalArea, AreaPatch);
     }
 
     protected override void ThreadProc()
@@ -130,7 +137,7 @@ abstract public class Fractal<T> : Worker, IFractal where T : INumber<T>, new()
             m_state = state;
         }
 
-        m_colorist.UpdateAreaPatch(m_settings.FractalArea, AreaPatch);
+        UpdateColorsForAreaPatch();
 
         Stopped = true;
     }

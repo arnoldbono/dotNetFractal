@@ -46,6 +46,12 @@ public class DisplayAreaData
     [JsonPropertyName("highPrecision")]
     public bool HighPrecision { get; set; }
 
+    [JsonPropertyName("useCuda")]
+    public bool UseCuda { get; set; }
+
+    [JsonPropertyName("patchSize")]
+    public int PatchSize { get; set; } = 128;
+
     [JsonPropertyName("fractalType")]
     public string FractalType { get; set; } = null!;
 

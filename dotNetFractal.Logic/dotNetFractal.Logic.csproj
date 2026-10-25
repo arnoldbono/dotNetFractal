@@ -24,4 +24,7 @@
     <ItemGroup>
       <PackageReference Include="SkiaSharp" />
     </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\dotNetFractal.Cuda\dotNetFractal.Cuda.csproj" />
+    </ItemGroup>
 </Project>

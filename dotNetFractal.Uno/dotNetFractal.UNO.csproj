@@ -43,6 +43,7 @@
     <Company>Roland Boon</Company>
     <Copyright>Copyright © 2026</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <BaseOutputPath>..\Output\</BaseOutputPath>
   </PropertyGroup>
 
   <ItemGroup>

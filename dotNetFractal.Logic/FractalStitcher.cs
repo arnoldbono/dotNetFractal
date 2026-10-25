@@ -14,8 +14,6 @@ public class FractalStitcher : Worker, IDisposable
     private readonly AutoResetEvent m_bitmapUpdateEvent = new (false);
     private double m_progress = 0.0;
 
-    private static int PatchSize => 128;
-
     public event EventHandler ComputationCompleted = delegate { };
 
     public FractalSettings FractalSettings => m_fractalSettings;
@@ -56,22 +54,23 @@ public class FractalStitcher : Worker, IDisposable
     {
         var width = area.PixelsHorizontal;
         var height = area.PixelsVertical;
+        var patchSize = m_fractalSettings.PatchSize;
 
-        var horizontalPatches = width / PatchSize + (width % PatchSize != 0 ? 1 : 0);
-        var vertitalPatches = height / PatchSize + (height % PatchSize != 0 ? 1 : 0);
+        var horizontalPatches = width / patchSize + (width % patchSize != 0 ? 1 : 0);
+        var vertitalPatches = height / patchSize + (height % patchSize != 0 ? 1 : 0);
 
         var patches = new List<IFractal>();
 
         for (int i = 0; i < horizontalPatches; ++i)
         {
-            var startIndexWidth = i * PatchSize;
+            var startIndexWidth = i * patchSize;
 
             for (int j = 0; j < vertitalPatches; ++j)
             {
-                var startIndexHeight = j * PatchSize;
-                var stopIndexHeight = Math.Min(startIndexHeight + PatchSize, height);
+                var startIndexHeight = j * patchSize;
+                var stopIndexHeight = Math.Min(startIndexHeight + patchSize, height);
 
-                var areaPatch = new FractalAreaPatch(startIndexWidth, startIndexHeight, PatchSize);
+                var areaPatch = new FractalAreaPatch(startIndexWidth, startIndexHeight, patchSize);
                 var fractal = FractalFactory.CreateFractal(m_fractalSettings, areaPatch);
                 patches.Add(fractal);
             }

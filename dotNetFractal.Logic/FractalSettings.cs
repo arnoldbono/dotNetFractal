@@ -21,9 +21,13 @@ public class FractalSettings
 
     public bool HighPrecision { get; private set; }
 
+    public bool UseCuda { get; private set; }
+
+    public int PatchSize { get; private set; }
+
     public int[] DistributionGraph { get; private set; }
 
-    public FractalSettings(IDisplayArea displayArea, int maxIterations, int maxColorSteps, int firstColorStep, bool smoothColoring, bool highPrecision, int[]? distributionGraph = null)
+    public FractalSettings(IDisplayArea displayArea, int maxIterations, int maxColorSteps, int firstColorStep, bool smoothColoring, bool highPrecision, bool useCuda = false, int patchSize = 128, int[]? distributionGraph = null)
     {
         Debug.Assert(displayArea != null);
 
@@ -36,6 +40,8 @@ public class FractalSettings
         FirstColorStep = firstColorStep;
         SmoothColoring = smoothColoring;
         HighPrecision = highPrecision;
+        UseCuda = useCuda;
+        PatchSize = patchSize is 128 or 256 or 512 or 1024 ? patchSize : 128;
         DistributionGraph = distributionGraph ?? [];
     }
 

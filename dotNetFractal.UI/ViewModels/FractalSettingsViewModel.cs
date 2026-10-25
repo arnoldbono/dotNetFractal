@@ -7,6 +7,8 @@ public class FractalSettingsViewModel : BaseViewModel
     private int m_firstColorStep = 0;
     private bool m_smoothColoring = true;
     private bool m_highPrecision = false;
+    private bool m_useCuda = false;
+    private int m_patchSize = 128;
     private int[] m_distributionGraph;
 
     public int MaxIterations
@@ -81,6 +83,53 @@ public class FractalSettingsViewModel : BaseViewModel
             }
 
             m_highPrecision = value;
+
+            if (m_highPrecision && m_useCuda)
+            {
+                m_useCuda = false;
+                OnPropertyChanged(nameof(UseCuda));
+            }
+
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(IsUseCudaEnabled));
+        }
+    }
+
+    public bool UseCuda
+    {
+        get => m_useCuda;
+        set
+        {
+            if (m_useCuda == value)
+            {
+                return;
+            }
+
+            m_useCuda = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool IsUseCudaEnabled => !m_highPrecision;
+
+    public int[] PatchSizeOptions { get; } = [128, 256, 512, 1024];
+
+    public int PatchSize
+    {
+        get => m_patchSize;
+        set
+        {
+            if (m_patchSize == value)
+            {
+                return;
+            }
+
+            if (value != 128 && value != 256 && value != 512 && value != 1024)
+            {
+                return;
+            }
+
+            m_patchSize = value;
             OnPropertyChanged();
         }
     }

@@ -15,6 +15,8 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -28,6 +30,9 @@
             <TextBox Text="{Binding FirstColorStep}" Width="80" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Right" HorizontalContentAlignment="Right" VerticalAlignment="Center"/>
             <CheckBox Content="Smooth Coloring" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" IsChecked="{Binding SmoothColoring}" VerticalAlignment="Center" Margin="5,5,0,0"/>
             <CheckBox Content="High Precision" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" IsChecked="{Binding HighPrecision}" VerticalAlignment="Center" Margin="5,5,0,0"/>
+            <CheckBox Content="Use CUDA" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" IsChecked="{Binding UseCuda}" IsEnabled="{Binding IsUseCudaEnabled}" VerticalAlignment="Center" Margin="5,5,0,0"/>
+            <Label Content="Patch Size:" Grid.Row="6" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+            <ComboBox ItemsSource="{Binding PatchSizeOptions}" SelectedItem="{Binding PatchSize}" Width="80" Grid.Row="6" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center"/>
         </Grid>
     </GroupBox>
 </UserControl>

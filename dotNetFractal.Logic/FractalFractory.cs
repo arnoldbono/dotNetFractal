@@ -16,6 +16,10 @@ public static class FractalFactory
     {
         if (fractalSettings.FractalArea.JuliaSet)
             return new FractalJuliaSet<T>(fractalSettings, areaPatch);
+
+        if (typeof(T) == typeof(double) && fractalSettings.UseCuda)
+            return new FractalMandelbrotCuda(fractalSettings, areaPatch);
+
         return new FractalMandelbrot<T>(fractalSettings, areaPatch);
     }
 }

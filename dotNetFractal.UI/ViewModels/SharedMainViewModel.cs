@@ -578,6 +578,8 @@ public class SharedMainViewModel : BaseViewModel, IDisposable
             m_fractalSettings.FirstColorStep = data.FirstColorStep;
             m_fractalSettings.SmoothColoring = data.SmoothColoring;
             m_fractalSettings.HighPrecision = data.HighPrecision;
+            m_fractalSettings.UseCuda = data.UseCuda;
+            m_fractalSettings.PatchSize = data.PatchSize;
 
             // Determine if it's a Julia set
             bool isJuliaSet = data.FractalType?.Equals("JuliaSet", StringComparison.OrdinalIgnoreCase) == true;
@@ -654,6 +656,8 @@ public class SharedMainViewModel : BaseViewModel, IDisposable
             data.FirstColorStep = m_fractalSettings.FirstColorStep;
             data.SmoothColoring = m_fractalSettings.SmoothColoring;
             data.HighPrecision = m_fractalSettings.HighPrecision;
+            data.UseCuda = m_fractalSettings.UseCuda;
+            data.PatchSize = m_fractalSettings.PatchSize;
             data.FractalType = m_fractalArea.JuliaSet ? "JuliaSet" : "Mandelbrot";
 
             var options = new System.Text.Json.JsonSerializerOptions
@@ -827,6 +831,8 @@ public class SharedMainViewModel : BaseViewModel, IDisposable
             m_fractalSettings.FirstColorStep,
             m_fractalSettings.SmoothColoring,
             m_fractalSettings.HighPrecision,
+            m_fractalSettings.UseCuda,
+            m_fractalSettings.PatchSize,
             m_fractalSettings.DistributionGraph);
 
         var stitcher = new FractalStitcher(fractalSettings);
