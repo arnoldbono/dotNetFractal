@@ -1,6 +1,7 @@
 using System.Windows;
-using dotNetFractal.Logic;
 using ReactiveUI.Builder;
+
+using dotNetFractal.Cuda;
 
 namespace dotNetFractal.WPF;
 

@@ -150,10 +150,18 @@ public class FractalStitcher : Worker, IDisposable
         var maxConcurrentThreads = processorCount - 1;
         var semaphore = new SemaphoreSlim(maxConcurrentThreads, maxConcurrentThreads);
 
+        // Track queued/running callbacks so cleanup can wait for them to finish
+        var pendingWorkItems = 0;
+        var allWorkItemsCompleted = new ManualResetEventSlim(true);
+
         // Create a thread pool executor that manages concurrency
         void threadPoolExecutor(Action work)
         {
             semaphore.Wait();
+
+            Interlocked.Increment(ref pendingWorkItems);
+            allWorkItemsCompleted.Reset();
+
             ThreadPool.QueueUserWorkItem(_ =>
             {
                 try
@@ -163,9 +171,20 @@ public class FractalStitcher : Worker, IDisposable
                 finally
                 {
                     LockMutex();
-                    semaphore?.Release();
-                    completionEvent?.Set();
-                    UnlockMutex();
+                    try
+                    {
+                        semaphore?.Release();
+                        completionEvent?.Set();
+                    }
+                    finally
+                    {
+                        UnlockMutex();
+                    }
+
+                    if (Interlocked.Decrement(ref pendingWorkItems) == 0)
+                    {
+                        allWorkItemsCompleted.Set();
+                    }
                 }
             });
         }
@@ -234,10 +253,15 @@ public class FractalStitcher : Worker, IDisposable
 
         startedFractals.Clear();
         waitingFractals.Clear();
+
+        // Ensure all queued callbacks have exited before disposing synchronization primitives
+        allWorkItemsCompleted.Wait();
+
         completionEvent.Dispose();
         completionEvent = null;
         semaphore.Dispose();
         semaphore = null;
+        allWorkItemsCompleted.Dispose();
     }
 
     public bool Update(SKBitmap bitmap)

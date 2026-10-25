@@ -91,7 +91,6 @@ __global__ void MandelbrotTileKernel(
     int pixelsVertical,
     int maxIterations,
     double maxRadius,
-    int borderOnly,
     int* iterations,
     double* radius2,
     double* prevRadius2)
@@ -105,14 +104,6 @@ __global__ void MandelbrotTileKernel(
     }
 
     int idx = y * width + x;
-
-    if (borderOnly == 1 && x > 0 && x < width - 1 && y > 0 && y < height - 1)
-    {
-        iterations[idx] = maxIterations;
-        radius2[idx] = maxRadius;
-        prevRadius2[idx] = maxRadius;
-        return;
-    }
 
     int i = startI + x;
     int j = startJ + y;
@@ -154,7 +145,6 @@ extern "C" __declspec(dllexport) int ComputeMandelbrotTile(
     int pixelsVertical,
     int maxIterations,
     double maxRadius,
-    int borderOnly,
     int* iterations,
     double* radius2,
     double* prevRadius2)
@@ -204,7 +194,6 @@ extern "C" __declspec(dllexport) int ComputeMandelbrotTile(
         pixelsVertical,
         maxIterations,
         maxRadius,
-        borderOnly,
         dIterations,
         dRadius2,
         dPrevRadius2);

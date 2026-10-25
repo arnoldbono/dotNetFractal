@@ -41,7 +41,7 @@ public class FractalSettings
         SmoothColoring = smoothColoring;
         HighPrecision = highPrecision;
         UseCuda = useCuda;
-        PatchSize = patchSize is 128 or 256 or 512 or 1024 ? patchSize : 128;
+        PatchSize = Math.Max(patchSize, 128);
         DistributionGraph = distributionGraph ?? [];
     }
 

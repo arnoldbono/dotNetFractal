@@ -1,4 +1,4 @@
-namespace dotNetFractal.Logic;
+namespace dotNetFractal.Cuda;
 
 public static class CudaMandelbrotStartup
 {

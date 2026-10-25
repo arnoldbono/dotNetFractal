@@ -1,8 +1,8 @@
 using System.Runtime.InteropServices;
 
-namespace dotNetFractal.Logic;
+namespace dotNetFractal.Cuda;
 
-internal static class CudaMandelbrotNative
+public static class CudaMandelbrotNative
 {
     [DllImport("dotNetFractal.Cuda", EntryPoint = "InitializeCudaDevice", CallingConvention = CallingConvention.Cdecl)]
     private static extern int InitializeCudaDeviceNative();
@@ -21,7 +21,6 @@ internal static class CudaMandelbrotNative
         int pixelsVertical,
         int maxIterations,
         double maxRadius,
-        int borderOnly,
         [Out] int[] iterations,
         [Out] double[] radius2,
         [Out] double[] prevRadius2);
@@ -59,7 +58,6 @@ internal static class CudaMandelbrotNative
         int pixelsVertical,
         int maxIterations,
         double maxRadius,
-        bool borderOnly,
         int[] iterations,
         double[] radius2,
         double[] prevRadius2)
@@ -85,7 +83,6 @@ internal static class CudaMandelbrotNative
                 pixelsVertical,
                 maxIterations,
                 maxRadius,
-                borderOnly ? 1 : 0,
                 iterations,
                 radius2,
                 prevRadius2);

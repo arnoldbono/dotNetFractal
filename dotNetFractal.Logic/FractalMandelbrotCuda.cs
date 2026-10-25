@@ -1,4 +1,5 @@
 using System;
+using dotNetFractal.Cuda;
 
 namespace dotNetFractal.Logic;
 
@@ -80,7 +81,6 @@ public class FractalMandelbrotCuda(FractalSettings settings, FractalAreaPatch ar
             displayArea.PixelsVertical,
             maxIterations,
             maxRadius,
-            borderOnly: true,
             borderIterations,
             borderRadius2,
             borderPrevRadius2);
@@ -91,103 +91,20 @@ public class FractalMandelbrotCuda(FractalSettings settings, FractalAreaPatch ar
             return;
         }
 
-        bool allMaxIterationReached = true;
-        bool someMaxIterationReached = false;
         m_state = ComputationState.Running;
 
         for (var i = startIndexWidth; i < stopIndexWidth && !Stop; ++i)
         {
             for (var j = startIndexHeight; j < stopIndexHeight && !Stop; ++j)
             {
-                if (i > startIndexWidth && i < stopIndexWidth - 1 && j > startIndexHeight && j < stopIndexHeight - 1)
-                {
-                    continue;
-                }
-
                 int idx = GetIndex(i, j, startIndexWidth, startIndexHeight, tileWidth);
                 int iteration = borderIterations[idx];
                 var pixel = new FractalPixel<double>(iteration, borderRadius2[idx], borderPrevRadius2[idx]);
                 UpdatePixel(i, j, pixel);
-
-                if (iteration < maxIterations)
-                {
-                    allMaxIterationReached = false;
-                }
-                else
-                {
-                    someMaxIterationReached = true;
-                }
             }
         }
 
-        ++startIndexWidth;
-        --stopIndexWidth;
-        ++startIndexHeight;
-        --stopIndexHeight;
-
-        if (allMaxIterationReached)
-        {
-            for (var i = startIndexWidth; i < stopIndexWidth && !Stop; ++i)
-            {
-                for (var j = startIndexHeight; j < stopIndexHeight && !Stop; ++j)
-                {
-                    UpdatePixel(i, j, new FractalPixel<double>(maxIterations, maxRadius, maxRadius));
-                }
-            }
-
-            m_state = ComputationState.AllMaxIterationsReached;
-        }
-        else
-        {
-            var state = someMaxIterationReached && areaPatch.Size > 16
-                ? ComputationState.SomeMaxIterationsReached
-                : ComputationState.NoneMaxIterationsReached;
-
-            if (state == ComputationState.NoneMaxIterationsReached)
-            {
-                int[] fullIterations = new int[elementCount];
-                double[] fullRadius2 = new double[elementCount];
-                double[] fullPrevRadius2 = new double[elementCount];
-
-                int fullReady = CudaMandelbrotNative.TryComputeMandelbrotTile(
-                    areaPatch.StartIndexWidth,
-                    areaPatch.StartIndexHeight,
-                    tileWidth,
-                    tileHeight,
-                    displayArea.CenterX,
-                    displayArea.CenterY,
-                    displayArea.Width,
-                    displayArea.Height,
-                    displayArea.PixelsHorizontal,
-                    displayArea.PixelsVertical,
-                    maxIterations,
-                    maxRadius,
-                    borderOnly: false,
-                    fullIterations,
-                    fullRadius2,
-                    fullPrevRadius2);
-
-                for (var i = startIndexWidth; i < stopIndexWidth && !Stop; ++i)
-                {
-                    for (var j = startIndexHeight; j < stopIndexHeight && !Stop; ++j)
-                    {
-                        if (fullReady == 0)
-                        {
-                            int idx = GetIndex(i, j, areaPatch.StartIndexWidth, areaPatch.StartIndexHeight, tileWidth);
-                            var pixel = new FractalPixel<double>(fullIterations[idx], fullRadius2[idx], fullPrevRadius2[idx]);
-                            UpdatePixel(i, j, pixel);
-                        }
-                        else
-                        {
-                            var pixel = Compute(maxRadius, maxIterations, displayArea, i, j);
-                            UpdatePixel(i, j, pixel);
-                        }
-                    }
-                }
-            }
-
-            m_state = state;
-        }
+        m_state = ComputationState.NoneMaxIterationsReached; // Fake, but works
 
         UpdateColorsForAreaPatch();
         Stopped = true;
